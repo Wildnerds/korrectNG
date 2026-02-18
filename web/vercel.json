@@ -1,0 +1,5 @@
+{
+  "installCommand": "cd .. && npm install && npm run build:shared && cd web && npm install",
+  "buildCommand": "next build",
+  "framework": "nextjs"
+}
