@@ -12,6 +12,8 @@
     "mobile"
   ],
   "scripts": {
+    "render:build": "npm run build:shared && npm run build:backend",
+    "render:start": "npm start --workspace=backend",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:web": "npm run dev --workspace=web",
     "dev:mobile": "npm run start --workspace=mobile",
