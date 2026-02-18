@@ -1,5 +1,0 @@
-{
-  "framework": "nextjs",
-  "installCommand": "npm install",
-  "buildCommand": "cd .. && npm install && cd shared && npm run build && cd ../web && next build"
-}
