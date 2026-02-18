@@ -1,0 +1,35 @@
+{
+  "name": "korrectng",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KorrectNG - Nigeria's Verified Artisan Marketplace",
+  "workspaces": [
+    "shared",
+    "packages/*",
+    "services/*",
+    "backend",
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=web",
+    "dev:mobile": "npm run start --workspace=mobile",
+    "dev:gateway": "npm run dev --workspace=@korrect/gateway",
+    "dev:users": "npm run dev --workspace=@korrect/users-service",
+    "build:shared": "npm run build --workspace=shared",
+    "build:packages": "npm run build --workspace=@korrect/auth-middleware && npm run build --workspace=@korrect/event-bus && npm run build --workspace=@korrect/logger && npm run build --workspace=@korrect/service-client && npm run build --workspace=@korrect/health",
+    "build:backend": "npm run build --workspace=backend",
+    "build:web": "npm run build --workspace=web",
+    "build:gateway": "npm run build --workspace=@korrect/gateway",
+    "build:users": "npm run build --workspace=@korrect/users-service",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker-compose -f docker/docker-compose.yml logs -f",
+    "seed": "npm run seed --workspace=backend",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

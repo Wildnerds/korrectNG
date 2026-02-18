@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: korrect-users
+  namespace: korrect
+  labels:
+    app: korrect-users
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: korrect-users
+  template:
+    metadata:
+      labels:
+        app: korrect-users
+    spec:
+      containers:
+        - name: users
+          image: ghcr.io/korrect/users:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: korrect-config
+            - secretRef:
+                name: korrect-secrets
+          env:
+            - name: PORT
+              value: "3001"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: korrect-secrets
+                  key: MONGODB_URI_USERS
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 5

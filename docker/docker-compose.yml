@@ -1,0 +1,250 @@
+version: '3.8'
+
+services:
+  # ─── Infrastructure ─────────────────────────────────────────────────────────
+
+  mongodb:
+    image: mongo:7
+    container_name: korrect-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-rootpassword}
+    networks:
+      - korrect-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: korrect-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - korrect-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── API Gateway ────────────────────────────────────────────────────────────
+
+  gateway:
+    build:
+      context: ../
+      dockerfile: services/gateway/Dockerfile
+    container_name: korrect-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      REDIS_URL: redis://redis:6379
+      # Service URLs
+      USERS_SERVICE_URL: http://users:3001
+      ARTISAN_SERVICE_URL: http://artisan:3002
+      TRANSACTION_SERVICE_URL: http://transaction:3003
+      MESSAGING_SERVICE_URL: http://messaging:3004
+      PLATFORM_SERVICE_URL: http://platform:3005
+      # Legacy monolith (during migration)
+      LEGACY_BACKEND_URL: http://legacy:5001
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  # ─── Microservices ──────────────────────────────────────────────────────────
+
+  users:
+    build:
+      context: ../
+      dockerfile: services/users/Dockerfile
+    container_name: korrect-users
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrect_users?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      JWT_EXPIRE: 30d
+      REDIS_URL: redis://redis:6379
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@korrectng.com}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  artisan:
+    build:
+      context: ../
+      dockerfile: services/artisan/Dockerfile
+    container_name: korrect-artisan
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrect_artisans?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      REDIS_URL: redis://redis:6379
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      # Service URLs for inter-service communication
+      USERS_SERVICE_URL: http://users:3001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  transaction:
+    build:
+      context: ../
+      dockerfile: services/transaction/Dockerfile
+    container_name: korrect-transaction
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrect_transactions?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      REDIS_URL: redis://redis:6379
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      PAYSTACK_WEBHOOK_SECRET: ${PAYSTACK_WEBHOOK_SECRET:-}
+      # Service URLs for inter-service communication
+      USERS_SERVICE_URL: http://users:3001
+      ARTISAN_SERVICE_URL: http://artisan:3002
+      PLATFORM_SERVICE_URL: http://platform:3005
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  messaging:
+    build:
+      context: ../
+      dockerfile: services/messaging/Dockerfile
+    container_name: korrect-messaging
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrect_messaging?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      REDIS_URL: redis://redis:6379
+      # Service URLs for inter-service communication
+      USERS_SERVICE_URL: http://users:3001
+      PLATFORM_SERVICE_URL: http://platform:3005
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  platform:
+    build:
+      context: ../
+      dockerfile: services/platform/Dockerfile
+    container_name: korrect-platform
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrect_platform?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      REDIS_URL: redis://redis:6379
+      TERMII_API_KEY: ${TERMII_API_KEY:-}
+      TERMII_SENDER_ID: ${TERMII_SENDER_ID:-KorrectNG}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      # Service URLs for inter-service communication
+      USERS_SERVICE_URL: http://users:3001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - korrect-network
+
+  # ─── Legacy Monolith (During Migration) ─────────────────────────────────────
+
+  legacy:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: korrect-legacy
+    ports:
+      - "5001:5001"
+    environment:
+      NODE_ENV: development
+      PORT: 5001
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-rootpassword}@mongodb:27017/korrectng?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      JWT_EXPIRE: 30d
+      # All other existing env vars
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@korrectng.com}
+      TERMII_API_KEY: ${TERMII_API_KEY:-}
+      TERMII_SENDER_ID: ${TERMII_SENDER_ID:-KorrectNG}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      PAYSTACK_WEBHOOK_SECRET: ${PAYSTACK_WEBHOOK_SECRET:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - korrect-network
+    profiles:
+      - legacy
+
+networks:
+  korrect-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:

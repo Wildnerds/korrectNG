@@ -1,0 +1,309 @@
+version: '3.8'
+
+# Production Docker Compose Configuration
+# Use with: docker-compose -f docker/docker-compose.prod.yml up -d
+
+services:
+  # ─── API Gateway ─────────────────────────────────────────────────────────────
+  gateway:
+    image: ghcr.io/korrect/gateway:${IMAGE_TAG:-latest}
+    container_name: korrect-gateway
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+      SENTRY_DSN: ${SENTRY_DSN}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      USERS_SERVICE_URL: http://users:3001
+      ARTISAN_SERVICE_URL: http://artisan:3002
+      TRANSACTION_SERVICE_URL: http://transaction:3003
+      MESSAGING_SERVICE_URL: http://messaging:3004
+      PLATFORM_SERVICE_URL: http://platform:3005
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Users Service ───────────────────────────────────────────────────────────
+  users:
+    image: ghcr.io/korrect/users:${IMAGE_TAG:-latest}
+    container_name: korrect-users
+    restart: always
+    expose:
+      - "3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: ${MONGODB_URI_USERS}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Artisan Service ─────────────────────────────────────────────────────────
+  artisan:
+    image: ghcr.io/korrect/artisan:${IMAGE_TAG:-latest}
+    container_name: korrect-artisan
+    restart: always
+    expose:
+      - "3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      MONGODB_URI: ${MONGODB_URI_ARTISANS}
+      REDIS_URL: redis://redis:6379
+      USERS_SERVICE_URL: http://users:3001
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      users:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Transaction Service ─────────────────────────────────────────────────────
+  transaction:
+    image: ghcr.io/korrect/transaction:${IMAGE_TAG:-latest}
+    container_name: korrect-transaction
+    restart: always
+    expose:
+      - "3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      MONGODB_URI: ${MONGODB_URI_TRANSACTIONS}
+      REDIS_URL: redis://redis:6379
+      USERS_SERVICE_URL: http://users:3001
+      ARTISAN_SERVICE_URL: http://artisan:3002
+      PLATFORM_SERVICE_URL: http://platform:3005
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      users:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Messaging Service ───────────────────────────────────────────────────────
+  messaging:
+    image: ghcr.io/korrect/messaging:${IMAGE_TAG:-latest}
+    container_name: korrect-messaging
+    restart: always
+    expose:
+      - "3004"
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      MONGODB_URI: ${MONGODB_URI_MESSAGING}
+      REDIS_URL: redis://redis:6379
+      USERS_SERVICE_URL: http://users:3001
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Platform Service ────────────────────────────────────────────────────────
+  platform:
+    image: ghcr.io/korrect/platform:${IMAGE_TAG:-latest}
+    container_name: korrect-platform
+    restart: always
+    expose:
+      - "3005"
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      MONGODB_URI: ${MONGODB_URI_PLATFORM}
+      REDIS_URL: redis://redis:6379
+      USERS_SERVICE_URL: http://users:3001
+      ARTISAN_SERVICE_URL: http://artisan:3002
+      TRANSACTION_SERVICE_URL: http://transaction:3003
+      TERMII_API_KEY: ${TERMII_API_KEY}
+      TERMII_SENDER_ID: ${TERMII_SENDER_ID}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - korrect-network
+
+  # ─── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: korrect-redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - korrect-network
+
+  # ─── Nginx (Reverse Proxy) ───────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: korrect-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - gateway
+    networks:
+      - korrect-network
+
+networks:
+  korrect-network:
+    driver: bridge
+
+volumes:
+  redis-data:

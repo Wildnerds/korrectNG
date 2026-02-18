@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: korrect-config
+  namespace: korrect
+data:
+  NODE_ENV: "production"
+  USERS_SERVICE_URL: "http://korrect-users:3001"
+  ARTISAN_SERVICE_URL: "http://korrect-artisan:3002"
+  TRANSACTION_SERVICE_URL: "http://korrect-transaction:3003"
+  MESSAGING_SERVICE_URL: "http://korrect-messaging:3004"
+  PLATFORM_SERVICE_URL: "http://korrect-platform:3005"

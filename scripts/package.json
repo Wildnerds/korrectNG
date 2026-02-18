@@ -1,0 +1,17 @@
+{
+  "name": "@korrect/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "migrate": "ts-node migrate-data.ts",
+    "migrate:dry-run": "ts-node migrate-data.ts --dry-run"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

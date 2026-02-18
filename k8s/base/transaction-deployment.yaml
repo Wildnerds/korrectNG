@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: korrect-transaction
+  namespace: korrect
+  labels:
+    app: korrect-transaction
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: korrect-transaction
+  template:
+    metadata:
+      labels:
+        app: korrect-transaction
+    spec:
+      containers:
+        - name: transaction
+          image: ghcr.io/korrect/transaction:latest
+          ports:
+            - containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: korrect-config
+            - secretRef:
+                name: korrect-secrets
+          env:
+            - name: PORT
+              value: "3003"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: korrect-secrets
+                  key: MONGODB_URI_TRANSACTIONS
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 5

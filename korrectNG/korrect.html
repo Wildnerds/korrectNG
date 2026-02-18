@@ -1,0 +1,920 @@
+# KorrectNG - Complete Wireframe Design (HTML/CSS/JS)
+
+Copy and paste this entire code into a single HTML file or use it in Claude Code.
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KorrectNG - Find Verified Artisans in Nigeria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #008751;
+            --dark-green: #006B40;
+            --orange: #FF6B35;
+            --black: #1A1A1A;
+            --gray: #666666;
+            --light-gray: #F5F5F5;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--black);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        .logo span {
+            color: var(--orange);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--black);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--dark-green);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: var(--white);
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        /* Search Box */
+        .search-box {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .form-group label {
+            color: var(--black);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 16px;
+            color: var(--black);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+
+        /* Trust Badges */
+        .trust-badges {
+            padding: 60px 0;
+            background: var(--light-gray);
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            text-align: center;
+        }
+
+        .badge-item {
+            padding: 30px;
+            background: var(--white);
+            border-radius: 12px;
+        }
+
+        .badge-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .badge-item h3 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 50px;
+            color: var(--black);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+
+        .step-card h3 {
+            margin-bottom: 10px;
+            color: var(--black);
+        }
+
+        .step-card p {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* Artisan Preview */
+        .artisan-preview {
+            padding: 80px 0;
+            background: var(--light-gray);
+        }
+
+        .artisans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .artisan-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .artisan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .artisan-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--white);
+        }
+
+        .artisan-info {
+            padding: 20px;
+        }
+
+        .verified-badge {
+            display: inline-block;
+            background: var(--primary-green);
+            color: var(--white);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .artisan-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .artisan-trade {
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .artisan-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            color: #FFA000;
+        }
+
+        .artisan-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid #E0E0E0;
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--primary-green);
+            color: var(--white);
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn-white {
+            background: var(--white);
+            color: var(--primary-green);
+        }
+
+        .btn-white:hover {
+            background: var(--light-gray);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--black);
+            color: var(--white);
+            padding: 60px 0 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-about h3 {
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+
+        .footer-links h4 {
+            margin-bottom: 15px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--white);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            line-height: 2;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+
+            .badges-grid,
+            .steps-grid,
+            .artisans-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: var(--white);
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .close:hover {
+            color: var(--black);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--primary-green);
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo">Korrect<span>NG</span></div>
+                <ul class="nav-links">
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#trades">Trades</a></li>
+                    <li><a href="#about">About</a></li>
+                </ul>
+                <div class="nav-buttons">
+                    <a href="#" class="btn btn-secondary" onclick="openModal('login')">Sign In</a>
+                    <a href="#" class="btn btn-primary" onclick="openModal('signup-artisan')">Get Verified</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Find Verified Artisans You Can Trust</h1>
+            <p>Mechanics, Electricians, Plumbers, AC Technicians - All Verified. All Accountable.</p>
+            
+            <div class="search-box">
+                <form class="search-form" onsubmit="handleSearch(event)">
+                    <div class="form-group">
+                        <label for="trade">What do you need?</label>
+                        <select id="trade" name="trade" required>
+                            <option value="">Select a trade</option>
+                            <option value="mechanic">Auto Mechanic</option>
+                            <option value="electrician">Electrician</option>
+                            <option value="plumber">Plumber</option>
+                            <option value="ac-tech">AC Technician</option>
+                            <option value="generator-tech">Generator Technician</option>
+                            <option value="phone-repair">Phone Repairer</option>
+                            <option value="tailor">Tailor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Where?</label>
+                        <input type="text" id="location" name="location" placeholder="Enter your area (e.g., Lekki)" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Badges -->
+    <section class="trust-badges">
+        <div class="container">
+            <div class="badges-grid">
+                <div class="badge-item">
+                    <div class="badge-icon">✓</div>
+                    <h3>500+ Verified Artisans</h3>
+                    <p>Every artisan verified with background checks and skills tests</p>
+                </div>
+                <div class="badge-item">
+                    <div class="badge-icon">⭐</div>
+                    <h3>4.8 Average Rating</h3>
+                    <p>Real reviews from real customers just like you</p>
+                </div>
+                <div class="badge-item">
+                    <div class="badge-icon">🛡️</div>
+                    <h3>30-Day Warranty</h3>
+                    <p>Every job comes with guaranteed warranty protection</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How KorrectNG Works</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Search</h3>
+                    <p>Enter what you need and your location to find verified artisans near you</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Compare</h3>
+                    <p>Check ratings, reviews, and work history before choosing</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Connect</h3>
+                    <p>Contact directly via WhatsApp or phone to discuss your job</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Protected</h3>
+                    <p>Get 30-day warranty and leave a review after completion</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Artisan Preview -->
+    <section class="artisan-preview" id="trades">
+        <div class="container">
+            <h2 class="section-title">Featured Verified Artisans</h2>
+            <div class="artisans-grid">
+                <div class="artisan-card">
+                    <div class="artisan-image">🔧</div>
+                    <div class="artisan-info">
+                        <span class="verified-badge">✓ VERIFIED</span>
+                        <div class="artisan-name">Emeka Motors</div>
+                        <div class="artisan-trade">Auto Mechanic - Lekki</div>
+                        <div class="artisan-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span>4.9 (47 reviews)</span>
+                        </div>
+                        <div class="artisan-stats">
+                            <span>3 years experience</span>
+                            <span>120+ jobs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artisan-card">
+                    <div class="artisan-image">⚡</div>
+                    <div class="artisan-info">
+                        <span class="verified-badge">✓ VERIFIED</span>
+                        <div class="artisan-name">Bayo Electrics</div>
+                        <div class="artisan-trade">Electrician - Victoria Island</div>
+                        <div class="artisan-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span>4.8 (62 reviews)</span>
+                        </div>
+                        <div class="artisan-stats">
+                            <span>5 years experience</span>
+                            <span>200+ jobs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artisan-card">
+                    <div class="artisan-image">❄️</div>
+                    <div class="artisan-info">
+                        <span class="verified-badge">✓ VERIFIED</span>
+                        <div class="artisan-name">CoolBreeze AC</div>
+                        <div class="artisan-trade">AC Technician - Ikoyi</div>
+                        <div class="artisan-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span>5.0 (34 reviews)</span>
+                        </div>
+                        <div class="artisan-stats">
+                            <span>4 years experience</span>
+                            <span>85+ jobs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Are You A Skilled Artisan?</h2>
+            <p>Get verified on KorrectNG and get more customers who trust quality work</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-white" onclick="openModal('signup-artisan')">Get Verified Today</a>
+                <a href="#" class="btn btn-secondary" style="border-color: white; color: white;">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <h3>KorrectNG</h3>
+                    <p>Nigeria's leading platform for verified artisans. We connect customers with skilled, accountable service providers across all trades.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>For Customers</h4>
+                    <ul>
+                        <li><a href="#">Find Artisans</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Warranty Claims</a></li>
+                        <li><a href="#">Safety Tips</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>For Artisans</h4>
+                    <ul>
+                        <li><a href="#">Get Verified</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">Success Stories</a></li>
+                        <li><a href="#">Resources</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 KorrectNG. All rights reserved. Built with pride in Nigeria 🇳🇬</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('login')">&times;</span>
+            <h2>Sign In to KorrectNG</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="email" placeholder="Email or Phone Number" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: var(--gray);">
+                Don't have an account? <a href="#" onclick="switchModal('login', 'signup-customer')" style="color: var(--primary-green);">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Customer Signup Modal -->
+    <div id="signupCustomerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('signup-customer')">&times;</span>
+            <h2>Create Customer Account</h2>
+            <form onsubmit="handleCustomerSignup(event)">
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email" required>
+                <input type="tel" placeholder="Phone Number" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: var(--gray);">
+                Already have an account? <a href="#" onclick="switchModal('signup-customer', 'login')" style="color: var(--primary-green);">Sign In</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Artisan Signup Modal -->
+    <div id="signupArtisanModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('signup-artisan')">&times;</span>
+            <h2>Get Verified as an Artisan</h2>
+            <form onsubmit="handleArtisanSignup(event)">
+                <input type="text" placeholder="Business Name" required>
+                <input type="text" placeholder="Your Full Name" required>
+                <select required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #E0E0E0; border-radius: 6px; font-size: 16px;">
+                    <option value="">Select Your Trade</option>
+                    <option value="mechanic">Auto Mechanic</option>
+                    <option value="electrician">Electrician</option>
+                    <option value="plumber">Plumber</option>
+                    <option value="ac-tech">AC Technician</option>
+                    <option value="generator-tech">Generator Technician</option>
+                    <option value="phone-repair">Phone Repairer</option>
+                    <option value="tailor">Tailor</option>
+                </select>
+                <input type="tel" placeholder="Phone Number (WhatsApp)" required>
+                <input type="email" placeholder="Email" required>
+                <input type="text" placeholder="Location (e.g., Lekki, Lagos)" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Start Verification</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; color: var(--gray); font-size: 14px;">
+                Verification fee: ₦10,000 (one-time) + ₦5,000/month subscription
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openModal(type) {
+            const modals = {
+                'login': 'loginModal',
+                'signup-customer': 'signupCustomerModal',
+                'signup-artisan': 'signupArtisanModal'
+            };
+            document.getElementById(modals[type]).style.display = 'block';
+        }
+
+        function closeModal(type) {
+            const modals = {
+                'login': 'loginModal',
+                'signup-customer': 'signupCustomerModal',
+                'signup-artisan': 'signupArtisanModal'
+            };
+            document.getElementById(modals[type]).style.display = 'none';
+        }
+
+        function switchModal(from, to) {
+            closeModal(from);
+            openModal(to);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Form Handlers
+        function handleSearch(event) {
+            event.preventDefault();
+            const trade = document.getElementById('trade').value;
+            const location = document.getElementById('location').value;
+            alert(`Searching for ${trade} in ${location}...\n\nIn the real app, this would show search results!`);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            alert('Login functionality would connect to backend API here!');
+            closeModal('login');
+        }
+
+        function handleCustomerSignup(event) {
+            event.preventDefault();
+            alert('Customer signup would create account via backend API!');
+            closeModal('signup-customer');
+        }
+
+        function handleArtisanSignup(event) {
+            event.preventDefault();
+            alert('Artisan signup would start verification process!\n\nNext steps:\n1. Submit documents\n2. Skills test\n3. Pay verification fee\n4. Get approved');
+            closeModal('signup-artisan');
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && document.querySelector(href)) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+---
+
+## **What This Wireframe Includes:**
+
+✅ **Complete Homepage Layout**
+- Navigation with logo, links, sign-in/get-verified buttons
+- Hero section with search functionality
+- Trust badges (500+ verified, 4.8 rating, 30-day warranty)
+- How It Works section (4 steps)
+- Featured artisan cards with ratings
+- CTA section for artisans
+- Full footer with links
+
+✅ **Interactive Elements**
+- Working search form
+- Modal popups for login, customer signup, artisan signup
+- Smooth scrolling
+- Hover effects on cards and buttons
+
+✅ **Responsive Design**
+- Mobile-friendly breakpoints
+- Grid layouts that stack on mobile
+- Touch-friendly buttons
+
+✅ **Brand Colors**
+- Nigerian green (#008751) as primary
+- Orange accent (#FF6B35)
+- Clean, modern aesthetic
+
+---
+
+## **How to Use:**
+
+1. **Copy the entire code above**
+2. **Create a new file:** `korrectng-wireframe.html`
+3. **Paste the code and save**
+4. **Open in browser** to see the full design
+5. **Or use in Claude Code in VSCode** to iterate and customize
+
+---
+
+## **Next Steps to Make it Real:**
+
+1. **Backend Integration:**
+   - Replace `alert()` functions with actual API calls
+   - Connect to database for artisan profiles
+   - Implement real authentication
+
+2. **Additional Pages to Build:**
+   - Search results page
+   - Artisan profile detail page
+   - Customer dashboard
+   - Artisan dashboard
+   - Verification application flow
+
+3. **Features to Add:**
+   - Real image uploads for artisans
+   - Star rating system
+   - Review submission form
+   - Warranty claim form
+   - WhatsApp integration (WhatsApp Business API)
+
+Want me to build any of these additional pages or features?
