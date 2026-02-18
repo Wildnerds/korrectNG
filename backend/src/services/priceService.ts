@@ -48,7 +48,7 @@ export async function getForexRate(): Promise<number> {
     const response = await fetch(
       'https://api.exchangerate-api.com/v4/latest/USD'
     );
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (data.rates?.NGN) {
       forexCache = {
