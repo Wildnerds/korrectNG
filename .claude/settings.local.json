@@ -43,7 +43,20 @@
       "Bash(npm run render:build:*)",
       "Bash(ls:*)",
       "Bash(node dist/server.js:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:web:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm why:*)",
+      "Bash(npm run vercel:build:*)",
+      "Bash(pnpm --version:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm run vercel:build:*)",
+      "Bash(git status:*)",
+      "Bash(git rm:*)",
+      "Bash(pnpm dev:web:*)"
     ]
   }
 }
