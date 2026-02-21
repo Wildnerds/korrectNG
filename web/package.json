@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
+    "build:vercel": "cd .. && pnpm --filter @korrectng/shared build && cd web && next build",
     "start": "next start",
     "lint": "next lint"
   },
