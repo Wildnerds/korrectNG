@@ -59,11 +59,11 @@ export default function WarrantyClaimsPage() {
     const token = Cookies.get('token');
     setLoading(true);
     try {
-      const res = await apiFetch<{ data: { data: WarrantyClaim[] } }>(
+      const res = await apiFetch<{ data: WarrantyClaim[] }>(
         `/admin/warranty?status=${filter}`,
         { token }
       );
-      setClaims(res.data?.data || []);
+      setClaims(res.data?.data ?? []);
     } catch {
       showToast('Failed to load warranty claims', 'error');
     } finally {

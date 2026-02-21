@@ -42,7 +42,8 @@
       "Bash(git update-ref:*)",
       "Bash(npm run render:build:*)",
       "Bash(ls:*)",
-      "Bash(node dist/server.js:*)"
+      "Bash(node dist/server.js:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }
