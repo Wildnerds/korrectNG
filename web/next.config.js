@@ -12,7 +12,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@korrectng/shared'],
+  transpilePackages: ['@korrectng/shared', 'react-markdown'],
   images: {
     remotePatterns: [
       {
