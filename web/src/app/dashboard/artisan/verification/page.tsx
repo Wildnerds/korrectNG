@@ -9,7 +9,7 @@ import { TRADES, LOCATIONS, formatNaira, slugify } from '@korrectng/shared';
 import type { VerificationApplication, ArtisanProfile } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 
-const STEPS = ['personal-info', 'documents', 'review'] as const;
+const STEPS = ['personal-info', 'documents', 'payment', 'review'] as const;
 type Step = (typeof STEPS)[number];
 
 export default function VerificationPage() {
