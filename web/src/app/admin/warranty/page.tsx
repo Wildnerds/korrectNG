@@ -63,7 +63,7 @@ export default function WarrantyClaimsPage() {
         `/admin/warranty?status=${filter}`,
         { token }
       );
-      setClaims(res.data?.data ?? []);
+      setClaims((res.data?.data as WarrantyClaim[]) || []);
     } catch {
       showToast('Failed to load warranty claims', 'error');
     } finally {
