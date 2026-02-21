@@ -12,8 +12,8 @@
     "mobile"
   ],
   "scripts": {
-    "render:build": "pnpm build:shared && pnpm build:backend",
-    "render:start": "cd backend && pnpm exec tsx src/server.ts",
+    "render:build": "npm i -g pnpm && pnpm install --frozen-lockfile && pnpm build:shared && pnpm build:backend",
+    "render:start": "cd backend && npx tsx src/server.ts",
     "vercel:build": "pnpm build:shared && pnpm build:web",
     "dev:backend": "pnpm --filter @korrectng/backend dev",
     "dev:web": "pnpm --filter @korrectng/web dev",
