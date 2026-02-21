@@ -1,0 +1,4 @@
+{
+  "installCommand": "npm i -g pnpm && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm run vercel:build"
+}

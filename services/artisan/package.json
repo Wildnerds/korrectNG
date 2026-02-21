@@ -10,12 +10,12 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@korrect/auth-middleware": "1.0.0",
-    "@korrect/event-bus": "1.0.0",
-    "@korrect/health": "1.0.0",
-    "@korrect/logger": "1.0.0",
-    "@korrect/service-client": "1.0.0",
-    "@korrectng/shared": "1.0.0",
+    "@korrect/auth-middleware": "workspace:*",
+    "@korrect/event-bus": "workspace:*",
+    "@korrect/health": "workspace:*",
+    "@korrect/logger": "workspace:*",
+    "@korrect/service-client": "workspace:*",
+    "@korrectng/shared": "workspace:*",
     "cloudinary": "^1.41.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

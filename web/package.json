@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "preinstall": "cd ../shared && npm install && npm run build",
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
@@ -11,11 +10,11 @@
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
-    "@korrectng/shared": "*",
+    "@korrectng/shared": "workspace:*",
     "js-cookie": "^3.0.5",
     "next": "^14.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
     "sharp": "^0.34.5"
   },

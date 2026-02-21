@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -6,6 +6,10 @@ import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 import InstallPrompt from '@/components/InstallPrompt';
 import { ToastProvider } from '@/components/Toast';
 import { AuthProvider } from '@/context/AuthContext';
+
+export const viewport: Viewport = {
+  themeColor: '#22C55E',
+};
 
 export const metadata: Metadata = {
   title: {
@@ -23,7 +27,6 @@ export const metadata: Metadata = {
     'trusted artisans',
   ],
   manifest: '/manifest.json',
-  themeColor: '#22C55E',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

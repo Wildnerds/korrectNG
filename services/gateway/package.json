@@ -10,9 +10,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@korrect/auth-middleware": "1.0.0",
-    "@korrect/health": "1.0.0",
-    "@korrect/logger": "1.0.0",
+    "@korrect/auth-middleware": "workspace:*",
+    "@korrect/health": "workspace:*",
+    "@korrect/logger": "workspace:*",
     "@sentry/node": "^7.100.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",

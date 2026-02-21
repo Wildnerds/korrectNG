@@ -10,7 +10,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@korrectng/shared": "*",
+    "@korrectng/shared": "workspace:*",
     "@react-native-picker/picker": "^2.6.1",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",

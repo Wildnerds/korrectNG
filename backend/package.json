@@ -13,7 +13,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@korrectng/shared": "*",
+    "@korrectng/shared": "workspace:*",
     "@sentry/node": "^8.0.0",
     "@types/sharp": "^0.31.1",
     "axios": "^1.13.5",

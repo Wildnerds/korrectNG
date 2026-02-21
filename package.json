@@ -12,30 +12,27 @@
     "mobile"
   ],
   "scripts": {
-    "render:build": "npm run build:shared && npm run build:backend",
-    "render:start": "cd backend && npx tsx src/server.ts",
-    "vercel:build": "npm run build:shared && npm run build:web",
-    "dev:backend": "npm run dev --workspace=backend",
-    "dev:web": "npm run dev --workspace=web",
-    "dev:mobile": "npm run start --workspace=mobile",
-    "dev:gateway": "npm run dev --workspace=@korrect/gateway",
-    "dev:users": "npm run dev --workspace=@korrect/users-service",
-    "build:shared": "npm run build --workspace=shared",
-    "build:packages": "npm run build --workspace=@korrect/auth-middleware && npm run build --workspace=@korrect/event-bus && npm run build --workspace=@korrect/logger && npm run build --workspace=@korrect/service-client && npm run build --workspace=@korrect/health",
-    "build:backend": "npm run build --workspace=backend",
-    "build:web": "npm run build --workspace=web",
-    "build:gateway": "npm run build --workspace=@korrect/gateway",
-    "build:users": "npm run build --workspace=@korrect/users-service",
+    "render:build": "pnpm build:shared && pnpm build:backend",
+    "render:start": "cd backend && pnpm exec tsx src/server.ts",
+    "vercel:build": "pnpm build:shared && pnpm build:web",
+    "dev:backend": "pnpm --filter @korrectng/backend dev",
+    "dev:web": "pnpm --filter @korrectng/web dev",
+    "dev:mobile": "pnpm --filter @korrectng/mobile start",
+    "dev:gateway": "pnpm --filter @korrect/gateway dev",
+    "dev:users": "pnpm --filter @korrect/users-service dev",
+    "build:shared": "pnpm --filter @korrectng/shared build",
+    "build:packages": "pnpm --filter @korrect/auth-middleware build && pnpm --filter @korrect/event-bus build && pnpm --filter @korrect/logger build && pnpm --filter @korrect/service-client build && pnpm --filter @korrect/health build",
+    "build:backend": "pnpm --filter @korrectng/backend build",
+    "build:web": "pnpm --filter @korrectng/web build",
+    "build:gateway": "pnpm --filter @korrect/gateway build",
+    "build:users": "pnpm --filter @korrect/users-service build",
     "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker-compose -f docker/docker-compose.yml down",
     "docker:logs": "docker-compose -f docker/docker-compose.yml logs -f",
-    "seed": "npm run seed --workspace=backend",
-    "lint": "npm run lint --workspaces --if-present"
+    "seed": "pnpm --filter @korrectng/backend seed",
+    "lint": "pnpm -r lint"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "react-markdown": "^10.1.0"
   }
 }
