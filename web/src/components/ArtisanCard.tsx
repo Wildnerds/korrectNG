@@ -11,7 +11,7 @@ export default function ArtisanCard({ artisan }: Props) {
     <Link href={`/artisan/${artisan.slug}`}>
       <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <div className="h-48 bg-gradient-to-br from-brand-green to-brand-green-dark flex items-center justify-center">
-          {artisan.user?.avatar ? (
+          {typeof artisan.user === 'object' && artisan.user?.avatar ? (
             <img
               src={artisan.user.avatar}
               alt={artisan.businessName}
