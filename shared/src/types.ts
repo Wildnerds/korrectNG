@@ -308,6 +308,7 @@ export interface EscrowRelease {
   releasedAt: string;
   releasedBy: string;
   paystackTransferRef?: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
 }
 
 export interface EscrowStatusHistory {
