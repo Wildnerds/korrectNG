@@ -56,10 +56,9 @@ app.use(
       if (!origin) return callback(null, true);
 
       // Check exact match or Vercel preview URLs
-      const isAllowed = allowedOrigins.some(allowed =>
-        origin === allowed ||
-        (allowed.includes('vercel.app') && origin.endsWith('.vercel.app'))
-      );
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app'); // Allow all Vercel preview deployments
 
       if (isAllowed) {
         callback(null, true);
