@@ -8,6 +8,10 @@ const TOKEN_LENGTH = 32;
 // Routes that should skip CSRF validation
 const CSRF_EXEMPT_ROUTES = [
   '/api/v1/payments/webhook', // Paystack webhooks
+  '/api/v1/auth/register', // Registration doesn't have session yet
+  '/api/v1/auth/login', // Login doesn't have session yet
+  '/api/v1/auth/forgot-password', // No session
+  '/api/v1/auth/reset-password', // No session
   '/api/health',
 ];
 
@@ -66,7 +70,7 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false, // Must be readable by JavaScript
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // 'none' for cross-origin
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
     });
@@ -133,7 +137,7 @@ export function getCsrfToken(req: Request, res: Response): void {
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // 'none' for cross-origin
       maxAge: 24 * 60 * 60 * 1000,
       path: '/',
     });

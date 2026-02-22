@@ -14,10 +14,11 @@ const router = Router();
 function sendTokenResponse(user: any, statusCode: number, res: Response) {
   const token = user.getSignedJwtToken();
   const cookieExpire = parseInt(process.env.COOKIE_EXPIRE || '30', 10);
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-origin
     maxAge: cookieExpire * 24 * 60 * 60 * 1000,
   });
 
