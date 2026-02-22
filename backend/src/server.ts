@@ -40,9 +40,33 @@ initSentry(app);
 
 // Security
 app.use(helmet());
+
+// Parse allowed origins from CLIENT_URL (comma-separated) and add defaults
+const allowedOrigins = [
+  ...(process.env.CLIENT_URL?.split(',').map(url => url.trim()) || ['http://localhost:3000']),
+  'https://korrectng.ng',
+  'https://www.korrectng.ng',
+  'exp://localhost:8081',
+];
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'exp://localhost:8081'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check exact match or Vercel preview URLs
+      const isAllowed = allowedOrigins.some(allowed =>
+        origin === allowed ||
+        (allowed.includes('vercel.app') && origin.endsWith('.vercel.app'))
+      );
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS not allowed for origin: ${origin}`));
+      }
+    },
     credentials: true,
     exposedHeaders: ['X-Refreshed-Token'],
   })
