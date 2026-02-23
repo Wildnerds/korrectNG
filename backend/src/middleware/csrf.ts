@@ -8,12 +8,7 @@ const TOKEN_LENGTH = 32;
 // Routes that should skip CSRF validation
 const CSRF_EXEMPT_ROUTES = [
   '/api/v1/payments/webhook', // Paystack webhooks
-  '/api/v1/auth/register', // Registration doesn't have session yet
-  '/api/v1/auth/login', // Login doesn't have session yet
-  '/api/v1/auth/forgot-password', // No session
-  '/api/v1/auth/reset-password', // No session
-  '/api/v1/auth/verify-email', // Email verification from link
-  '/api/v1/auth/resend-verification', // Resend verification email
+  '/api/v1/auth/', // All auth routes - protected by Bearer token
   '/api/health',
 ];
 
