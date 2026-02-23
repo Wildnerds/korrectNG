@@ -107,10 +107,10 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
   const isCompact = variant === 'compact';
 
   return (
-    <div className={`${isCompact ? 'bg-white rounded-xl shadow-lg' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-6 md:p-8 max-w-4xl mx-auto overflow-visible`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-visible">
+    <div className={`${isCompact ? 'bg-white rounded-xl shadow-lg' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} px-6 py-6 md:px-10 md:py-8 max-w-4xl mx-auto overflow-visible`}>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 overflow-visible">
         {/* Trade Selector */}
-        <div ref={tradeRef}>
+        <div className="w-full md:w-1/2" ref={tradeRef}>
           <label className={`block text-sm font-semibold mb-2 ${isCompact ? 'text-brand-black' : 'text-white/90'}`}>
             What do you need?
           </label>
@@ -175,7 +175,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
         </div>
 
         {/* Location Input */}
-        <div ref={locationRef}>
+        <div className="w-full md:w-1/2" ref={locationRef}>
           <label className={`block text-sm font-semibold mb-2 ${isCompact ? 'text-brand-black' : 'text-white/90'}`}>
             Where?
           </label>
