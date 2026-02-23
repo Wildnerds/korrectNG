@@ -67,6 +67,17 @@ export default function ArtisanProfileScreen() {
 
   const handleWhatsApp = () => {
     if (!artisan) return;
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to contact artisans', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => router.push('/(auth)/login') },
+      ]);
+      return;
+    }
+    if (!user.isEmailVerified) {
+      Alert.alert('Email Verification Required', 'Please verify your email before contacting artisans');
+      return;
+    }
     const link = getWhatsAppLink(
       artisan.whatsappNumber,
       `Hi, I found you on KorrectNG. I need a ${getTradeLabel(artisan.trade)}.`
@@ -76,17 +87,35 @@ export default function ArtisanProfileScreen() {
 
   const handleCall = () => {
     if (!artisan) return;
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to contact artisans', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => router.push('/(auth)/login') },
+      ]);
+      return;
+    }
+    if (!user.isEmailVerified) {
+      Alert.alert('Email Verification Required', 'Please verify your email before contacting artisans');
+      return;
+    }
     const link = getPhoneLink(artisan.phoneNumber);
     Linking.openURL(link).catch(() => Alert.alert('Error', 'Could not make call'));
   };
 
   const handleBookmark = async () => {
     if (!artisan) return;
-    const token = await getToken();
-    if (!token) {
-      Alert.alert('Sign In', 'Please sign in to bookmark artisans');
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to bookmark artisans', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => router.push('/(auth)/login') },
+      ]);
       return;
     }
+    if (!user.isEmailVerified) {
+      Alert.alert('Email Verification Required', 'Please verify your email before saving artisans');
+      return;
+    }
+    const token = await getToken();
     try {
       await apiFetch(`/artisans/${artisan._id}/bookmark`, { method: 'POST', token });
       Alert.alert('Success', 'Artisan bookmarked!');
