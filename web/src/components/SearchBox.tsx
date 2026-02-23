@@ -108,9 +108,9 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
 
   return (
     <div className={`${isCompact ? 'bg-white rounded-xl shadow-lg' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-4 md:p-6 max-w-4xl mx-auto overflow-visible`}>
-      <div className="flex flex-col md:flex-row gap-4 overflow-visible">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
         {/* Trade Selector */}
-        <div className="flex-1 min-w-0 md:flex-[1_1_0%]" ref={tradeRef}>
+        <div ref={tradeRef}>
           <label className={`block text-sm font-semibold mb-2 ${isCompact ? 'text-brand-black' : 'text-white/90'}`}>
             What do you need?
           </label>
@@ -175,7 +175,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
         </div>
 
         {/* Location Input */}
-        <div className="flex-1 min-w-0 md:flex-[1_1_0%]" ref={locationRef}>
+        <div ref={locationRef}>
           <label className={`block text-sm font-semibold mb-2 ${isCompact ? 'text-brand-black' : 'text-white/90'}`}>
             Where?
           </label>
@@ -242,14 +242,17 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
           </div>
         </div>
 
-        {/* Search indicator / Clear button */}
-        <div className="flex items-end">
+      </div>
+
+      {/* Search indicator / Clear button */}
+      {(isSearching || trade || location) && (
+        <div className="flex justify-center mt-4">
           {isSearching ? (
             <div className={`px-6 py-3.5 rounded-xl flex items-center gap-2 ${isCompact ? 'bg-brand-green/10' : 'bg-white/20'}`}>
               <div className="w-5 h-5 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
               <span className={isCompact ? 'text-brand-green' : 'text-white'}>Searching...</span>
             </div>
-          ) : (trade || location) ? (
+          ) : (
             <button
               onClick={clearFilters}
               className={`px-6 py-3.5 rounded-xl font-medium transition-all flex items-center gap-2 ${
@@ -261,11 +264,11 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Clear
+              Clear Filters
             </button>
-          ) : null}
+          )}
         </div>
-      </div>
+      )}
 
       {/* Quick Trade Filters - Only show on hero variant */}
       {variant === 'hero' && (
