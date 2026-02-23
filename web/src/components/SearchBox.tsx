@@ -107,8 +107,8 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
   const isCompact = variant === 'compact';
 
   return (
-    <div className={`${isCompact ? 'bg-white rounded-xl shadow-lg' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-4 md:p-6 max-w-4xl mx-auto overflow-visible`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
+    <div className={`${isCompact ? 'bg-white rounded-xl shadow-lg' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-6 md:p-8 max-w-4xl mx-auto overflow-visible`}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-visible">
         {/* Trade Selector */}
         <div ref={tradeRef}>
           <label className={`block text-sm font-semibold mb-2 ${isCompact ? 'text-brand-black' : 'text-white/90'}`}>
@@ -118,7 +118,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
             <button
               type="button"
               onClick={() => setShowTradeDropdown(!showTradeDropdown)}
-              className={`w-full px-4 py-3.5 rounded-xl text-left flex items-center justify-between transition-all ${
+              className={`w-full h-[52px] px-4 rounded-xl text-left flex items-center justify-between transition-all ${
                 isCompact
                   ? 'bg-gray-50 border-2 border-gray-200 hover:border-brand-green focus:border-brand-green text-brand-black'
                   : 'bg-white text-brand-black hover:shadow-md'
@@ -193,7 +193,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
                 onChange={(e) => handleLocationInput(e.target.value)}
                 onFocus={() => setShowLocationDropdown(true)}
                 placeholder="Enter your area"
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl transition-all ${
+                className={`w-full h-[52px] pl-12 pr-4 rounded-xl transition-all ${
                   isCompact
                     ? 'bg-gray-50 border-2 border-gray-200 hover:border-brand-green focus:border-brand-green focus:outline-none text-brand-black'
                     : 'bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-green/50'
