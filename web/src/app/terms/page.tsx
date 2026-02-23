@@ -74,10 +74,10 @@ export default function TermsOfServicePage() {
               <li>Photos of previous work</li>
             </ul>
 
-            <h3>4.2 Verification Fee</h3>
+            <h3>4.2 Verification Cost</h3>
             <p>
-              A one-time verification fee of ₦10,000 (Ten Thousand Naira) is required to process verification
-              applications. This fee is non-refundable regardless of the outcome of the verification process.
+              Verification is FREE. KorrectNG charges a 10% platform commission on completed jobs only.
+              Artisans only pay when they earn.
             </p>
 
             <h3>4.3 Verification Status</h3>
@@ -86,11 +86,11 @@ export default function TermsOfServicePage() {
               the artisan has provided valid identification and credentials as of the verification date.
             </p>
 
-            <h2>5. Subscription for Artisans</h2>
+            <h2>5. Platform Commission</h2>
             <p>
-              Verified artisans must maintain an active subscription of ₦5,000 (Five Thousand Naira) per month
-              to appear in search results and receive customer inquiries. Subscriptions are billed monthly and
-              may be cancelled at any time.
+              KorrectNG charges a 10% commission on all completed jobs paid through the platform. This fee is
+              automatically deducted when payment is released to the artisan. There are no monthly fees or
+              subscription charges.
             </p>
 
             <h2>6. Platform Protection Program</h2>
@@ -144,8 +144,9 @@ export default function TermsOfServicePage() {
 
             <h2>8. Payment Terms</h2>
             <p>
-              All payments for verification fees and subscriptions are processed through Paystack. By making
-              a payment, you agree to Paystack's terms of service. KorrectNG does not store payment card details.
+              All payments are processed through Paystack. By making a payment, you agree to Paystack's terms
+              of service. KorrectNG does not store payment card details. The 10% platform commission is automatically
+              deducted when funds are released to artisans.
             </p>
 
             <h2>9. Limitation of Liability</h2>

@@ -112,7 +112,7 @@ function RegisterForm() {
 
         {form.role === 'artisan' && (
           <p className="text-center mt-4 text-sm text-brand-gray">
-            Verification fee: ₦10,000 (one-time) + ₦5,000/month subscription
+            Free to join • 10% commission on completed jobs only
           </p>
         )}
 

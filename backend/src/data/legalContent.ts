@@ -147,9 +147,8 @@ Customers pay the contract amount directly, with no additional platform fees.
 
 ### 8.2 Artisan Fees
 Artisans pay:
-- One-time verification fee: ₦10,000
-- Monthly subscription: ₦5,000
-- Platform commission: 10% of each contract
+- Verification: FREE
+- Platform commission: 10% of each completed job (deducted automatically from payment)
 
 ### 8.3 Refund Policy
 Refunds are processed according to our dispute resolution outcomes. Platform fees may be non-refundable in certain circumstances.

@@ -19,6 +19,7 @@ router.post('/apply', verificationLimiter, protect, authorize('artisan'), requir
 
     const application = await VerificationApplication.create({
       artisan: artisan._id,
+      paymentStatus: 'paid', // Verification is free - platform takes 10% from transactions instead
     });
 
     res.status(201).json({ success: true, data: application });
