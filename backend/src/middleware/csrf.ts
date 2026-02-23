@@ -12,6 +12,8 @@ const CSRF_EXEMPT_ROUTES = [
   '/api/v1/auth/login', // Login doesn't have session yet
   '/api/v1/auth/forgot-password', // No session
   '/api/v1/auth/reset-password', // No session
+  '/api/v1/auth/verify-email', // Email verification from link
+  '/api/v1/auth/resend-verification', // Resend verification email
   '/api/health',
 ];
 
