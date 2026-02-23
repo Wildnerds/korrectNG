@@ -1,5 +1,5 @@
 'use client';
-
+// SearchBox v2 - equal width fix
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TRADES, LOCATIONS } from '@korrectng/shared';
