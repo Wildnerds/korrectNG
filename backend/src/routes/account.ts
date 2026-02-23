@@ -1,7 +1,7 @@
-import { Router, Request, Response } from 'express';
-import { auth } from '../middleware/auth';
+import { Router, Response } from 'express';
+import { auth, AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
-import ArtisanProfile from '../models/ArtisanProfile';
+import { ArtisanProfile } from '../models/ArtisanProfile';
 import Booking from '../models/Booking';
 import { sendOTP, verifyOTP } from '../services/sms';
 import { sendEmail } from '../utils/email';
@@ -14,7 +14,7 @@ const router = Router();
  * @desc    Get current user account details
  * @access  Private
  */
-router.get('/', auth, async (req: Request, res: Response) => {
+router.get('/', auth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id).select('-password');
 
@@ -55,10 +55,10 @@ router.get('/', auth, async (req: Request, res: Response) => {
       const profile = await ArtisanProfile.findOne({ user: user._id }).lean();
       if (profile) {
         stats.businessName = profile.businessName;
-        stats.isVerified = profile.isVerified;
+        stats.isVerified = profile.verificationStatus === 'approved';
         stats.totalReviews = profile.totalReviews;
         stats.averageRating = profile.averageRating;
-        stats.profileViews = profile.profileViews;
+        stats.trustScore = profile.trustScore;
       }
 
       const bookingStats = await Booking.aggregate([
@@ -102,14 +102,15 @@ router.get('/', auth, async (req: Request, res: Response) => {
  * @desc    Update user profile
  * @access  Private
  */
-router.put('/profile', auth, async (req: Request, res: Response) => {
+router.put('/profile', auth, async (req: AuthRequest, res: Response) => {
   try {
-    const { firstName, lastName, phone, avatar } = req.body;
+    const { firstName, lastName, phone, avatar, address } = req.body;
 
     const updateData: any = {};
     if (firstName) updateData.firstName = firstName.trim();
     if (lastName) updateData.lastName = lastName.trim();
     if (avatar) updateData.avatar = avatar;
+    if (address) updateData.address = address.trim();
 
     // If phone changed, mark as unverified
     if (phone && phone !== req.user!.phone) {
@@ -117,13 +118,33 @@ router.put('/profile', auth, async (req: Request, res: Response) => {
       updateData.isPhoneVerified = false;
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.user!._id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    ).select('-password');
+    // Fetch user to calculate isProfileComplete
+    const user = await User.findById(req.user!._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-    res.json({ success: true, data: { user } });
+    // Apply updates
+    Object.assign(user, updateData);
+
+    // Recalculate isProfileComplete for customers
+    if (user.role === 'customer') {
+      user.isProfileComplete = !!(user.firstName && user.lastName && user.phone && user.address);
+    }
+
+    await user.save();
+
+    // Return user without password
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.json({
+      success: true,
+      data: {
+        user: userObj,
+        isProfileComplete: user.isProfileComplete
+      }
+    });
   } catch (error) {
     log.error('Update profile error', { error });
     res.status(500).json({ success: false, message: 'Server error' });
@@ -135,7 +156,7 @@ router.put('/profile', auth, async (req: Request, res: Response) => {
  * @desc    Change password
  * @access  Private
  */
-router.put('/password', auth, async (req: Request, res: Response) => {
+router.put('/password', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -194,7 +215,7 @@ router.put('/password', auth, async (req: Request, res: Response) => {
  * @desc    Update notification settings
  * @access  Private
  */
-router.put('/settings', auth, async (req: Request, res: Response) => {
+router.put('/settings', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { smsNotifications, emailNotifications, pushNotifications, marketingEmails } = req.body;
 
@@ -222,7 +243,7 @@ router.put('/settings', auth, async (req: Request, res: Response) => {
  * @desc    Send OTP to verify phone number
  * @access  Private
  */
-router.post('/verify-phone/send', auth, async (req: Request, res: Response) => {
+router.post('/verify-phone/send', auth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id);
     if (!user) {
@@ -263,7 +284,7 @@ router.post('/verify-phone/send', auth, async (req: Request, res: Response) => {
  * @desc    Verify phone with OTP
  * @access  Private
  */
-router.post('/verify-phone/confirm', auth, async (req: Request, res: Response) => {
+router.post('/verify-phone/confirm', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { otp } = req.body;
 
@@ -313,7 +334,7 @@ router.post('/verify-phone/confirm', auth, async (req: Request, res: Response) =
  * @desc    Deactivate account (reversible)
  * @access  Private
  */
-router.post('/deactivate', auth, async (req: Request, res: Response) => {
+router.post('/deactivate', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { reason, password } = req.body;
 
@@ -386,7 +407,7 @@ router.post('/deactivate', auth, async (req: Request, res: Response) => {
  * @desc    Reactivate a deactivated account
  * @access  Private
  */
-router.post('/reactivate', auth, async (req: Request, res: Response) => {
+router.post('/reactivate', auth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id);
     if (!user) {
@@ -428,7 +449,7 @@ router.post('/reactivate', auth, async (req: Request, res: Response) => {
  * @desc    Permanently delete account (GDPR compliance)
  * @access  Private
  */
-router.delete('/', auth, async (req: Request, res: Response) => {
+router.delete('/', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { password, confirmText } = req.body;
 
@@ -524,7 +545,7 @@ router.delete('/', auth, async (req: Request, res: Response) => {
  * @desc    Export user data (GDPR/NDPR compliance)
  * @access  Private
  */
-router.get('/export', auth, async (req: Request, res: Response) => {
+router.get('/export', auth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id).select('-password').lean();
     if (!user) {

@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { protect, restrictTo } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import EscrowPayment from '../models/EscrowPayment';
+import EscrowPayment, { IEscrowPayment } from '../models/EscrowPayment';
 import JobContract from '../models/JobContract';
-import User from '../models/User';
+import { User } from '../models/User';
 import {
   createEscrow,
   fundEscrow,
@@ -85,7 +85,7 @@ router.post(
       const { callbackUrl } = req.body;
 
       // Get or create escrow
-      let escrow = await EscrowPayment.findOne({ contract: contractId });
+      let escrow: IEscrowPayment | null = await EscrowPayment.findOne({ contract: contractId });
 
       if (!escrow) {
         // Auto-create escrow if contract is signed
@@ -145,7 +145,7 @@ router.post(
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { status: boolean; message?: string; data: { authorization_url: string; reference: string } };
 
       if (!data.status) {
         log.error('Paystack escrow initialization failed', {

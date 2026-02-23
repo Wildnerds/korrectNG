@@ -170,7 +170,22 @@ async function verifyWithDojah(request: VerificationRequest): Promise<Verificati
       },
     });
 
-    const data = await response.json();
+    const data = await response.json() as {
+      error?: string;
+      entity?: {
+        first_name?: string;
+        firstName?: string;
+        last_name?: string;
+        lastName?: string;
+        date_of_birth?: string;
+        dateOfBirth?: string;
+        gender?: string;
+        phone_number?: string;
+        phoneNumber?: string;
+        photo?: string;
+        image?: string;
+      }
+    };
 
     if (!response.ok) {
       log.error('Dojah API error', { error: data });

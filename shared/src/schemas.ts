@@ -17,10 +17,12 @@ import {
 // ─── Auth Schemas ────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+  // Optional at registration - required for profile completion
+  firstName: z.string().min(2, 'First name must be at least 2 characters').max(50).optional(),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50).optional(),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits').max(15).optional(),
+  // Required at registration
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits').max(15),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -123,6 +125,7 @@ export const verificationPersonalInfoSchema = z.object({
 // ─── Warranty Schemas ────────────────────────────────────────────────────────
 
 export const warrantyClaimSchema = z.object({
+  bookingId: z.string().min(1, 'Booking ID is required'),  // Required - must link to a booking
   artisanId: z.string().min(1, 'Artisan ID is required'),
   jobDescription: z.string().min(10, 'Job description must be at least 10 characters').max(1000),
   issueDescription: z.string().min(10, 'Issue description must be at least 10 characters').max(1000),

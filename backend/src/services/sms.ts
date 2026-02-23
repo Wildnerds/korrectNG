@@ -20,7 +20,7 @@ const SMS_TEMPLATES = {
     `KorrectNG: ${artisanName} has marked your job as complete. Please confirm in the app to release payment.`,
 
   payment_received: (amount: number) =>
-    `KorrectNG: Payment of NGN${amount.toLocaleString()} received! Your 30-day warranty is now active.`,
+    `KorrectNG: Payment of NGN${amount.toLocaleString()} received! Your 7-day protection period is now active.`,
 
   new_booking: (customerName: string) =>
     `KorrectNG: New booking request from ${customerName}! Open the app to accept or decline.`,

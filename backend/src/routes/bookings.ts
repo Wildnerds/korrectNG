@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { protect, restrictTo } from '../middleware/auth';
+import { protect, restrictTo, requireProfileComplete } from '../middleware/auth';
 import Booking, { BookingStatus } from '../models/Booking';
-import ArtisanProfile from '../models/ArtisanProfile';
-import User from '../models/User';
+import { ArtisanProfile } from '../models/ArtisanProfile';
+import { User } from '../models/User';
 import Conversation from '../models/Conversation';
 import { z } from 'zod';
 import { createNotification, notificationTemplates } from '../services/notifications';
@@ -35,9 +35,9 @@ const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 /**
  * @route   POST /api/v1/bookings
  * @desc    Create a new booking request
- * @access  Private (Customer)
+ * @access  Private (Customer with complete profile)
  */
-router.post('/', bookingLimiter, protect, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validation = createBookingSchema.safeParse(req.body);
 
@@ -417,7 +417,7 @@ router.post('/:id/pay', protect, async (req: Request, res: Response, next: NextF
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean; message?: string; data: { authorization_url: string; reference: string } };
 
     if (!data.status) {
       log.error('Paystack initialization failed', { error: data.message, bookingId });
@@ -626,6 +626,157 @@ router.post('/:id/dispute', protect, async (req: Request, res: Response, next: N
     res.status(200).json({
       success: true,
       message: 'Dispute opened. Our team will review and contact you within 24 hours.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/complete
+ * @desc    Artisan marks job as complete (starts certification countdown)
+ * @access  Private (Artisan)
+ */
+router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify artisan owns this booking
+    if (booking.artisan.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to update this booking',
+      });
+    }
+
+    // Can only mark complete if in_progress
+    if (booking.status !== 'in_progress') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only mark jobs as complete that are in progress',
+      });
+    }
+
+    const now = new Date();
+    const certificationDeadline = new Date(now);
+    certificationDeadline.setDate(certificationDeadline.getDate() + 3); // 3 days to certify
+
+    booking.status = 'completed';
+    booking.completedAt = now;
+    booking.jobCompletedAt = now;
+    booking.certificationDeadline = certificationDeadline;
+    (booking as any)._statusChangedBy = userId;
+    await booking.save();
+
+    // Send notification to customer
+    const artisan = await User.findById(userId);
+    await createNotification(
+      booking.customer.toString(),
+      notificationTemplates.bookingCompleted(
+        `${artisan?.firstName} ${artisan?.lastName}`,
+        bookingId
+      )
+    );
+
+    const populatedBooking = await Booking.findById(bookingId)
+      .populate('customer', 'firstName lastName email phone avatar')
+      .populate('artisan', 'firstName lastName email phone avatar')
+      .populate('artisanProfile', 'businessName slug trade');
+
+    res.status(200).json({
+      success: true,
+      message: 'Job marked as complete. Customer has 3 days to certify.',
+      data: {
+        booking: populatedBooking,
+        certificationDeadline,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/certify
+ * @desc    Customer certifies job completion (starts 7-day grace period, releases escrow)
+ * @access  Private (Customer)
+ */
+router.post('/:id/certify', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify customer owns this booking
+    if (booking.customer.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized',
+      });
+    }
+
+    // Can only certify completed jobs
+    if (booking.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only certify completed jobs',
+      });
+    }
+
+    const now = new Date();
+    const gracePeriodExpiry = new Date(now);
+    gracePeriodExpiry.setDate(gracePeriodExpiry.getDate() + 7); // 7-day grace period
+
+    // Update booking with certification
+    booking.status = 'confirmed';
+    booking.confirmedAt = now;
+    booking.customerCertifiedAt = now;
+    booking.gracePeriodExpiresAt = gracePeriodExpiry;
+    booking.warrantyExpiresAt = gracePeriodExpiry;
+    booking.paymentStatus = 'released';
+    booking.releasedAt = now;
+    (booking as any)._statusChangedBy = userId;
+    await booking.save();
+
+    // Send notification to artisan about payment release
+    await createNotification(
+      booking.artisan.toString(),
+      notificationTemplates.paymentReceived(booking.artisanEarnings, booking.jobType)
+    );
+
+    // Update artisan stats and trust metrics
+    const artisanProfileId = booking.artisanProfile.toString();
+    let wasOnTime = true;
+    if (booking.scheduledDate && booking.completedAt) {
+      wasOnTime = booking.completedAt <= booking.scheduledDate;
+    }
+    await trustService.onJobCompleted(artisanProfileId, wasOnTime);
+
+    res.status(200).json({
+      success: true,
+      message: 'Job certified and payment released. 7-day protection period started.',
+      data: {
+        gracePeriodExpiresAt: gracePeriodExpiry,
+        warrantyExpiresAt: gracePeriodExpiry,
+      },
     });
   } catch (error) {
     next(error);

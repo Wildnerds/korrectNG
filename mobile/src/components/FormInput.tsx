@@ -19,7 +19,7 @@ export function FormInput({ label, error, hint, required, style, ...props }: For
         style={[
           styles.input,
           error && styles.inputError,
-          style,
+          style as object,
         ]}
         placeholderTextColor={Colors.gray}
         {...props}

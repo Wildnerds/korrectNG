@@ -27,10 +27,22 @@ function sendTokenResponse(user: any, statusCode: number, res: Response) {
 }
 
 // POST /api/v1/auth/register
+// Simplified registration - only email, password, role required
+// firstName, lastName, phone are optional (needed for profile completion)
 router.post('/register', authLimiter, validate(registerSchema), async (req, res, next) => {
   try {
     const { firstName, lastName, email, phone, password, role } = req.body;
-    const user = await User.create({ firstName, lastName, email, phone, password, role });
+
+    // Create user with optional fields - isProfileComplete will be false
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      role,
+      isProfileComplete: false  // Explicitly set false for new users
+    });
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(20).toString('hex');
@@ -42,7 +54,8 @@ router.post('/register', authLimiter, validate(registerSchema), async (req, res,
 
     // Send welcome email with verification link
     try {
-      const template = emailTemplates.verifyEmail(firstName, verifyUrl);
+      const displayName = firstName || 'there';
+      const template = emailTemplates.verifyEmail(displayName, verifyUrl);
       await sendEmail({
         to: email,
         subject: template.subject,

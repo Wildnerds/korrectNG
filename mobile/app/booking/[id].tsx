@@ -336,14 +336,14 @@ export default function BookingDetailsScreen() {
           </View>
         </View>
 
-        {/* Warranty Info */}
+        {/* Protection Info */}
         {booking.status === 'confirmed' && booking.warrantyExpiresAt && (
           <View style={styles.section}>
             <View style={styles.warrantyCard}>
               <Text style={styles.warrantyIcon}>🛡️</Text>
-              <Text style={styles.warrantyTitle}>30-Day Warranty Active</Text>
+              <Text style={styles.warrantyTitle}>7-Day Protection Active</Text>
               <Text style={styles.warrantyText}>
-                Expires on {formatDate(booking.warrantyExpiresAt)}
+                Report issues by {formatDate(booking.warrantyExpiresAt)}
               </Text>
             </View>
           </View>

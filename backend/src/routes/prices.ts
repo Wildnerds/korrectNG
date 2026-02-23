@@ -99,7 +99,10 @@ router.post('/analyze-contract', protect, async (req: Request, res: Response, ne
     }
 
     const { materials, trade } = validation.data;
-    const analysis = await priceService.analyzeContractPrices(materials, trade);
+    const analysis = await priceService.analyzeContractPrices(
+      materials as { item: string; estimatedCost: number }[],
+      trade
+    );
 
     res.status(200).json({
       success: true,

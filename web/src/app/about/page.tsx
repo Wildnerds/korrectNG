@@ -69,9 +69,9 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="bg-green-50 p-6 rounded-lg">
-                <h3 className="font-semibold text-brand-green mb-2">30-Day Warranty</h3>
+                <h3 className="font-semibold text-brand-green mb-2">Escrow Protection</h3>
                 <p className="text-gray-600 text-sm">
-                  All jobs come with warranty protection. If something goes wrong, we help make it right.
+                  Pay through the platform for escrow protection. If something goes wrong within 7 days, we help make it right.
                 </p>
               </div>
               <div className="bg-orange-50 p-6 rounded-lg">

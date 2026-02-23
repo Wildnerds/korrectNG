@@ -18,22 +18,19 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
   const [role, setRole] = useState<'customer' | 'artisan'>('customer');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!firstName || !lastName || !email || !phone || !password) {
+    if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
-      await register({ firstName, lastName, email, phone, password, role });
+      await register({ email, password, role });
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Registration failed');
@@ -72,27 +69,6 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.row}>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>First Name</Text>
-              <TextInput
-                style={styles.input}
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholderTextColor={Colors.gray}
-              />
-            </View>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Last Name</Text>
-              <TextInput
-                style={styles.input}
-                value={lastName}
-                onChangeText={setLastName}
-                placeholderTextColor={Colors.gray}
-              />
-            </View>
-          </View>
-
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
@@ -101,16 +77,6 @@ export default function RegisterScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            placeholderTextColor={Colors.gray}
-          />
-
-          <Text style={styles.label}>Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="08012345678"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
             placeholderTextColor={Colors.gray}
           />
 
@@ -133,6 +99,10 @@ export default function RegisterScreen() {
               {loading ? 'Creating...' : role === 'artisan' ? 'Start Verification' : 'Create Account'}
             </Text>
           </TouchableOpacity>
+
+          <Text style={styles.profileNote}>
+            You'll complete your profile before making your first booking
+          </Text>
 
           {role === 'artisan' && (
             <Text style={styles.feeNote}>
@@ -172,8 +142,6 @@ const styles = StyleSheet.create({
   roleButtonActive: { backgroundColor: Colors.green },
   roleText: { fontWeight: '600' },
   roleTextActive: { color: Colors.white },
-  row: { flexDirection: 'row', gap: 10 },
-  halfInput: { flex: 1 },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 12 },
   input: {
     backgroundColor: Colors.lightGray,
@@ -190,7 +158,8 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: Colors.white, fontWeight: 'bold', fontSize: 16 },
-  feeNote: { textAlign: 'center', color: Colors.gray, marginTop: 12, fontSize: 13 },
+  profileNote: { textAlign: 'center', color: Colors.gray, marginTop: 12, fontSize: 13 },
+  feeNote: { textAlign: 'center', color: Colors.gray, marginTop: 8, fontSize: 13 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
   footerText: { color: Colors.gray },
   link: { color: Colors.green, fontWeight: '600' },

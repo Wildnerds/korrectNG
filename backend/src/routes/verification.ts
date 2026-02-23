@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { VerificationApplication, ArtisanProfile } from '../models';
-import { protect, authorize, AuthRequest } from '../middleware/auth';
+import { protect, authorize, requireProfileComplete, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { validateDocument, isAutomatedVerificationAvailable, getProvider } from '../services';
 import { verificationLimiter, uploadLimiter } from '../middleware/rateLimiter';
@@ -8,7 +8,8 @@ import { verificationLimiter, uploadLimiter } from '../middleware/rateLimiter';
 const router = Router();
 
 // POST /api/v1/verification/apply
-router.post('/apply', verificationLimiter, protect, authorize('artisan'), async (req: AuthRequest, res, next) => {
+// Artisan must have complete profile before applying for verification
+router.post('/apply', verificationLimiter, protect, authorize('artisan'), requireProfileComplete('artisan'), async (req: AuthRequest, res, next) => {
   try {
     const artisan = await ArtisanProfile.findOne({ user: req.user!._id });
     if (!artisan) throw new AppError('Create an artisan profile first', 400);
@@ -202,7 +203,7 @@ router.post('/init-payment', protect, authorize('artisan'), async (req: AuthRequ
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean; data: any };
     if (!data.status) {
       throw new AppError('Failed to initialize payment', 500);
     }
@@ -223,7 +224,7 @@ router.get('/verify-payment', protect, authorize('artisan'), async (req: AuthReq
       headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean; data: { status: string; metadata: { artisanId: string; applicationId: string } } };
     if (!data.status || data.data.status !== 'success') {
       throw new AppError('Payment verification failed', 400);
     }

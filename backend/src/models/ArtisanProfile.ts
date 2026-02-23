@@ -40,6 +40,7 @@ export interface IArtisanProfile extends Document {
   jobsCompleted: number;
   verificationStatus: 'pending' | 'in-review' | 'approved' | 'rejected';
   isPublished: boolean;
+  isProfileComplete: boolean;
   averageRating: number;
   totalReviews: number;
   galleryImages: IGalleryImage[];
@@ -99,6 +100,7 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
       default: 'pending',
     },
     isPublished: { type: Boolean, default: false },
+    isProfileComplete: { type: Boolean, default: false },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0, min: 0 },
     galleryImages: [
@@ -164,5 +166,20 @@ artisanProfileSchema.index(
   { businessName: 'text', trade: 'text', location: 'text', description: 'text' },
   { name: 'artisan_text_search' }
 );
+
+// Pre-save hook to calculate isProfileComplete for artisan profiles
+// Required fields: businessName, trade, description, location, address, whatsappNumber, phoneNumber
+artisanProfileSchema.pre('save', function (next) {
+  this.isProfileComplete = !!(
+    this.businessName &&
+    this.trade &&
+    this.description &&
+    this.location &&
+    this.address &&
+    this.whatsappNumber &&
+    this.phoneNumber
+  );
+  next();
+});
 
 export const ArtisanProfile = mongoose.model<IArtisanProfile>('ArtisanProfile', artisanProfileSchema);

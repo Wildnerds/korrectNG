@@ -11,14 +11,16 @@ export interface IUserSettings {
 }
 
 export interface IUser extends Document {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
-  phone: string;
+  phone?: string;
+  address?: string;
   password: string;
   role: 'customer' | 'artisan' | 'admin';
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
+  isProfileComplete: boolean;
   phoneVerificationPinId?: string;
   emailVerificationToken?: string;
   emailVerificationExpire?: Date;
@@ -37,6 +39,7 @@ export interface IUser extends Document {
   getSignedJwtToken(): string;
   getResetPasswordToken(): string;
   getEmailVerificationToken(): string;
+  checkProfileComplete(): boolean;
 }
 
 const settingsSchema = new Schema<IUserSettings>(
@@ -51,8 +54,8 @@ const settingsSchema = new Schema<IUserSettings>(
 
 const userSchema = new Schema<IUser>(
   {
-    firstName: { type: String, required: true, trim: true, maxlength: 50 },
-    lastName: { type: String, required: true, trim: true, maxlength: 50 },
+    firstName: { type: String, required: false, trim: true, maxlength: 50 },
+    lastName: { type: String, required: false, trim: true, maxlength: 50 },
     email: {
       type: String,
       required: true,
@@ -60,7 +63,8 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-    phone: { type: String, required: true, trim: true },
+    phone: { type: String, required: false, trim: true },
+    address: { type: String, required: false, trim: true, maxlength: 500 },
     password: { type: String, required: true, minlength: 8, select: false },
     role: {
       type: String,
@@ -69,6 +73,7 @@ const userSchema = new Schema<IUser>(
     },
     isEmailVerified: { type: Boolean, default: false },
     isPhoneVerified: { type: Boolean, default: false },
+    isProfileComplete: { type: Boolean, default: false },
     phoneVerificationPinId: String,
     emailVerificationToken: String,
     emailVerificationExpire: Date,
@@ -99,9 +104,11 @@ userSchema.methods.matchPassword = async function (password: string): Promise<bo
 };
 
 userSchema.methods.getSignedJwtToken = function (): string {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET || 'secret', {
-    expiresIn: process.env.JWT_EXPIRE || '30d',
-  });
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: process.env.JWT_EXPIRE || '30d' } as jwt.SignOptions
+  );
 };
 
 userSchema.methods.getResetPasswordToken = function (): string {
@@ -117,5 +124,22 @@ userSchema.methods.getEmailVerificationToken = function (): string {
   this.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
   return token;
 };
+
+// Check if customer profile is complete (firstName, lastName, phone, address required)
+userSchema.methods.checkProfileComplete = function (): boolean {
+  if (this.role === 'customer') {
+    return !!(this.firstName && this.lastName && this.phone && this.address);
+  }
+  // For artisans, profile completion is checked via ArtisanProfile.isProfileComplete
+  return true;
+};
+
+// Pre-save hook to calculate isProfileComplete for customers
+userSchema.pre('save', function (next) {
+  if (this.role === 'customer') {
+    this.isProfileComplete = !!(this.firstName && this.lastName && this.phone && this.address);
+  }
+  next();
+});
 
 export const User = mongoose.model<IUser>('User', userSchema);

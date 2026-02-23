@@ -228,8 +228,8 @@ export const emailTemplates = {
                 Make informed decisions based on genuine customer feedback.
               </div>
               <div class="feature">
-                <strong>30-Day Warranty</strong><br>
-                All jobs booked through KorrectNG come with warranty protection.
+                <strong>Escrow Payment Protection</strong><br>
+                Pay through the platform for escrow protection and a 7-day issue resolution window.
               </div>
               ` : `
               <h3>Getting Started as an Artisan:</h3>

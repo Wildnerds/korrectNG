@@ -4,7 +4,6 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { TRADES } from '@korrectng/shared';
 
 function RegisterForm() {
   const router = useRouter();
@@ -13,10 +12,7 @@ function RegisterForm() {
   const { register } = useAuth();
 
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
-    phone: '',
     password: '',
     role: initialRole as 'customer' | 'artisan',
   });
@@ -81,45 +77,12 @@ function RegisterForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">First Name</label>
-              <input
-                type="text"
-                value={form.firstName}
-                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Last Name</label>
-              <input
-                type="text"
-                value={form.lastName}
-                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                required
-              />
-            </div>
-          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone Number</label>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="e.g., 08012345678"
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
               required
             />
@@ -142,6 +105,9 @@ function RegisterForm() {
           >
             {loading ? 'Creating account...' : form.role === 'artisan' ? 'Start Verification' : 'Create Account'}
           </button>
+          <p className="text-center text-sm text-brand-gray">
+            You'll complete your profile before making your first booking
+          </p>
         </form>
 
         {form.role === 'artisan' && (

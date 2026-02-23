@@ -159,8 +159,8 @@ export default function HomeScreen() {
         </View>
         <View style={styles.trustBadge}>
           <Text style={styles.trustIcon}>🛡️</Text>
-          <Text style={styles.trustTitle}>30-Day Warranty</Text>
-          <Text style={styles.trustDesc}>Every job protected</Text>
+          <Text style={styles.trustTitle}>Platform Protection</Text>
+          <Text style={styles.trustDesc}>Pay via escrow for coverage</Text>
         </View>
       </View>
 

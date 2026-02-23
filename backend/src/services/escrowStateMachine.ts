@@ -373,7 +373,7 @@ async function initiateTransfer(
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean; message?: string; data: { transfer_code: string } };
 
     if (data.status) {
       // Update release record with transfer reference

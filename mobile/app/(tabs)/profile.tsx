@@ -52,12 +52,12 @@ export default function ProfileScreen() {
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {user.firstName[0]}
-            {user.lastName[0]}
+            {(user.firstName || 'U')[0]}
+            {(user.lastName || 'N')[0]}
           </Text>
         </View>
         <Text style={styles.name}>
-          {user.firstName} {user.lastName}
+          {user.firstName || ''} {user.lastName || 'User'}
         </Text>
         <Text style={styles.email}>{user.email}</Text>
         <View style={styles.roleBadge}>

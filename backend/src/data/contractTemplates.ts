@@ -71,7 +71,7 @@ export const contractTemplates: Record<TradeValue, ContractTemplate> = {
       'Complete diagnostic report',
       'Replacement of specified faulty parts',
       'Test drive to confirm repairs',
-      'Warranty on parts and labor (30 days)',
+      'Warranty on parts and labor (7 days via platform)',
     ],
     commonExclusions: [
       'Pre-existing damage not related to current repair',
@@ -200,7 +200,7 @@ export const contractTemplates: Record<TradeValue, ContractTemplate> = {
       'Complete repair of specified issue',
       'Quality replacement parts',
       'Device testing before handover',
-      'Warranty on repair (14-30 days)',
+      'Warranty on repair (7 days via platform)',
     ],
     commonExclusions: [
       'Data backup/recovery',

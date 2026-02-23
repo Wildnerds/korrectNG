@@ -10,12 +10,13 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: {
-    firstName: string;
-    lastName: string;
     email: string;
-    phone: string;
     password: string;
     role: 'customer' | 'artisan';
+    // Optional at registration - can be added during profile completion
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -53,12 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: {
-    firstName: string;
-    lastName: string;
     email: string;
-    phone: string;
     password: string;
     role: 'customer' | 'artisan';
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
   }) => {
     const res = await apiFetch<{ user: User; token: string }>('/auth/register', {
       method: 'POST',

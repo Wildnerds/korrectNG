@@ -443,7 +443,8 @@ router.post(
       }
 
       // Check if both parties have signed
-      if (contract.customerSignature && contract.artisanSignature) {
+      const bothSigned = !!(contract.customerSignature && contract.artisanSignature);
+      if (bothSigned) {
         contract.setStatus('signed', userId, 'Both parties have signed');
       }
 
@@ -466,7 +467,7 @@ router.post(
       });
 
       // If both signed, notify both parties
-      if (contract.status === 'signed') {
+      if (bothSigned) {
         const bothSignedNotification = {
           type: 'contract_signed' as any,
           title: 'Contract Fully Executed',
@@ -485,16 +486,16 @@ router.post(
         contractId,
         signedBy: userId,
         role: isCustomer ? 'customer' : 'artisan',
-        fullyExecuted: contract.status === 'signed',
+        fullyExecuted: bothSigned,
       });
 
       res.status(200).json({
         success: true,
-        message: contract.status === 'signed'
+        message: bothSigned
           ? 'Contract fully executed! Both parties have signed.'
           : 'Contract signed successfully. Waiting for other party to sign.',
         data: {
-          status: contract.status,
+          status: bothSigned ? 'signed' : 'pending_signatures',
           customerSigned: !!contract.customerSignature,
           artisanSigned: !!contract.artisanSignature,
         },

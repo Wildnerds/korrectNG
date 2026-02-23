@@ -193,20 +193,20 @@ export default function BookArtisanScreen() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {LOCATIONS.slice(0, 6).map((loc) => (
                     <TouchableOpacity
-                      key={loc.value}
+                      key={loc}
                       style={[
                         styles.locationChip,
-                        location === loc.value && styles.locationChipActive,
+                        location === loc && styles.locationChipActive,
                       ]}
-                      onPress={() => setLocation(loc.value)}
+                      onPress={() => setLocation(loc)}
                     >
                       <Text
                         style={[
                           styles.locationChipText,
-                          location === loc.value && styles.locationChipTextActive,
+                          location === loc && styles.locationChipTextActive,
                         ]}
                       >
-                        {loc.label}
+                        {loc}
                       </Text>
                     </TouchableOpacity>
                   ))}

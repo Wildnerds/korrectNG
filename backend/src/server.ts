@@ -32,6 +32,7 @@ import disputeRoutes from './routes/disputes';
 import legalRoutes from './routes/legal';
 import priceRoutes from './routes/prices';
 import { startDisputeEscalationJob } from './jobs/disputeEscalation';
+import { startAutoCertificationJob } from './jobs/autoCertification';
 
 const app = express();
 
@@ -137,6 +138,7 @@ async function start() {
 
     // Start background jobs
     startDisputeEscalationJob();
+    startAutoCertificationJob();
   });
 }
 

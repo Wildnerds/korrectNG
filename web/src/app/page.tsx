@@ -51,9 +51,9 @@ export default async function HomePage() {
             </div>
             <div className="bg-white rounded-xl p-5 sm:p-8 text-center">
               <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">&#128737;&#65039;</div>
-              <h3 className="text-brand-green font-bold text-base sm:text-lg mb-2">30-Day Warranty</h3>
+              <h3 className="text-brand-green font-bold text-base sm:text-lg mb-2">Platform Protection</h3>
               <p className="text-brand-gray text-xs sm:text-sm">
-                Every job comes with guaranteed warranty protection
+                Pay through KorrectNG for escrow protection and issue resolution
               </p>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default async function HomePage() {
               { num: 1, title: 'Search', desc: 'Enter what you need and your location to find verified artisans near you' },
               { num: 2, title: 'Compare', desc: 'Check ratings, reviews, and work history before choosing' },
               { num: 3, title: 'Connect', desc: 'Contact directly via WhatsApp or phone to discuss your job' },
-              { num: 4, title: 'Protected', desc: 'Get 30-day warranty and leave a review after completion' },
+              { num: 4, title: 'Protected', desc: 'Pay via escrow for 7-day protection and leave a review after completion' },
             ].map((step) => (
               <div key={step.num} className="text-center px-4">
                 <div className="w-16 h-16 bg-brand-green text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-5">

@@ -27,23 +27,27 @@ export interface Timestamps {
 
 export interface User extends Timestamps {
   _id: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
-  phone: string;
+  phone?: string;
+  address?: string;
   role: Role;
   isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  isProfileComplete: boolean;
   bookmarkedArtisans: string[];
   avatar?: string;
 }
 
 export interface UserRegistration {
-  firstName: string;
-  lastName: string;
   email: string;
-  phone: string;
   password: string;
   role: 'customer' | 'artisan';
+  // Optional at registration - required for profile completion
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
 }
 
 export interface LoginCredentials {

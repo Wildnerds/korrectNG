@@ -51,7 +51,7 @@ router.post('/subscribe', paymentLimiter, protect, authorize('artisan'), async (
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean; data: any };
     if (!data.status) throw new AppError('Failed to initialize payment', 500);
 
     res.status(200).json({ success: true, data: data.data });
@@ -95,7 +95,7 @@ router.post('/cancel', paymentLimiter, protect, authorize('artisan'), async (req
       }),
     });
 
-    const data = await response.json();
+    const data = await response.json() as { status: boolean };
     if (!data.status) throw new AppError('Failed to cancel subscription', 500);
 
     subscription.status = 'cancelled';

@@ -2,7 +2,7 @@ import Notification, { NotificationType, INotification } from '../models/Notific
 import { log } from '../utils/logger';
 import { sendTemplateSMS, SMSTemplate } from './sms';
 import { sendPushNotification } from './pushNotifications';
-import User from '../models/User';
+import { User } from '../models/User';
 
 // Critical notification types that warrant SMS
 const SMS_CRITICAL_TYPES: NotificationType[] = [
@@ -115,7 +115,7 @@ export async function getNotifications(
   ]);
 
   return {
-    notifications: notifications as INotification[],
+    notifications: notifications as unknown as INotification[],
     unreadCount,
     total,
   };

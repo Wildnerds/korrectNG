@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models';
+import { ArtisanProfile } from '../models/ArtisanProfile';
 
 export interface AuthRequest extends Request {
   user?: IUser;
@@ -73,6 +74,65 @@ export function requireVerifiedEmail(req: AuthRequest, res: Response, next: Next
     });
   }
   next();
+}
+
+// Require profile to be complete before allowing certain actions
+// For customers: Check firstName, lastName, phone, address
+// For artisans: Check ArtisanProfile exists with all required fields
+export function requireProfileComplete(userType?: 'customer' | 'artisan') {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ success: false, error: 'Not authorized' });
+      }
+
+      // If a specific user type is required, check it
+      if (userType && user.role !== userType) {
+        return res.status(403).json({
+          success: false,
+          error: `This action requires a ${userType} account`,
+          code: 'WRONG_ROLE'
+        });
+      }
+
+      if (user.role === 'customer') {
+        // For customers, check basic profile fields
+        const isComplete = !!(user.firstName && user.lastName && user.phone && user.address);
+        if (!isComplete) {
+          return res.status(403).json({
+            success: false,
+            error: 'Please complete your profile (name, phone, address) before proceeding',
+            code: 'PROFILE_INCOMPLETE',
+            requiredFields: ['firstName', 'lastName', 'phone', 'address']
+          });
+        }
+      } else if (user.role === 'artisan') {
+        // For artisans, check ArtisanProfile exists and is complete
+        const artisanProfile = await ArtisanProfile.findOne({ user: user._id });
+        if (!artisanProfile) {
+          return res.status(403).json({
+            success: false,
+            error: 'Please create your artisan profile before proceeding',
+            code: 'PROFILE_INCOMPLETE',
+            requiredFields: ['businessName', 'trade', 'description', 'location', 'address', 'whatsappNumber', 'phoneNumber']
+          });
+        }
+        if (!artisanProfile.isProfileComplete) {
+          return res.status(403).json({
+            success: false,
+            error: 'Please complete your artisan profile before proceeding',
+            code: 'PROFILE_INCOMPLETE',
+            requiredFields: ['businessName', 'trade', 'description', 'location', 'address', 'whatsappNumber', 'phoneNumber']
+          });
+        }
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 // Aliases used in some route files

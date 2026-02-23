@@ -1,5 +1,5 @@
-import { Router, Request, Response } from 'express';
-import { auth } from '../middleware/auth';
+import { Router, Response } from 'express';
+import { auth, AuthRequest } from '../middleware/auth';
 import { registerPushToken, unregisterPushToken } from '../services/pushNotifications';
 import { log } from '../utils/logger';
 
@@ -10,7 +10,7 @@ const router = Router();
  * @desc    Register a push token for the current user
  * @access  Private
  */
-router.post('/', auth, async (req: Request, res: Response) => {
+router.post('/', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { token, platform, deviceId } = req.body;
 
@@ -57,7 +57,7 @@ router.post('/', auth, async (req: Request, res: Response) => {
  * @desc    Unregister a push token (on logout)
  * @access  Private
  */
-router.delete('/', auth, async (req: Request, res: Response) => {
+router.delete('/', auth, async (req: AuthRequest, res: Response) => {
   try {
     const { token } = req.body;
 

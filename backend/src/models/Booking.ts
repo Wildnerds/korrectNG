@@ -55,6 +55,13 @@ export interface IBooking extends Document {
   completedAt?: Date;
   confirmedAt?: Date;
 
+  // Job Certification (new warranty model)
+  jobCompletedAt?: Date;           // When artisan marks job complete
+  certificationDeadline?: Date;    // 3 days from jobCompletedAt
+  customerCertifiedAt?: Date;      // When customer certified (manual or auto)
+  autoCertifiedAt?: Date;          // If auto-certified after 3 days
+  gracePeriodExpiresAt?: Date;     // 7 days from certification
+
   // Rating & Review
   hasReview: boolean;
   review?: mongoose.Types.ObjectId;
@@ -63,7 +70,7 @@ export interface IBooking extends Document {
   contract?: mongoose.Types.ObjectId;
   escrow?: mongoose.Types.ObjectId;
 
-  // Warranty
+  // Warranty (7-day grace period from certification)
   warrantyExpiresAt?: Date;
 
   // Cancellation/Dispute
@@ -198,6 +205,23 @@ const bookingSchema = new Schema<IBooking>(
       type: Date,
     },
 
+    // Job Certification (new warranty model)
+    jobCompletedAt: {
+      type: Date,
+    },
+    certificationDeadline: {
+      type: Date,
+    },
+    customerCertifiedAt: {
+      type: Date,
+    },
+    autoCertifiedAt: {
+      type: Date,
+    },
+    gracePeriodExpiresAt: {
+      type: Date,
+    },
+
     // Rating
     hasReview: {
       type: Boolean,
@@ -218,7 +242,7 @@ const bookingSchema = new Schema<IBooking>(
       ref: 'EscrowPayment',
     },
 
-    // Warranty (30 days from confirmation)
+    // Warranty (7-day grace period from certification)
     warrantyExpiresAt: {
       type: Date,
     },
@@ -275,13 +299,16 @@ bookingSchema.pre('save', function (next) {
   next();
 });
 
-// Set warranty expiry when confirmed
+// Set warranty/grace period expiry when confirmed (7-day protection period)
 bookingSchema.pre('save', function (next) {
   if (this.status === 'confirmed' && !this.warrantyExpiresAt) {
-    const warrantyDays = 30;
-    this.warrantyExpiresAt = new Date();
-    this.warrantyExpiresAt.setDate(this.warrantyExpiresAt.getDate() + warrantyDays);
-    this.confirmedAt = new Date();
+    const gracePeriodDays = 7;  // Changed from 30 to 7 days
+    const now = new Date();
+    this.confirmedAt = now;
+    this.customerCertifiedAt = now;
+    this.gracePeriodExpiresAt = new Date(now);
+    this.gracePeriodExpiresAt.setDate(this.gracePeriodExpiresAt.getDate() + gracePeriodDays);
+    this.warrantyExpiresAt = this.gracePeriodExpiresAt;
   }
   next();
 });

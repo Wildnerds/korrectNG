@@ -93,15 +93,25 @@ export default function TermsOfServicePage() {
               may be cancelled at any time.
             </p>
 
-            <h2>6. Warranty Program</h2>
-            <h3>6.1 Coverage</h3>
+            <h2>6. Platform Protection Program</h2>
+            <h3>6.1 Escrow Payment Protection</h3>
             <p>
-              All services arranged through KorrectNG come with a 30-day warranty from the date of service
-              completion. This warranty covers defects in workmanship related to the original service provided.
+              Services paid through the KorrectNG platform escrow system qualify for issue resolution protection.
+              Once you certify job completion, a 7-day issue resolution window begins. During this period,
+              you can report issues and the artisan has the opportunity to re-check and fix their work.
             </p>
 
-            <h3>6.2 Limitations</h3>
-            <p>The warranty does NOT cover:</p>
+            <h3>6.2 Eligibility Requirements</h3>
+            <p>Protection is ONLY available when:</p>
+            <ul>
+              <li>Payment was made through the KorrectNG platform (escrow)</li>
+              <li>You have certified the job completion (manual or auto-certification after 3 days)</li>
+              <li>The claim is filed within the 7-day issue resolution window</li>
+            </ul>
+            <p className="mt-2"><strong>Important:</strong> Off-platform payments (cash, direct transfer) are NOT protected.</p>
+
+            <h3>6.3 Limitations</h3>
+            <p>The protection does NOT cover:</p>
             <ul>
               <li>Damage caused by customer misuse or negligence</li>
               <li>Normal wear and tear</li>
@@ -110,11 +120,11 @@ export default function TermsOfServicePage() {
               <li>Transactions conducted outside the Platform</li>
             </ul>
 
-            <h3>6.3 Claims Process</h3>
+            <h3>6.4 Claims Process</h3>
             <p>
-              To file a warranty claim, customers must submit a claim through the Platform within 30 days
-              of service completion, providing a description of the issue. Artisans have 72 hours to respond
-              to claims.
+              To file a claim, customers must submit through the Platform within the 7-day issue resolution window
+              after job certification, providing a description of the issue. Artisans have 7 days to respond
+              and re-check the work.
             </p>
 
             <h2>7. Reviews and Ratings</h2>
