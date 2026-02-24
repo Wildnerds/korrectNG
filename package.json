@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "render:build": "pnpm install && pnpm build:shared && pnpm build:backend",
-    "render:start": "node backend/dist/server.js",
+    "render:start": "pnpm --filter @korrectng/backend start",
     "vercel:build": "pnpm build:shared && pnpm build:web",
     "dev:backend": "pnpm --filter @korrectng/backend dev",
     "dev:web": "pnpm --filter @korrectng/web dev",
