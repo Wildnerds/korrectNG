@@ -8,6 +8,7 @@ import { TRADES, LOCATIONS } from '@korrectng/shared';
 import type { ArtisanProfile } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 import { NotificationPrompt } from '@/components/NotificationPrompt';
+import { BankAccountForm } from '@/components/BankAccountForm';
 
 export default function ArtisanProfileEdit() {
   const router = useRouter();
@@ -397,6 +398,11 @@ export default function ArtisanProfileEdit() {
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
+
+        {/* Bank Account for Payouts */}
+        <div className="mt-8">
+          <BankAccountForm />
+        </div>
 
         {/* Notifications */}
         <div className="mt-8">
