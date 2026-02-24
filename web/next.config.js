@@ -8,6 +8,9 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   workboxOptions: {
     disableDevLogs: true,
   },
+  customWorkerSrc: 'worker',
+  customWorkerDest: 'public',
+  customWorkerPrefix: 'push-worker',
 });
 
 /** @type {import('next').NextConfig} */

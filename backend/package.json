@@ -10,7 +10,8 @@
     "create-admin": "tsx src/create-admin.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "generate-vapid-keys": "node scripts/generate-vapid-keys.js"
   },
   "dependencies": {
     "@korrectng/shared": "workspace:*",
@@ -34,6 +35,7 @@
     "sanitize-html": "^2.17.0",
     "sharp": "^0.34.5",
     "uuid": "^10.0.0",
+    "web-push": "^3.6.7",
     "winston": "^3.14.0",
     "zod": "^3.22.4"
   },
@@ -48,6 +50,7 @@
     "@types/nodemailer": "^6.4.14",
     "@types/sanitize-html": "^2.16.0",
     "@types/supertest": "^6.0.2",
+    "@types/web-push": "^3.6.4",
     "jest": "^29.7.0",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0",

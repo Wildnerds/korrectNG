@@ -36,3 +36,6 @@ export type { IPriceCatalogItem, IPriceSource, IPriceHistory } from './PriceCata
 
 export { default as Supplier } from './Supplier';
 export type { ISupplier } from './Supplier';
+
+export { default as WebPushSubscription } from './WebPushSubscription';
+export type { IWebPushSubscription } from './WebPushSubscription';

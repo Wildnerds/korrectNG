@@ -2,6 +2,7 @@ import Notification, { NotificationType, INotification } from '../models/Notific
 import { log } from '../utils/logger';
 import { sendTemplateSMS, SMSTemplate } from './sms';
 import { sendPushNotification } from './pushNotifications';
+import { sendWebPushNotification, isWebPushConfigured } from './webPushNotifications';
 import { User } from '../models/User';
 
 // Critical notification types that warrant SMS
@@ -288,15 +289,30 @@ export async function createNotificationWithSMS(
   try {
     const user = await User.findById(userId).select('phone settings').lean();
 
-    // Send push notification if enabled
+    // Send push notifications if enabled
     const pushEnabled = user?.settings?.pushNotifications !== false;
     if (pushEnabled) {
+      // Send to mobile app (Expo Push)
       await sendPushNotification(userId, payload.title, payload.message, {
         type: payload.type,
         link: payload.link,
         notificationId: notification._id.toString(),
         ...payload.data,
       });
+
+      // Send to web app (Web Push) if configured
+      if (isWebPushConfigured()) {
+        await sendWebPushNotification(userId, {
+          title: payload.title,
+          body: payload.message,
+          data: {
+            type: payload.type,
+            link: payload.link,
+            notificationId: notification._id.toString(),
+            ...payload.data,
+          },
+        });
+      }
     }
 
     // Send SMS for critical notifications
@@ -339,12 +355,27 @@ export async function createNotificationWithPush(
     const pushEnabled = user?.settings?.pushNotifications !== false;
 
     if (pushEnabled) {
+      // Send to mobile app (Expo Push)
       await sendPushNotification(userId, payload.title, payload.message, {
         type: payload.type,
         link: payload.link,
         notificationId: notification._id.toString(),
         ...payload.data,
       });
+
+      // Send to web app (Web Push) if configured
+      if (isWebPushConfigured()) {
+        await sendWebPushNotification(userId, {
+          title: payload.title,
+          body: payload.message,
+          data: {
+            type: payload.type,
+            link: payload.link,
+            notificationId: notification._id.toString(),
+            ...payload.data,
+          },
+        });
+      }
     }
   } catch (error) {
     log.error('Failed to send push notification', {
