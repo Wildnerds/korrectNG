@@ -199,7 +199,8 @@ router.post('/resend-verification', emailVerificationLimiter, protect, async (re
 
     // Send email
     try {
-      const template = emailTemplates.verifyEmail(user.firstName, verifyUrl);
+      const displayName = user.firstName || 'there';
+      const template = emailTemplates.verifyEmail(displayName, verifyUrl);
       await sendEmail({
         to: user.email,
         subject: template.subject,
