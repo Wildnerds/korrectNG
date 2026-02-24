@@ -134,16 +134,26 @@ app.use(sentryErrorHandler());
 app.use(errorHandler);
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
+const HOST = '0.0.0.0';
 
 async function start() {
-  await connectDB();
-  app.listen(PORT, () => {
-    log.info(`Server running on port ${PORT}`, { port: PORT, env: process.env.NODE_ENV });
+  try {
+    console.log(`Starting server on ${HOST}:${PORT}...`);
+    await connectDB();
+    console.log('Database connected, starting HTTP server...');
 
-    // Start background jobs
-    startDisputeEscalationJob();
-    startAutoCertificationJob();
-  });
+    app.listen(PORT, HOST, () => {
+      console.log(`Server listening on ${HOST}:${PORT}`);
+      log.info(`Server running on port ${PORT}`, { port: PORT, env: process.env.NODE_ENV });
+
+      // Start background jobs
+      startDisputeEscalationJob();
+      startAutoCertificationJob();
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
 start();
