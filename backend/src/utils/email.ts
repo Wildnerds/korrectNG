@@ -10,28 +10,27 @@ interface EmailOptions {
 
 // Create transporter based on environment
 const createTransporter = () => {
-  // For production, use your SMTP service (SendGrid, Mailgun, AWS SES, etc.)
-  if (process.env.NODE_ENV === 'production') {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  const secure = port === 465; // Use SSL for port 465, STARTTLS for others
 
-  // For development, use Ethereal (fake SMTP)
-  // Or use mailtrap.io for testing
+  console.log('Creating SMTP transporter:', {
+    host: process.env.SMTP_HOST,
+    port,
+    secure,
+    user: process.env.SMTP_USER,
+  });
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: parseInt(process.env.SMTP_PORT || '587'),
+    host: process.env.SMTP_HOST,
+    port,
+    secure,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 };
 
