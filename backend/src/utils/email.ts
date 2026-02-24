@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { log } from './logger';
 
 interface EmailOptions {
@@ -8,57 +8,30 @@ interface EmailOptions {
   text?: string;
 }
 
-// Create transporter based on environment
-const createTransporter = () => {
-  const port = parseInt(process.env.SMTP_PORT || '587');
-  const secure = port === 465; // Use SSL for port 465, STARTTLS for others
-
-  console.log('Creating SMTP transporter:', {
-    host: process.env.SMTP_HOST,
-    port,
-    secure,
-    user: process.env.SMTP_USER,
-  });
-
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port,
-    secure,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-};
+// Use Resend API key (SMTP_PASS contains the API key)
+const resend = new Resend(process.env.RESEND_API_KEY || process.env.SMTP_PASS);
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
-  const transporter = createTransporter();
-
-  const mailOptions = {
-    from: `"KorrectNG" <${process.env.EMAIL_FROM || 'noreply@korrectng.com'}>`,
-    to: options.to,
-    subject: options.subject,
-    html: options.html,
-    text: options.text || options.html.replace(/<[^>]*>/g, ''),
-  };
+  const fromEmail = process.env.EMAIL_FROM || 'noreply@support.korrectng.ng';
 
   try {
-    console.log('Attempting to send email to:', options.to);
-    console.log('SMTP config:', { host: process.env.SMTP_HOST, port: process.env.SMTP_PORT, user: process.env.SMTP_USER });
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully! Message ID:', info.messageId);
-    log.info('Email sent', { messageId: info.messageId, to: options.to });
+    console.log('Attempting to send email via Resend API to:', options.to);
 
-    // For Ethereal, log preview URL
-    if (process.env.NODE_ENV !== 'production') {
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        log.debug('Email preview URL', { url: previewUrl });
-      }
+    const { data, error } = await resend.emails.send({
+      from: `KorrectNG <${fromEmail}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text || options.html.replace(/<[^>]*>/g, ''),
+    });
+
+    if (error) {
+      log.error('Resend API error', { error, to: options.to });
+      throw new Error(error.message);
     }
+
+    console.log('Email sent successfully! ID:', data?.id);
+    log.info('Email sent', { emailId: data?.id, to: options.to });
   } catch (error) {
     log.error('Email sending failed', { error: error instanceof Error ? error.message : error, to: options.to });
     throw new Error('Failed to send email');
