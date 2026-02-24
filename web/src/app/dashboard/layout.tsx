@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationPrompt } from '@/components/NotificationPrompt';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -24,5 +25,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
-  return <>{children}</>;
+  return (
+    <>
+      <NotificationPrompt variant="banner" />
+      {children}
+    </>
+  );
 }

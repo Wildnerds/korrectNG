@@ -1,6 +1,7 @@
 import Booking from '../models/Booking';
 import { createNotification, notificationTemplates } from '../services/notifications';
 import trustService from '../services/trustService';
+import { payArtisan } from '../services/payoutService';
 import { log } from '../utils/logger';
 
 const AUTO_CERTIFICATION_INTERVAL_MS = 60 * 60 * 1000; // Check every hour
@@ -74,6 +75,22 @@ export async function runAutoCertificationCheck(): Promise<void> {
           wasOnTime = booking.completedAt <= booking.scheduledDate;
         }
         await trustService.onJobCompleted(artisanProfileId, wasOnTime);
+
+        // Initiate automatic payout to artisan (if bank details configured)
+        const payoutResult = await payArtisan(
+          artisanProfileId,
+          booking.artisanEarnings,
+          booking.paymentReference || booking._id.toString(),
+          booking.jobType
+        );
+
+        if (payoutResult.success) {
+          log.info('Auto-certification payout initiated', {
+            bookingId: booking._id,
+            amount: booking.artisanEarnings,
+            transferCode: payoutResult.transferCode,
+          });
+        }
 
         certifiedCount++;
       } catch (bookingError) {

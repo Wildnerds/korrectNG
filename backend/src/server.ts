@@ -32,6 +32,7 @@ import disputeRoutes from './routes/disputes';
 import legalRoutes from './routes/legal';
 import priceRoutes from './routes/prices';
 import webPushRoutes from './routes/webPush';
+import payoutRoutes from './routes/payout';
 import { startDisputeEscalationJob } from './jobs/disputeEscalation';
 import { startAutoCertificationJob } from './jobs/autoCertification';
 
@@ -119,6 +120,7 @@ app.use('/api/v1/disputes', disputeRoutes);
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/prices', priceRoutes);
 app.use('/api/v1/web-push', webPushRoutes);
+app.use('/api/v1/payout', payoutRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

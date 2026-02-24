@@ -69,6 +69,12 @@ export interface IArtisanProfile extends Document {
   totalResponseTimeMinutes: number;
   responseCount: number;
 
+  // Bank account for payouts
+  bankCode?: string;           // Nigerian bank code (e.g., "058" for GTBank)
+  accountNumber?: string;      // 10-digit account number
+  accountName?: string;        // Verified account name from Paystack
+  paystackRecipientCode?: string; // Paystack transfer recipient code
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,6 +158,12 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
     totalJobsOnTime: { type: Number, default: 0, min: 0 },
     totalResponseTimeMinutes: { type: Number, default: 0, min: 0 },
     responseCount: { type: Number, default: 0, min: 0 },
+
+    // Bank account for payouts
+    bankCode: { type: String, trim: true },
+    accountNumber: { type: String, trim: true },
+    accountName: { type: String, trim: true },
+    paystackRecipientCode: { type: String, trim: true },
   },
   { timestamps: true }
 );

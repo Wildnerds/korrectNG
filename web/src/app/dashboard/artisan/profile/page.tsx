@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { TRADES, LOCATIONS } from '@korrectng/shared';
 import type { ArtisanProfile } from '@korrectng/shared';
 import Cookies from 'js-cookie';
+import { NotificationPrompt } from '@/components/NotificationPrompt';
 
 export default function ArtisanProfileEdit() {
   const router = useRouter();
@@ -396,6 +397,12 @@ export default function ArtisanProfileEdit() {
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
+
+        {/* Notifications */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Notifications</h2>
+          <NotificationPrompt variant="inline" />
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import Cookies from 'js-cookie';
+import { NotificationPrompt } from '@/components/NotificationPrompt';
 
 export default function CustomerProfileEdit() {
   const router = useRouter();
@@ -157,7 +158,7 @@ export default function CustomerProfileEdit() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white rounded-xl p-6">
+        <div className="bg-white rounded-xl p-6 mb-6">
           <h2 className="text-xl font-bold mb-4">Change Password</h2>
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div>
@@ -199,6 +200,12 @@ export default function CustomerProfileEdit() {
               {saving ? 'Updating...' : 'Update Password'}
             </button>
           </form>
+        </div>
+
+        {/* Notifications */}
+        <div className="bg-white rounded-xl p-6">
+          <h2 className="text-xl font-bold mb-4">Notifications</h2>
+          <NotificationPrompt variant="inline" />
         </div>
       </div>
     </div>

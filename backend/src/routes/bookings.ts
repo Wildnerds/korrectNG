@@ -9,6 +9,7 @@ import { createNotification, notificationTemplates } from '../services/notificat
 import { log } from '../utils/logger';
 import { bookingLimiter } from '../middleware/rateLimiter';
 import trustService from '../services/trustService';
+import { payArtisan } from '../services/payoutService';
 
 const router = Router();
 
@@ -498,11 +499,33 @@ router.post('/:id/confirm', protect, async (req: Request, res: Response, next: N
 
     await trustService.onJobCompleted(artisanProfileId, wasOnTime);
 
+    // Initiate automatic payout to artisan (if bank details configured)
+    const payoutResult = await payArtisan(
+      artisanProfileId,
+      booking.artisanEarnings,
+      booking.paymentReference || booking._id.toString(),
+      booking.jobType
+    );
+
+    if (payoutResult.success) {
+      log.info('Automatic payout initiated', {
+        bookingId: booking._id,
+        amount: booking.artisanEarnings,
+        transferCode: payoutResult.transferCode,
+      });
+    } else {
+      log.warn('Automatic payout skipped', {
+        bookingId: booking._id,
+        reason: payoutResult.error,
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Job confirmed and payment released',
       data: {
         warrantyExpiresAt: booking.warrantyExpiresAt,
+        payoutInitiated: payoutResult.success,
       },
     });
   } catch (error) {
@@ -770,12 +793,34 @@ router.post('/:id/certify', protect, async (req: Request, res: Response, next: N
     }
     await trustService.onJobCompleted(artisanProfileId, wasOnTime);
 
+    // Initiate automatic payout to artisan (if bank details configured)
+    const payoutResult = await payArtisan(
+      artisanProfileId,
+      booking.artisanEarnings,
+      booking.paymentReference || booking._id.toString(),
+      booking.jobType
+    );
+
+    if (payoutResult.success) {
+      log.info('Automatic payout initiated', {
+        bookingId: booking._id,
+        amount: booking.artisanEarnings,
+        transferCode: payoutResult.transferCode,
+      });
+    } else {
+      log.warn('Automatic payout skipped', {
+        bookingId: booking._id,
+        reason: payoutResult.error,
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Job certified and payment released. 7-day protection period started.',
       data: {
         gracePeriodExpiresAt: gracePeriodExpiry,
         warrantyExpiresAt: gracePeriodExpiry,
+        payoutInitiated: payoutResult.success,
       },
     });
   } catch (error) {
