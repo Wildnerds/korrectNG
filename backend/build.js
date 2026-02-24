@@ -1,8 +1,8 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { globSync } = require('glob');
 
-// Use tsx to compile - it's already installed and skips type checking
 const srcDir = path.join(__dirname, 'src');
 const distDir = path.join(__dirname, 'dist');
 
@@ -12,13 +12,32 @@ if (fs.existsSync(distDir)) {
 }
 fs.mkdirSync(distDir, { recursive: true });
 
-// Use esbuild via npx for fast transpilation without type checking
+// Find all TypeScript files
+const tsFiles = globSync('src/**/*.ts', { cwd: __dirname });
+console.log(`Found ${tsFiles.length} TypeScript files to compile`);
+
+if (tsFiles.length === 0) {
+  console.error('No TypeScript files found!');
+  process.exit(1);
+}
+
+// Use esbuild for fast transpilation
 try {
+  const filesArg = tsFiles.join(' ');
   execSync(
-    `npx esbuild src/**/*.ts --outdir=dist --platform=node --format=cjs --target=node18`,
+    `npx esbuild ${filesArg} --outdir=dist --platform=node --format=cjs --target=node18`,
     { stdio: 'inherit', cwd: __dirname }
   );
-  console.log('Build completed successfully!');
+
+  // Verify server.js was created
+  const serverPath = path.join(distDir, 'server.js');
+  if (fs.existsSync(serverPath)) {
+    console.log('Build completed successfully!');
+    console.log(`Server file created at: ${serverPath}`);
+  } else {
+    console.error('Build completed but server.js was not created!');
+    process.exit(1);
+  }
 } catch (error) {
   console.error('Build failed:', error.message);
   process.exit(1);
