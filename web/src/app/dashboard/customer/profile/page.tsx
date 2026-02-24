@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import Cookies from 'js-cookie';
 import { NotificationPrompt } from '@/components/NotificationPrompt';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export default function CustomerProfileEdit() {
   const router = useRouter();
@@ -163,32 +164,28 @@ export default function CustomerProfileEdit() {
           <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Current Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwords.currentPassword}
                 onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                placeholder="Enter current password"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">New Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwords.newPassword}
                 onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
                 placeholder="Min 8 chars, 1 uppercase, 1 number"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Confirm New Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwords.confirmPassword}
                 onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                placeholder="Confirm new password"
                 required
               />
             </div>

@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { PasswordInput } from '@/components/PasswordInput';
 
 function RegisterForm() {
   const router = useRouter();
@@ -89,12 +90,10 @@ function RegisterForm() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
-            <input
-              type="password"
+            <PasswordInput
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="Min 8 chars, 1 uppercase, 1 number"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
               required
             />
           </div>

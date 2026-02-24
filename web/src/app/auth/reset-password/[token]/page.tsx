@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { PasswordInput } from '@/components/PasswordInput';
 
 export default function ResetPasswordPage() {
   const params = useParams();
@@ -86,24 +87,20 @@ export default function ResetPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">New Password</label>
-            <input
-              type="password"
+            <PasswordInput
               value={passwords.password}
               onChange={(e) => setPasswords({ ...passwords, password: e.target.value })}
               placeholder="Min 8 characters"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
               required
               minLength={8}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Confirm New Password</label>
-            <input
-              type="password"
+            <PasswordInput
               value={passwords.confirmPassword}
               onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
               placeholder="Confirm your password"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
               required
             />
           </div>
