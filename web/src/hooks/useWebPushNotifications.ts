@@ -15,7 +15,7 @@ interface WebPushState {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
 /**
- * Convert a base64 string to Uint8Array (for VAPID key)
+ * Convert a base64 URL string to Uint8Array (for VAPID key)
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -28,6 +28,14 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+/**
+ * Get ArrayBuffer from Uint8Array for applicationServerKey
+ */
+function getApplicationServerKey(base64String: string): ArrayBuffer {
+  const uint8Array = urlBase64ToUint8Array(base64String);
+  return uint8Array.buffer as ArrayBuffer;
 }
 
 export function useWebPushNotifications() {
@@ -112,13 +120,13 @@ export function useWebPushNotifications() {
         throw new Error('Failed to get VAPID public key');
       }
 
-      const vapidPublicKey = urlBase64ToUint8Array(vapidData.data.publicKey);
+      const applicationServerKey = getApplicationServerKey(vapidData.data.publicKey);
 
       // Subscribe to push notifications
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidPublicKey,
+        applicationServerKey,
       });
 
       // Send subscription to server
