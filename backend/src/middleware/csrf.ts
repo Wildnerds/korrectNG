@@ -9,6 +9,7 @@ const TOKEN_LENGTH = 32;
 const CSRF_EXEMPT_ROUTES = [
   '/api/v1/payments/webhook', // Paystack webhooks
   '/api/v1/auth/', // All auth routes - protected by Bearer token
+  '/api/v1/payout/', // Payout routes - protected by Bearer token
   '/api/health',
 ];
 

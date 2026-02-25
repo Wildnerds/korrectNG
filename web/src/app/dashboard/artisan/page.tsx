@@ -3,17 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/Toast';
 import { apiFetch } from '@/lib/api';
-import type { ArtisanProfile, Subscription, WarrantyClaim, VerificationApplication } from '@korrectng/shared';
-import { formatRating, formatNaira, getTradeLabel } from '@korrectng/shared';
+import type { ArtisanProfile, WarrantyClaim, VerificationApplication } from '@korrectng/shared';
+import { formatRating, getTradeLabel } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 
 export default function ArtisanDashboard() {
   const { user } = useAuth();
-  const { showToast } = useToast();
   const [profile, setProfile] = useState<ArtisanProfile | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [verification, setVerification] = useState<VerificationApplication | null>(null);
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,14 +33,6 @@ export default function ArtisanDashboard() {
           }
         } catch {
           // No application yet
-        }
-
-        // Fetch subscription
-        try {
-          const subRes = await apiFetch<Subscription>('/payments/subscription', { token });
-          setSubscription(subRes.data || null);
-        } catch {
-          // No subscription
         }
 
         // Fetch warranty claims
@@ -76,8 +65,7 @@ export default function ArtisanDashboard() {
   const isInReview = verificationStatus === 'in-review';
   const isRejected = verificationStatus === 'rejected';
   const hasProfile = !!profile;
-  const hasSubscription = subscription?.status === 'active';
-  const isPublished = profile?.isPublished && hasSubscription;
+  const isPublished = profile?.isPublished;
 
   // Show onboarding if no profile and no verification application
   if (!hasProfile && !verification) {
@@ -176,33 +164,10 @@ export default function ArtisanDashboard() {
               <div>
                 <p className="font-semibold text-green-800">You're Verified!</p>
                 <p className="text-sm text-green-700">
-                  {hasSubscription
-                    ? 'Your profile is now live on KorrectNG.'
-                    : 'Subscribe to get your profile published and start receiving customers.'}
+                  Your profile is now live on KorrectNG.
                 </p>
               </div>
             </div>
-            {!hasSubscription && (
-              <button
-                onClick={async () => {
-                  const token = Cookies.get('token');
-                  try {
-                    const res = await apiFetch<{ authorization_url: string }>('/payments/subscribe', {
-                      method: 'POST',
-                      token,
-                    });
-                    if (res.data?.authorization_url) {
-                      window.location.href = res.data.authorization_url;
-                    }
-                  } catch (err: any) {
-                    showToast(err.message || 'Failed to start subscription', 'error');
-                  }
-                }}
-                className="px-6 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold whitespace-nowrap"
-              >
-                Subscribe Now
-              </button>
-            )}
           </div>
         )}
 
@@ -249,19 +214,6 @@ export default function ArtisanDashboard() {
               {isVerified ? '✓ Verified' : verificationStatus}
             </p>
           </div>
-          <div className="bg-white rounded-xl p-4 sm:p-6">
-            <p className="text-xs sm:text-sm text-brand-gray mb-1">Subscription</p>
-            <p
-              className={`text-base sm:text-lg font-bold ${
-                hasSubscription ? 'text-green-600' : 'text-orange-500'
-              }`}
-            >
-              {hasSubscription ? 'Active' : 'Inactive'}
-            </p>
-            {subscription && (
-              <p className="text-xs text-brand-gray">{formatNaira(subscription.amount)}/month</p>
-            )}
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
@@ -287,27 +239,6 @@ export default function ArtisanDashboard() {
               >
                 Manage Gallery ({profile?.galleryImages?.length || 0} photos)
               </Link>
-              {!hasSubscription && isVerified && (
-                <button
-                  onClick={async () => {
-                    const token = Cookies.get('token');
-                    try {
-                      const res = await apiFetch<{ authorization_url: string }>('/payments/subscribe', {
-                        method: 'POST',
-                        token,
-                      });
-                      if (res.data?.authorization_url) {
-                        window.location.href = res.data.authorization_url;
-                      }
-                    } catch (err: any) {
-                      showToast(err.message || 'Failed to start subscription', 'error');
-                    }
-                  }}
-                  className="block w-full px-4 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors text-center font-semibold"
-                >
-                  Subscribe ({formatNaira(5000)}/month)
-                </button>
-              )}
             </div>
           </div>
 
