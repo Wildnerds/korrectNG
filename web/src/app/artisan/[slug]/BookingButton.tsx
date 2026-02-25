@@ -34,7 +34,8 @@ export default function BookingButton({ artisanProfileId, artisanName, trade }: 
 
     // Check if profile is complete
     if (!user.firstName || !user.lastName || !user.phone) {
-      showToast('Please complete your profile to request bookings', 'warning');
+      showToast('Please complete your profile (name & phone) first', 'warning');
+      window.location.href = '/dashboard/customer/profile';
       return;
     }
 

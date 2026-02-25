@@ -97,14 +97,14 @@ export function requireProfileComplete(userType?: 'customer' | 'artisan') {
       }
 
       if (user.role === 'customer') {
-        // For customers, check basic profile fields
-        const isComplete = !!(user.firstName && user.lastName && user.phone && user.address);
+        // For customers, check basic profile fields (address collected per booking)
+        const isComplete = !!(user.firstName && user.lastName && user.phone);
         if (!isComplete) {
           return res.status(403).json({
             success: false,
-            error: 'Please complete your profile (name, phone, address) before proceeding',
+            error: 'Please complete your profile (name and phone) before proceeding',
             code: 'PROFILE_INCOMPLETE',
-            requiredFields: ['firstName', 'lastName', 'phone', 'address']
+            requiredFields: ['firstName', 'lastName', 'phone']
           });
         }
       } else if (user.role === 'artisan') {
