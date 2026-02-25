@@ -81,6 +81,9 @@ export interface IBooking extends Document {
   // Warranty (7-day grace period from certification)
   warrantyExpiresAt?: Date;
 
+  // Auto-expiry
+  expiresAt?: Date;  // When this booking will auto-cancel if no action taken
+
   // Cancellation/Dispute
   cancellationReason?: string;
   cancelledBy?: mongoose.Types.ObjectId;
@@ -272,6 +275,12 @@ const bookingSchema = new Schema<IBooking>(
       type: Date,
     },
 
+    // Auto-expiry
+    expiresAt: {
+      type: Date,
+      index: true,
+    },
+
     // Cancellation/Dispute
     cancellationReason: {
       type: String,
@@ -320,6 +329,22 @@ bookingSchema.pre('save', function (next) {
       timestamp: new Date(),
       by: (this as any)._statusChangedBy || this.customer,
     });
+
+    // Set auto-expiry based on status
+    const now = new Date();
+    if (this.status === 'pending') {
+      // Artisan has 48 hours to respond
+      this.expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    } else if (this.status === 'quoted') {
+      // Customer has 48 hours to accept/decline quote
+      this.expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    } else if (this.status === 'accepted') {
+      // Customer has 24 hours to pay
+      this.expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    } else {
+      // Clear expiry for other statuses
+      this.expiresAt = undefined;
+    }
   }
   next();
 });

@@ -357,6 +357,74 @@ router.post('/:id/decline-quote', protect, async (req: Request, res: Response, n
 });
 
 /**
+ * @route   POST /api/v1/bookings/:id/cancel
+ * @desc    Customer cancels a booking (before payment only)
+ * @access  Private (Customer)
+ */
+router.post('/:id/cancel', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+    const { reason } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Only customer can cancel their booking
+    if (booking.customer.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only the customer can cancel this booking',
+      });
+    }
+
+    // Can only cancel before payment
+    const cancellableStatuses = ['pending', 'quoted', 'accepted', 'payment_pending'];
+    if (!cancellableStatuses.includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot cancel a booking that has already been paid for. Please contact support if you need assistance.',
+      });
+    }
+
+    booking.status = 'cancelled';
+    booking.cancellationReason = reason || 'Cancelled by customer';
+    booking.cancelledBy = userId;
+    booking.expiresAt = undefined;
+    (booking as any)._statusChangedBy = userId;
+
+    await booking.save();
+
+    // Notify artisan about the cancellation
+    const customer = await User.findById(userId);
+    await createNotificationWithPush(
+      booking.artisan.toString(),
+      {
+        type: 'booking_rejected',
+        title: 'Booking Cancelled',
+        message: `${customer?.firstName} ${customer?.lastName} cancelled their booking for ${booking.jobType}.${reason ? ` Reason: ${reason}` : ''}`,
+        link: `/dashboard/artisan/bookings/${bookingId}`,
+      }
+    );
+
+    log.info('Customer cancelled booking', { bookingId, customerId: userId, reason });
+
+    res.status(200).json({
+      success: true,
+      message: 'Booking cancelled successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * @route   GET /api/v1/bookings
  * @desc    Get bookings for current user
  * @access  Private

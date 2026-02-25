@@ -35,6 +35,7 @@ import webPushRoutes from './routes/webPush';
 import payoutRoutes from './routes/payout';
 import { startDisputeEscalationJob } from './jobs/disputeEscalation';
 import { startAutoCertificationJob } from './jobs/autoCertification';
+import { startBookingAutoCancelJob } from './jobs/bookingAutoCancel';
 
 const app = express();
 
@@ -149,6 +150,7 @@ async function start() {
       // Start background jobs
       startDisputeEscalationJob();
       startAutoCertificationJob();
+      startBookingAutoCancelJob();
     });
   } catch (error) {
     console.error('Failed to start server:', error);
