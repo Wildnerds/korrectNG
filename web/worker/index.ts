@@ -15,7 +15,6 @@ self.addEventListener('push', (event) => {
     tag: 'korrectng-notification',
     actions: [] as Array<{ action: string; title: string }>,
     requireInteraction: false,
-    image: undefined as string | undefined,
   };
 
   if (event.data) {
@@ -34,7 +33,6 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon || '/icons/icon-192x192.png',
     badge: data.badge || '/icons/icon-72x72.png',
-    image: data.image,
     tag: data.tag || 'korrectng-notification',
     data: data.data || {},
     actions: data.actions || [],
