@@ -15,6 +15,7 @@ import WarrantyClaimButton from './WarrantyClaimButton';
 import ShareButton from './ShareButton';
 import ContactButtons, { ContactButtonsHeader } from './ContactButtons';
 import GallerySection from './GallerySection';
+import BookingButton from './BookingButton';
 
 interface Props {
   params: { slug: string };
@@ -185,12 +186,27 @@ export default async function ArtisanProfilePage({ params }: Props) {
               </div>
 
               <div className="bg-white rounded-xl p-6">
-                <h3 className="font-bold mb-4">Contact</h3>
-                <ContactButtons
-                  whatsappLink={whatsappLink}
-                  phoneLink={phoneLink}
-                  phoneNumber={artisan.phoneNumber}
-                />
+                <h3 className="font-bold mb-4">Book This Artisan</h3>
+                <div className="space-y-3">
+                  <BookingButton
+                    artisanProfileId={artisan._id}
+                    artisanName={artisan.businessName}
+                    trade={artisan.trade}
+                  />
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="px-2 bg-white text-gray-500">or contact directly</span>
+                    </div>
+                  </div>
+                  <ContactButtons
+                    whatsappLink={whatsappLink}
+                    phoneLink={phoneLink}
+                    phoneNumber={artisan.phoneNumber}
+                  />
+                </div>
                 <WarrantyClaimButton artisanId={artisan._id} artisanName={artisan.businessName} />
               </div>
             </div>

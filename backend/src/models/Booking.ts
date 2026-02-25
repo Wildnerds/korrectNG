@@ -2,8 +2,10 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export type BookingStatus =
   | 'pending'          // Customer requested, waiting for artisan
-  | 'accepted'         // Artisan accepted
-  | 'rejected'         // Artisan rejected
+  | 'quoted'           // Artisan sent price quote, waiting for customer
+  | 'accepted'         // Customer accepted quote
+  | 'rejected'         // Artisan rejected the request
+  | 'declined'         // Customer declined the quote
   | 'payment_pending'  // Waiting for customer payment
   | 'paid'             // Customer paid (escrow)
   | 'in_progress'      // Work has started
@@ -28,12 +30,18 @@ export interface IBooking extends Document {
   address: string;
   scheduledDate?: Date;
   scheduledTime?: string;
+  images?: string[];  // Optional images of the job/damage
 
   // Pricing
-  estimatedPrice: number;
+  estimatedPrice?: number;   // Optional - set when artisan quotes
   finalPrice?: number;
-  platformFee: number;      // 10% platform fee
-  artisanEarnings: number;  // finalPrice - platformFee
+  platformFee: number;       // 10% platform fee
+  artisanEarnings: number;   // finalPrice - platformFee
+
+  // Quote from artisan
+  quotedPrice?: number;
+  quoteMessage?: string;
+  quotedAt?: Date;
 
   // Payment
   paymentStatus: PaymentStatus;
@@ -130,11 +138,13 @@ const bookingSchema = new Schema<IBooking>(
     scheduledTime: {
       type: String,
     },
+    images: [{
+      type: String,  // URLs to uploaded images
+    }],
 
     // Pricing (all in Naira)
     estimatedPrice: {
       type: Number,
-      required: true,
       min: 0,
     },
     finalPrice: {
@@ -148,6 +158,19 @@ const bookingSchema = new Schema<IBooking>(
     artisanEarnings: {
       type: Number,
       default: 0,
+    },
+
+    // Quote from artisan
+    quotedPrice: {
+      type: Number,
+      min: 0,
+    },
+    quoteMessage: {
+      type: String,
+      maxlength: 1000,
+    },
+    quotedAt: {
+      type: Date,
     },
 
     // Payment
@@ -176,8 +199,10 @@ const bookingSchema = new Schema<IBooking>(
       type: String,
       enum: [
         'pending',
+        'quoted',
         'accepted',
         'rejected',
+        'declined',
         'payment_pending',
         'paid',
         'in_progress',

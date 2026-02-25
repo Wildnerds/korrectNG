@@ -89,6 +89,54 @@ export default function CustomerDashboard() {
           </div>
         )}
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Link
+            href="/dashboard/customer/bookings"
+            className="bg-white rounded-xl p-5 hover:shadow-lg transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 bg-brand-green/10 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold">My Bookings</h3>
+              <p className="text-sm text-gray-500">View and manage your bookings</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/search"
+            className="bg-white rounded-xl p-5 hover:shadow-lg transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold">Find Artisans</h3>
+              <p className="text-sm text-gray-500">Search for skilled artisans</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/customer/contracts"
+            className="bg-white rounded-xl p-5 hover:shadow-lg transition-shadow flex items-center gap-4"
+          >
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold">Contracts</h3>
+              <p className="text-sm text-gray-500">View your contracts</p>
+            </div>
+          </Link>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-4 mb-6">
           <button

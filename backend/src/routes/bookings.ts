@@ -20,9 +20,14 @@ const createBookingSchema = z.object({
   description: z.string().min(10).max(2000),
   location: z.string().min(1),
   address: z.string().min(5),
-  estimatedPrice: z.number().min(1000), // Minimum ₦1,000
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
+  images: z.array(z.string()).max(5).optional(), // Up to 5 images
+});
+
+const sendQuoteSchema = z.object({
+  quotedPrice: z.number().min(1000), // Minimum ₦1,000
+  quoteMessage: z.string().max(1000).optional(),
 });
 
 const updateStatusSchema = z.object({
@@ -50,7 +55,7 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
     }
 
     const customerId = (req as any).user._id;
-    const { artisanProfileId, jobType, description, location, address, estimatedPrice, scheduledDate, scheduledTime } = validation.data;
+    const { artisanProfileId, jobType, description, location, address, scheduledDate, scheduledTime, images } = validation.data;
 
     // Get artisan profile
     const artisanProfile = await ArtisanProfile.findById(artisanProfileId).populate('user');
@@ -98,7 +103,7 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
       description,
       location,
       address,
-      estimatedPrice,
+      images: images || [],
       scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
       scheduledTime,
       status: 'pending',
@@ -124,6 +129,227 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
     res.status(201).json({
       success: true,
       data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/quote
+ * @desc    Artisan sends a price quote for a booking request
+ * @access  Private (Artisan)
+ */
+router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const validation = sendQuoteSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error.errors[0].message,
+      });
+    }
+
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+    const { quotedPrice, quoteMessage } = validation.data;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify artisan owns this booking
+    if (booking.artisan.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to quote this booking',
+      });
+    }
+
+    // Can only quote pending bookings
+    if (booking.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only send quotes for pending booking requests',
+      });
+    }
+
+    // Update booking with quote
+    booking.status = 'quoted';
+    booking.quotedPrice = quotedPrice;
+    booking.quoteMessage = quoteMessage;
+    booking.quotedAt = new Date();
+    (booking as any)._statusChangedBy = userId;
+
+    // Record response time for trust metrics
+    const responseTimeMinutes = Math.round(
+      (Date.now() - booking.createdAt.getTime()) / (1000 * 60)
+    );
+    const artisanProfile = await ArtisanProfile.findOne({ user: userId });
+    if (artisanProfile) {
+      await trustService.recordResponseTime(artisanProfile._id.toString(), responseTimeMinutes);
+    }
+
+    await booking.save();
+
+    // Send notification to customer about the quote
+    const artisan = await User.findById(userId);
+    await createNotification(
+      booking.customer.toString(),
+      {
+        type: 'quote_received',
+        title: 'Quote Received',
+        message: `${artisan?.firstName} ${artisan?.lastName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request`,
+        link: `/dashboard/customer/bookings/${bookingId}`,
+      }
+    );
+
+    const populatedBooking = await Booking.findById(bookingId)
+      .populate('customer', 'firstName lastName email phone avatar')
+      .populate('artisan', 'firstName lastName email phone avatar')
+      .populate('artisanProfile', 'businessName slug trade');
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote sent successfully',
+      data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/accept-quote
+ * @desc    Customer accepts the artisan's quote
+ * @access  Private (Customer)
+ */
+router.post('/:id/accept-quote', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify customer owns this booking
+    if (booking.customer.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized',
+      });
+    }
+
+    // Can only accept quoted bookings
+    if (booking.status !== 'quoted') {
+      return res.status(400).json({
+        success: false,
+        error: 'No quote to accept',
+      });
+    }
+
+    // Accept the quote - set finalPrice and move to payment_pending
+    booking.status = 'payment_pending';
+    booking.estimatedPrice = booking.quotedPrice;
+    booking.finalPrice = booking.quotedPrice;
+    (booking as any)._statusChangedBy = userId;
+    await booking.save();
+
+    // Send notification to artisan
+    const customer = await User.findById(userId);
+    await createNotification(
+      booking.artisan.toString(),
+      {
+        type: 'quote_accepted',
+        title: 'Quote Accepted',
+        message: `${customer?.firstName} ${customer?.lastName} accepted your quote for ${booking.jobType}. Awaiting payment.`,
+        link: `/dashboard/artisan/bookings/${bookingId}`,
+      }
+    );
+
+    const populatedBooking = await Booking.findById(bookingId)
+      .populate('customer', 'firstName lastName email phone avatar')
+      .populate('artisan', 'firstName lastName email phone avatar')
+      .populate('artisanProfile', 'businessName slug trade');
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote accepted. Please proceed to payment.',
+      data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/decline-quote
+ * @desc    Customer declines the artisan's quote
+ * @access  Private (Customer)
+ */
+router.post('/:id/decline-quote', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+    const { reason } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify customer owns this booking
+    if (booking.customer.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized',
+      });
+    }
+
+    // Can only decline quoted bookings
+    if (booking.status !== 'quoted') {
+      return res.status(400).json({
+        success: false,
+        error: 'No quote to decline',
+      });
+    }
+
+    booking.status = 'declined';
+    booking.cancellationReason = reason || 'Quote declined by customer';
+    (booking as any)._statusChangedBy = userId;
+    await booking.save();
+
+    // Notify artisan
+    const customer = await User.findById(userId);
+    await createNotification(
+      booking.artisan.toString(),
+      {
+        type: 'quote_declined',
+        title: 'Quote Declined',
+        message: `${customer?.firstName} ${customer?.lastName} declined your quote for ${booking.jobType}.`,
+        link: `/dashboard/artisan/bookings/${bookingId}`,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote declined',
     });
   } catch (error) {
     next(error);
@@ -565,7 +791,7 @@ router.post('/:id/cancel', protect, async (req: Request, res: Response, next: Ne
     }
 
     // Check if cancellation is allowed
-    const cancellableStatuses: BookingStatus[] = ['pending', 'accepted', 'payment_pending'];
+    const cancellableStatuses: BookingStatus[] = ['pending', 'quoted', 'accepted', 'payment_pending'];
     if (!cancellableStatuses.includes(booking.status)) {
       return res.status(400).json({
         success: false,

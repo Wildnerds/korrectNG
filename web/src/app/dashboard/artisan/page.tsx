@@ -270,6 +270,12 @@ export default function ArtisanDashboard() {
             <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <Link
+                href="/dashboard/artisan/bookings"
+                className="block w-full px-4 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors text-center font-semibold"
+              >
+                View Booking Requests
+              </Link>
+              <Link
                 href="/dashboard/artisan/profile"
                 className="block w-full px-4 py-3 bg-brand-light-gray rounded-md hover:bg-gray-200 transition-colors text-center font-medium"
               >
