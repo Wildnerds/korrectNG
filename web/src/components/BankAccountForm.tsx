@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
+import Cookies from 'js-cookie';
 
 interface Bank {
   code: string;
@@ -22,11 +23,38 @@ export function BankAccountForm() {
   const [loadingAccount, setLoadingAccount] = useState(true);
 
   const [bankCode, setBankCode] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [accountNumber, setAccountNumber] = useState('');
   const [verifiedName, setVerifiedName] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get auth token
+  const getToken = () => Cookies.get('token');
+
+  // Filter banks based on search
+  const filteredBanks = banks.filter((bank) =>
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  );
+
+  // Get selected bank name
+  const selectedBank = banks.find((b) => b.code === bankCode);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowBankDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch banks list
   useEffect(() => {
@@ -47,7 +75,8 @@ export function BankAccountForm() {
   useEffect(() => {
     async function fetchAccount() {
       try {
-        const res = await apiFetch<BankAccount>('/payout/bank-account');
+        const token = getToken();
+        const res = await apiFetch<BankAccount>('/payout/bank-account', { token });
         if (res.data) {
           setExistingAccount(res.data);
         }
@@ -60,6 +89,13 @@ export function BankAccountForm() {
     fetchAccount();
   }, []);
 
+  const handleSelectBank = (bank: Bank) => {
+    setBankCode(bank.code);
+    setBankSearch(bank.name);
+    setShowBankDropdown(false);
+    setVerifiedName('');
+  };
+
   const handleVerify = async () => {
     if (!bankCode || accountNumber.length !== 10) {
       setMessage({ type: 'error', text: 'Please select a bank and enter a 10-digit account number' });
@@ -71,8 +107,10 @@ export function BankAccountForm() {
     setVerifiedName('');
 
     try {
+      const token = getToken();
       const res = await apiFetch<{ accountName: string; accountNumber: string }>('/payout/verify-account', {
         method: 'POST',
+        token,
         body: JSON.stringify({ bankCode, accountNumber }),
       });
 
@@ -97,15 +135,16 @@ export function BankAccountForm() {
     setMessage(null);
 
     try {
+      const token = getToken();
       await apiFetch('/payout/bank-account', {
         method: 'POST',
+        token,
         body: JSON.stringify({ bankCode, accountNumber }),
       });
 
       setMessage({ type: 'success', text: 'Bank account saved successfully!' });
 
       // Update existing account display
-      const selectedBank = banks.find(b => b.code === bankCode);
       setExistingAccount({
         bankCode,
         accountNumber: '******' + accountNumber.slice(-4),
@@ -115,6 +154,7 @@ export function BankAccountForm() {
 
       // Reset form
       setBankCode('');
+      setBankSearch('');
       setAccountNumber('');
       setVerifiedName('');
     } catch (err: any) {
@@ -128,7 +168,8 @@ export function BankAccountForm() {
     if (!confirm('Are you sure you want to remove your bank account?')) return;
 
     try {
-      await apiFetch('/payout/bank-account', { method: 'DELETE' });
+      const token = getToken();
+      await apiFetch('/payout/bank-account', { method: 'DELETE', token });
       setExistingAccount(null);
       setMessage({ type: 'success', text: 'Bank account removed' });
     } catch (err: any) {
@@ -187,23 +228,54 @@ export function BankAccountForm() {
 
       {/* Add/Update bank account form */}
       <div className="space-y-4">
-        <div>
+        {/* Searchable Bank Dropdown */}
+        <div ref={dropdownRef} className="relative">
           <label className="block text-sm font-medium mb-1">Select Bank</label>
-          <select
-            value={bankCode}
+          <input
+            ref={inputRef}
+            type="text"
+            value={bankSearch}
             onChange={(e) => {
-              setBankCode(e.target.value);
+              setBankSearch(e.target.value);
+              setBankCode('');
               setVerifiedName('');
+              setShowBankDropdown(true);
             }}
+            onFocus={() => setShowBankDropdown(true)}
+            placeholder="Search for your bank..."
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-          >
-            <option value="">Choose your bank</option>
-            {banks.map((bank) => (
-              <option key={bank.code} value={bank.code}>
-                {bank.name}
-              </option>
-            ))}
-          </select>
+          />
+          {selectedBank && (
+            <div className="absolute right-3 top-9 text-green-600">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+
+          {/* Dropdown list */}
+          {showBankDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {filteredBanks.length > 0 ? (
+                filteredBanks.map((bank) => (
+                  <button
+                    key={bank.code}
+                    type="button"
+                    onClick={() => handleSelectBank(bank)}
+                    className={`w-full text-left px-4 py-2 hover:bg-brand-light-gray transition-colors ${
+                      bank.code === bankCode ? 'bg-brand-light-gray font-medium' : ''
+                    }`}
+                  >
+                    {bank.name}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-gray-500 text-sm">
+                  No banks found matching "{bankSearch}"
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
