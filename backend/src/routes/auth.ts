@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, updatePasswordSchema, updateProfileSchema } from '@korrectng/shared';
 import { User } from '../models';
 import { protect, AuthRequest } from '../middleware/auth';
@@ -8,6 +9,8 @@ import { AppError } from '../middleware/errorHandler';
 import { sendEmail, emailTemplates } from '../utils/email';
 import { log } from '../utils/logger';
 import { authLimiter, passwordResetLimiter, emailVerificationLimiter } from '../middleware/rateLimiter';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
 
@@ -90,6 +93,85 @@ router.post('/login', authLimiter, validate(loginSchema), async (req, res, next)
     await user.save({ validateBeforeSave: false });
     sendTokenResponse(user, 200, res);
   } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/auth/google
+// Sign in or register with Google
+router.post('/google', authLimiter, async (req, res, next) => {
+  try {
+    const { credential, role } = req.body;
+
+    if (!credential) {
+      throw new AppError('Google credential is required', 400);
+    }
+
+    // Verify the Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      throw new AppError('Invalid Google token', 401);
+    }
+
+    const { email, given_name, family_name, picture, email_verified } = payload;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // Existing user - update Google info if needed
+      if (!user.googleId) {
+        user.googleId = payload.sub;
+        user.avatar = user.avatar || picture;
+        await user.save({ validateBeforeSave: false });
+      }
+    } else {
+      // New user - create account
+      const userRole = role === 'artisan' ? 'artisan' : 'customer';
+
+      user = await User.create({
+        email,
+        firstName: given_name || '',
+        lastName: family_name || '',
+        avatar: picture,
+        googleId: payload.sub,
+        isEmailVerified: email_verified || false,
+        role: userRole,
+        isProfileComplete: false,
+        // Random password for Google users (they won't use it)
+        password: crypto.randomBytes(32).toString('hex'),
+      });
+
+      // Send welcome email
+      try {
+        const displayName = given_name || 'there';
+        const template = emailTemplates.welcome(displayName, userRole);
+        await sendEmail({
+          to: email,
+          subject: template.subject,
+          html: template.html,
+        });
+      } catch (emailError) {
+        log.error('Failed to send welcome email', { error: emailError });
+      }
+    }
+
+    // Update last login
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    log.info('Google auth successful', { email, isNewUser: !user.googleId });
+    sendTokenResponse(user, 200, res);
+  } catch (error: any) {
+    log.error('Google auth failed', { error: error.message });
+    if (error.message?.includes('Token used too late') || error.message?.includes('Invalid token')) {
+      return next(new AppError('Google sign-in expired. Please try again.', 401));
+    }
     next(error);
   }
 });

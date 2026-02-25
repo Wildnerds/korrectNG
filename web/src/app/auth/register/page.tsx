@@ -3,14 +3,16 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Cookies from 'js-cookie';
 import { useAuth } from '@/context/AuthContext';
 import { PasswordInput } from '@/components/PasswordInput';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialRole = searchParams.get('role') === 'artisan' ? 'artisan' : 'customer';
-  const { register } = useAuth();
+  const { register, refreshUser } = useAuth();
 
   const [form, setForm] = useState({
     email: '',
@@ -76,6 +78,32 @@ function RegisterForm() {
             {error}
           </div>
         )}
+
+        {/* Google Sign-up */}
+        <GoogleSignInButton
+          onSuccess={(user, token) => {
+            Cookies.set('token', token, { expires: 7 });
+            refreshUser();
+            if (form.role === 'artisan') {
+              router.push('/dashboard/artisan/verification');
+            } else {
+              router.push('/');
+            }
+          }}
+          onError={(errorMsg) => setError(errorMsg)}
+          role={form.role}
+          text="signup_with"
+        />
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-gray-500">or sign up with email</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

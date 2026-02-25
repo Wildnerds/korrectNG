@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { PasswordInput } from '@/components/PasswordInput';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,6 +42,27 @@ export default function LoginPage() {
             {error}
           </div>
         )}
+
+        {/* Google Sign-in */}
+        <GoogleSignInButton
+          onSuccess={(user, token) => {
+            Cookies.set('token', token, { expires: 7 });
+            refreshUser();
+            router.push('/');
+          }}
+          onError={(errorMsg) => setError(errorMsg)}
+          text="signin_with"
+        />
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-gray-500">or sign in with email</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

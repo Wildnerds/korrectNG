@@ -6,6 +6,7 @@ import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 import InstallPrompt from '@/components/InstallPrompt';
 import { ToastProvider } from '@/components/Toast';
 import { AuthProvider } from '@/context/AuthContext';
+import { GoogleOAuthWrapper } from '@/components/GoogleOAuthWrapper';
 
 export const viewport: Viewport = {
   themeColor: '#22C55E',
@@ -58,15 +59,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="font-sans text-brand-black bg-white min-h-screen flex flex-col">
-        <AuthProvider>
-          <ToastProvider>
-            <Navbar />
-            <EmailVerificationBanner />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <InstallPrompt />
-          </ToastProvider>
-        </AuthProvider>
+        <GoogleOAuthWrapper>
+          <AuthProvider>
+            <ToastProvider>
+              <Navbar />
+              <EmailVerificationBanner />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <InstallPrompt />
+            </ToastProvider>
+          </AuthProvider>
+        </GoogleOAuthWrapper>
       </body>
     </html>
   );

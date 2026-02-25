@@ -17,6 +17,7 @@ export interface IUser extends Document {
   phone?: string;
   address?: string;
   password: string;
+  googleId?: string;
   role: 'customer' | 'artisan' | 'admin';
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
@@ -66,6 +67,7 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, required: false, trim: true },
     address: { type: String, required: false, trim: true, maxlength: 500 },
     password: { type: String, required: true, minlength: 8, select: false },
+    googleId: { type: String, sparse: true },
     role: {
       type: String,
       enum: ['customer', 'artisan', 'admin'],
