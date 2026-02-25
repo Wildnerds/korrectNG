@@ -13,7 +13,6 @@ self.addEventListener('push', (event) => {
     badge: '/icons/icon-72x72.png',
     data: {} as Record<string, unknown>,
     tag: 'korrectng-notification',
-    actions: [] as Array<{ action: string; title: string }>,
     requireInteraction: false,
   };
 
@@ -29,16 +28,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const options: NotificationOptions = {
+  const options = {
     body: data.body,
     icon: data.icon || '/icons/icon-192x192.png',
     badge: data.badge || '/icons/icon-72x72.png',
     tag: data.tag || 'korrectng-notification',
     data: data.data || {},
-    actions: data.actions || [],
     requireInteraction: data.requireInteraction || false,
-    vibrate: [200, 100, 200],
-    renotify: true,
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
