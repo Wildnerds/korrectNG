@@ -145,6 +145,25 @@ export default function CustomerBookingsPage() {
     }
   };
 
+  const cancelBooking = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+    setActionLoading(bookingId);
+    const token = Cookies.get('token');
+    try {
+      await apiFetch(`/bookings/${bookingId}/cancel`, {
+        method: 'POST',
+        token,
+      });
+      showToast('Booking cancelled', 'success');
+      fetchBookings();
+    } catch (error: any) {
+      showToast(error.message || 'Failed to cancel booking', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const filteredBookings = filter === 'all'
     ? bookings
     : bookings.filter(b => b.status === filter);
@@ -331,12 +350,23 @@ export default function CustomerBookingsPage() {
                       </span>
                     )}
                   </div>
-                  <Link
-                    href={`/dashboard/customer/bookings/${booking._id}`}
-                    className="text-brand-green hover:underline"
-                  >
-                    View Details →
-                  </Link>
+                  <div className="flex items-center gap-4">
+                    {['pending', 'quoted', 'accepted', 'payment_pending'].includes(booking.status) && (
+                      <button
+                        onClick={() => cancelBooking(booking._id)}
+                        disabled={actionLoading === booking._id}
+                        className="text-red-500 hover:text-red-700 hover:underline disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <Link
+                      href={`/dashboard/customer/bookings/${booking._id}`}
+                      className="text-brand-green hover:underline"
+                    >
+                      View Details →
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
