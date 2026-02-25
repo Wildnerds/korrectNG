@@ -87,17 +87,8 @@ export default function ArtisanProfileEdit() {
     setMessage(null);
 
     try {
-      // Get CSRF token
-      let csrfToken = Cookies.get('csrf_token');
-      if (!csrfToken) {
-        const csrfRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/csrf-token`, {
-          credentials: 'include',
-        });
-        if (csrfRes.ok) {
-          const csrfData = await csrfRes.json();
-          csrfToken = csrfData.data?.csrfToken;
-        }
-      }
+      // Get auth token
+      const token = Cookies.get('token');
 
       // Upload to Cloudinary
       const formData = new FormData();
@@ -105,8 +96,8 @@ export default function ArtisanProfileEdit() {
       formData.append('folder', 'avatars');
 
       const headers: Record<string, string> = {};
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/upload/single`, {
