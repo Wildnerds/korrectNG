@@ -124,10 +124,31 @@ router.post('/google', authLimiter, async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      // Existing user - update Google info if needed
+      // Existing user - update Google info and fill missing profile fields
+      let needsSave = false;
+
       if (!user.googleId) {
         user.googleId = payload.sub;
-        user.avatar = user.avatar || picture;
+        needsSave = true;
+      }
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+        needsSave = true;
+      }
+      if (!user.firstName && given_name) {
+        user.firstName = given_name;
+        needsSave = true;
+      }
+      if (!user.lastName && family_name) {
+        user.lastName = family_name;
+        needsSave = true;
+      }
+      if (!user.isEmailVerified && email_verified) {
+        user.isEmailVerified = true;
+        needsSave = true;
+      }
+
+      if (needsSave) {
         await user.save({ validateBeforeSave: false });
       }
     } else {
