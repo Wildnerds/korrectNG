@@ -16,6 +16,7 @@ export default function WarrantyClaimModal({ artisanId, artisanName, isOpen, onC
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
+    bookingReference: '',
     jobDescription: '',
     issueDescription: '',
   });
@@ -41,7 +42,7 @@ export default function WarrantyClaimModal({ artisanId, artisanName, isOpen, onC
         token,
       });
 
-      setForm({ jobDescription: '', issueDescription: '' });
+      setForm({ bookingReference: '', jobDescription: '', issueDescription: '' });
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -69,10 +70,13 @@ export default function WarrantyClaimModal({ artisanId, artisanName, isOpen, onC
           </button>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-blue-700">
-            If you've had work done by this artisan and there's an issue with the quality or service,
-            you can submit a warranty claim. The artisan will be notified and can respond.
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-amber-800 font-medium mb-1">
+            Important: Platform Protection Only
+          </p>
+          <p className="text-sm text-amber-700">
+            Warranty claims only cover jobs booked and paid through KorrectNG's escrow system.
+            Direct deals (via WhatsApp/Call) are not covered.
           </p>
         </div>
 
@@ -83,6 +87,23 @@ export default function WarrantyClaimModal({ artisanId, artisanName, isOpen, onC
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Booking Reference <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.bookingReference}
+              onChange={(e) => setForm({ ...form, bookingReference: e.target.value.toUpperCase() })}
+              placeholder="e.g., BK1234567890ABCD"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green font-mono"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Find this in your booking details at Dashboard → My Bookings
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">What job was done?</label>
             <input
