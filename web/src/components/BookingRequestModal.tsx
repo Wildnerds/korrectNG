@@ -64,7 +64,7 @@ export function BookingRequestModal({
         formData.append('image', file);
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/upload/image`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/upload/single`,
           {
             method: 'POST',
             headers: {
