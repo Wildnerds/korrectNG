@@ -46,7 +46,7 @@ export default function LoginPage() {
         {/* Google Sign-in */}
         <GoogleSignInButton
           onSuccess={(user, token) => {
-            Cookies.set('token', token, { expires: 7 });
+            Cookies.set('token', token, { expires: 30, path: '/' });
             refreshUser();
             router.push('/');
           }}

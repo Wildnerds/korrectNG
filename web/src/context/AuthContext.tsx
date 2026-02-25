@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
     });
     if (res.data?.token) {
-      Cookies.set('token', res.data.token, { expires: 30 });
+      Cookies.set('token', res.data.token, { expires: 30, path: '/' });
     }
     setUser(res.data?.user || null);
   };
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify(data),
     });
     if (res.data?.token) {
-      Cookies.set('token', res.data.token, { expires: 30 });
+      Cookies.set('token', res.data.token, { expires: 30, path: '/' });
     }
     setUser(res.data?.user || null);
   };
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore logout errors
     }
-    Cookies.remove('token');
+    Cookies.remove('token', { path: '/' });
     setUser(null);
   };
 

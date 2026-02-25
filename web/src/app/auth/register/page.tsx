@@ -82,7 +82,7 @@ function RegisterForm() {
         {/* Google Sign-up */}
         <GoogleSignInButton
           onSuccess={(user, token) => {
-            Cookies.set('token', token, { expires: 7 });
+            Cookies.set('token', token, { expires: 30, path: '/' });
             refreshUser();
             if (form.role === 'artisan') {
               router.push('/dashboard/artisan/verification');
