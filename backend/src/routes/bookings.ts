@@ -10,6 +10,7 @@ import { log } from '../utils/logger';
 import { bookingLimiter } from '../middleware/rateLimiter';
 import trustService from '../services/trustService';
 import { payArtisan } from '../services/payoutService';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -111,6 +112,7 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
 
     // Send notification to artisan
     const customer = await User.findById(customerId);
+    const artisanUser = artisanProfile.user as any;
     await createNotificationWithPush(
       artisanId.toString(),
       notificationTemplates.bookingRequest(
@@ -119,6 +121,24 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
         booking._id.toString()
       )
     );
+
+    // Send email to artisan
+    try {
+      const emailContent = emailTemplates.newBookingRequest(
+        artisanUser.firstName,
+        `${customer?.firstName} ${customer?.lastName}`,
+        jobType,
+        description,
+        location
+      );
+      await sendEmail({
+        to: artisanUser.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      });
+    } catch (emailError) {
+      log.error('Failed to send new booking email', { error: emailError, bookingId: booking._id });
+    }
 
     // Populate and return
     const populatedBooking = await Booking.findById(booking._id)
@@ -210,6 +230,28 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
       }
     );
 
+    // Send email to customer
+    try {
+      const customerUser = await User.findById(booking.customer);
+      if (customerUser && artisanProfile) {
+        const emailContent = emailTemplates.quoteReceived(
+          customerUser.firstName,
+          `${artisan?.firstName} ${artisan?.lastName}`,
+          artisanProfile.businessName,
+          booking.jobType,
+          quotedPrice,
+          quoteMessage
+        );
+        await sendEmail({
+          to: customerUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send quote received email', { error: emailError, bookingId });
+    }
+
     const populatedBooking = await Booking.findById(bookingId)
       .populate('customer', 'firstName lastName email phone avatar')
       .populate('artisan', 'firstName lastName email phone avatar')
@@ -279,6 +321,26 @@ router.post('/:id/accept-quote', protect, async (req: Request, res: Response, ne
       }
     );
 
+    // Send email to artisan
+    try {
+      const artisanUser = await User.findById(booking.artisan);
+      if (artisanUser && customer) {
+        const emailContent = emailTemplates.quoteAccepted(
+          artisanUser.firstName,
+          `${customer.firstName} ${customer.lastName}`,
+          booking.jobType,
+          booking.quotedPrice!
+        );
+        await sendEmail({
+          to: artisanUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send quote accepted email', { error: emailError, bookingId });
+    }
+
     const populatedBooking = await Booking.findById(bookingId)
       .populate('customer', 'firstName lastName email phone avatar')
       .populate('artisan', 'firstName lastName email phone avatar')
@@ -347,6 +409,25 @@ router.post('/:id/decline-quote', protect, async (req: Request, res: Response, n
       }
     );
 
+    // Send email to artisan
+    try {
+      const artisanUser = await User.findById(booking.artisan);
+      if (artisanUser && customer) {
+        const emailContent = emailTemplates.quoteDeclined(
+          artisanUser.firstName,
+          `${customer.firstName} ${customer.lastName}`,
+          booking.jobType
+        );
+        await sendEmail({
+          to: artisanUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send quote declined email', { error: emailError, bookingId });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Quote declined',
@@ -412,6 +493,26 @@ router.post('/:id/cancel', protect, async (req: Request, res: Response, next: Ne
         link: `/dashboard/artisan/bookings/${bookingId}`,
       }
     );
+
+    // Send email to artisan about the cancellation
+    try {
+      const artisanUser = await User.findById(booking.artisan);
+      if (artisanUser) {
+        const emailContent = emailTemplates.bookingCancelled(
+          artisanUser.firstName,
+          'customer',
+          booking.jobType,
+          reason
+        );
+        await sendEmail({
+          to: artisanUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send booking cancelled email', { error: emailError, bookingId });
+    }
 
     log.info('Customer cancelled booking', { bookingId, customerId: userId, reason });
 
@@ -997,6 +1098,7 @@ router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request
 
     // Send notification to customer
     const artisan = await User.findById(userId);
+    const artisanProfile = await ArtisanProfile.findOne({ user: userId });
     await createNotificationWithPush(
       booking.customer.toString(),
       notificationTemplates.bookingCompleted(
@@ -1004,6 +1106,26 @@ router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request
         bookingId
       )
     );
+
+    // Send email to customer about job completion
+    try {
+      const customerUser = await User.findById(booking.customer);
+      if (customerUser && artisan && artisanProfile) {
+        const emailContent = emailTemplates.jobCompleted(
+          customerUser.firstName,
+          `${artisan.firstName} ${artisan.lastName}`,
+          artisanProfile.businessName,
+          booking.jobType
+        );
+        await sendEmail({
+          to: customerUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send job completed email', { error: emailError, bookingId });
+    }
 
     const populatedBooking = await Booking.findById(bookingId)
       .populate('customer', 'firstName lastName email phone avatar')
@@ -1078,6 +1200,27 @@ router.post('/:id/certify', protect, async (req: Request, res: Response, next: N
       booking.artisan.toString(),
       notificationTemplates.paymentReceived(booking.artisanEarnings, booking.jobType)
     );
+
+    // Send email to artisan about job certification and payment release
+    try {
+      const artisanUser = await User.findById(booking.artisan);
+      const customerUser = await User.findById(userId);
+      if (artisanUser && customerUser) {
+        const emailContent = emailTemplates.jobCertified(
+          artisanUser.firstName,
+          `${customerUser.firstName} ${customerUser.lastName}`,
+          booking.jobType,
+          booking.artisanEarnings
+        );
+        await sendEmail({
+          to: artisanUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+    } catch (emailError) {
+      log.error('Failed to send job certified email', { error: emailError, bookingId });
+    }
 
     // Update artisan stats and trust metrics
     const artisanProfileId = booking.artisanProfile.toString();

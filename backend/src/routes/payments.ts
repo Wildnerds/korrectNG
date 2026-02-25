@@ -1,14 +1,15 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
-import { Subscription, ArtisanProfile, VerificationApplication } from '../models';
+import { Subscription, ArtisanProfile, VerificationApplication, User } from '../models';
 import Booking from '../models/Booking';
 import EscrowPayment from '../models/EscrowPayment';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
-import { createNotification, notificationTemplates } from '../services/notifications';
+import { createNotification, createNotificationWithPush, notificationTemplates } from '../services/notifications';
 import { fundEscrow, confirmTransfer } from '../services/escrowStateMachine';
 import { log } from '../utils/logger';
 import { paymentLimiter } from '../middleware/rateLimiter';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -185,7 +186,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
             await booking.save();
 
             // Notify artisan that payment is received and they can start work
-            await createNotification(
+            await createNotificationWithPush(
               booking.artisan.toString(),
               {
                 type: 'payment_received',
@@ -195,6 +196,27 @@ router.post('/webhook', async (req: Request, res: Response) => {
                 data: { bookingId: booking_id },
               }
             );
+
+            // Send email to artisan about payment received
+            try {
+              const artisanUser = await User.findById(booking.artisan);
+              const customerUser = await User.findById(booking.customer);
+              if (artisanUser && customerUser) {
+                const emailContent = emailTemplates.paymentReceived(
+                  artisanUser.firstName,
+                  `${customerUser.firstName} ${customerUser.lastName}`,
+                  booking.jobType,
+                  booking.finalPrice!
+                );
+                await sendEmail({
+                  to: artisanUser.email,
+                  subject: emailContent.subject,
+                  html: emailContent.html,
+                });
+              }
+            } catch (emailError) {
+              log.error('Failed to send payment received email', { error: emailError, bookingId: booking_id });
+            }
           }
         } else if (metadata?.type === 'escrow_funding') {
           // Handle contract escrow funding
