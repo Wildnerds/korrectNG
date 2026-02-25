@@ -35,6 +35,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'korrectng-notification',
     data: data.data || {},
     requireInteraction: data.requireInteraction || false,
+    silent: false, // Enable notification sound
+    vibrate: [200, 100, 200], // Vibration pattern for mobile
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));

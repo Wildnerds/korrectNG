@@ -5,7 +5,7 @@ import { ArtisanProfile } from '../models/ArtisanProfile';
 import { User } from '../models/User';
 import Conversation from '../models/Conversation';
 import { z } from 'zod';
-import { createNotification, notificationTemplates } from '../services/notifications';
+import { createNotification, createNotificationWithPush, notificationTemplates } from '../services/notifications';
 import { log } from '../utils/logger';
 import { bookingLimiter } from '../middleware/rateLimiter';
 import trustService from '../services/trustService';
@@ -111,7 +111,7 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
 
     // Send notification to artisan
     const customer = await User.findById(customerId);
-    await createNotification(
+    await createNotificationWithPush(
       artisanId.toString(),
       notificationTemplates.bookingRequest(
         `${customer?.firstName} ${customer?.lastName}`,
@@ -200,7 +200,7 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
 
     // Send notification to customer about the quote
     const artisan = await User.findById(userId);
-    await createNotification(
+    await createNotificationWithPush(
       booking.customer.toString(),
       {
         type: 'quote_received',
@@ -269,7 +269,7 @@ router.post('/:id/accept-quote', protect, async (req: Request, res: Response, ne
 
     // Send notification to artisan
     const customer = await User.findById(userId);
-    await createNotification(
+    await createNotificationWithPush(
       booking.artisan.toString(),
       {
         type: 'quote_accepted',
@@ -337,7 +337,7 @@ router.post('/:id/decline-quote', protect, async (req: Request, res: Response, n
 
     // Notify artisan
     const customer = await User.findById(userId);
-    await createNotification(
+    await createNotificationWithPush(
       booking.artisan.toString(),
       {
         type: 'quote_declined',
@@ -510,7 +510,7 @@ router.put('/:id/status', protect, async (req: Request, res: Response, next: Nex
 
       // Send notification to customer
       const artisan = await User.findById(userId);
-      await createNotification(
+      await createNotificationWithPush(
         booking.customer.toString(),
         notificationTemplates.bookingAccepted(
           `${artisan?.firstName} ${artisan?.lastName}`,
@@ -557,7 +557,7 @@ router.put('/:id/status', protect, async (req: Request, res: Response, next: Nex
 
       // Send notification to customer
       const artisan = await User.findById(userId);
-      await createNotification(
+      await createNotificationWithPush(
         booking.customer.toString(),
         notificationTemplates.bookingCompleted(
           `${artisan?.firstName} ${artisan?.lastName}`,
@@ -709,7 +709,7 @@ router.post('/:id/confirm', protect, async (req: Request, res: Response, next: N
     await booking.save();
 
     // Send notification to artisan about payment release
-    await createNotification(
+    await createNotificationWithPush(
       booking.artisan.toString(),
       notificationTemplates.paymentReceived(booking.artisanEarnings, booking.jobType)
     );
@@ -929,7 +929,7 @@ router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request
 
     // Send notification to customer
     const artisan = await User.findById(userId);
-    await createNotification(
+    await createNotificationWithPush(
       booking.customer.toString(),
       notificationTemplates.bookingCompleted(
         `${artisan?.firstName} ${artisan?.lastName}`,
@@ -1006,7 +1006,7 @@ router.post('/:id/certify', protect, async (req: Request, res: Response, next: N
     await booking.save();
 
     // Send notification to artisan about payment release
-    await createNotification(
+    await createNotificationWithPush(
       booking.artisan.toString(),
       notificationTemplates.paymentReceived(booking.artisanEarnings, booking.jobType)
     );

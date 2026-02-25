@@ -15,6 +15,9 @@ export type NotificationType =
   | 'booking_accepted'
   | 'booking_rejected'
   | 'booking_completed'
+  | 'quote_received'
+  | 'quote_accepted'
+  | 'quote_declined'
   | 'payment_received'
   | 'welcome'
   | 'system';
