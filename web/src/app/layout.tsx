@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 import InstallPrompt from '@/components/InstallPrompt';
+import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
 import { ToastProvider } from '@/components/Toast';
 import { AuthProvider } from '@/context/AuthContext';
 import { GoogleOAuthWrapper } from '@/components/GoogleOAuthWrapper';
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <main className="flex-1">{children}</main>
               <Footer />
               <InstallPrompt />
+              <PWAUpdatePrompt />
             </ToastProvider>
           </AuthProvider>
         </GoogleOAuthWrapper>

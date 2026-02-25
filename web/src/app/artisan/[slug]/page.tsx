@@ -190,6 +190,7 @@ export default async function ArtisanProfilePage({ params }: Props) {
                 <div className="space-y-3">
                   <BookingButton
                     artisanProfileId={artisan._id}
+                    artisanUserId={typeof artisan.user === 'string' ? artisan.user : artisan.user._id}
                     artisanName={artisan.businessName}
                     trade={artisan.trade}
                   />

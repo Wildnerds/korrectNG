@@ -7,11 +7,12 @@ import { BookingRequestModal } from '@/components/BookingRequestModal';
 
 interface BookingButtonProps {
   artisanProfileId: string;
+  artisanUserId: string;
   artisanName: string;
   trade: string;
 }
 
-export default function BookingButton({ artisanProfileId, artisanName, trade }: BookingButtonProps) {
+export default function BookingButton({ artisanProfileId, artisanUserId, artisanName, trade }: BookingButtonProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +25,12 @@ export default function BookingButton({ artisanProfileId, artisanName, trade }: 
 
     if (!user.isEmailVerified) {
       showToast('Please verify your email to request bookings', 'warning');
+      return;
+    }
+
+    // Check if user is trying to book themselves
+    if (user._id === artisanUserId) {
+      showToast('You cannot book yourself', 'warning');
       return;
     }
 
