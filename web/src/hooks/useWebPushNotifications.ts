@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Cookies from 'js-cookie';
 import { useAuth } from '@/context/AuthContext';
 
 interface WebPushState {
@@ -30,7 +31,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export function useWebPushNotifications() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
+  const token = Cookies.get('token');
   const [state, setState] = useState<WebPushState>({
     isSupported: false,
     isSubscribed: false,
