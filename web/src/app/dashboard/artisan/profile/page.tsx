@@ -95,28 +95,22 @@ export default function ArtisanProfileEdit() {
       formData.append('image', file);
       formData.append('folder', 'avatars');
 
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/upload/single`, {
+      // Use apiFetch which handles FormData and auth properly
+      const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
         method: 'POST',
-        credentials: 'include',
-        headers,
+        token,
         body: formData,
       });
 
-      const uploadData = await uploadRes.json();
-
-      if (!uploadRes.ok) {
-        throw new Error(uploadData.error || 'Failed to upload image');
+      if (!uploadRes.data?.url) {
+        throw new Error('Failed to upload image');
       }
-      const imageUrl = uploadData.data.url;
+      const imageUrl = uploadRes.data.url;
 
       // Update user profile with new avatar
       await apiFetch('/auth/update-profile', {
         method: 'PUT',
+        token,
         body: JSON.stringify({ avatar: imageUrl }),
       });
 

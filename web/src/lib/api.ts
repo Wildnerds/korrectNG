@@ -48,8 +48,11 @@ export async function apiFetch<T = any>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<{ success: boolean; data?: T; error?: string; message?: string; code?: string }> {
-  const { token, ...fetchOptions } = options;
+  const { token: passedToken, ...fetchOptions } = options;
   const method = (fetchOptions.method || 'GET').toUpperCase();
+
+  // Use passed token or fall back to cookie
+  const token = passedToken || Cookies.get('token');
 
   const headers: Record<string, string> = {
     ...(fetchOptions.headers as Record<string, string>),
