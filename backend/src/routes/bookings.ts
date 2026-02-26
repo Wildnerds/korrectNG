@@ -220,12 +220,15 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
 
     // Send notification to customer about the quote
     const artisan = await User.findById(userId);
+    const artisanName = artisan?.firstName && artisan?.lastName
+      ? `${artisan.firstName} ${artisan.lastName}`
+      : artisanProfile?.businessName || 'An artisan';
     await createNotificationWithPush(
       booking.customer.toString(),
       {
         type: 'quote_received',
         title: 'Quote Received',
-        message: `${artisan?.firstName} ${artisan?.lastName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request`,
+        message: `${artisanName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request`,
         link: `/dashboard/customer/bookings/${bookingId}`,
       }
     );
@@ -236,7 +239,7 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
       if (customerUser && artisanProfile) {
         const emailContent = emailTemplates.quoteReceived(
           customerUser.firstName,
-          `${artisan?.firstName} ${artisan?.lastName}`,
+          artisanName,
           artisanProfile.businessName,
           booking.jobType,
           quotedPrice,
@@ -311,12 +314,15 @@ router.post('/:id/accept-quote', protect, async (req: Request, res: Response, ne
 
     // Send notification to artisan
     const customer = await User.findById(userId);
+    const customerName = customer?.firstName && customer?.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : 'A customer';
     await createNotificationWithPush(
       booking.artisan.toString(),
       {
         type: 'quote_accepted',
         title: 'Quote Accepted',
-        message: `${customer?.firstName} ${customer?.lastName} accepted your quote for ${booking.jobType}. Awaiting payment.`,
+        message: `${customerName} accepted your quote for ${booking.jobType}. Awaiting payment.`,
         link: `/dashboard/artisan/bookings/${bookingId}`,
       }
     );
@@ -326,8 +332,8 @@ router.post('/:id/accept-quote', protect, async (req: Request, res: Response, ne
       const artisanUser = await User.findById(booking.artisan);
       if (artisanUser && customer) {
         const emailContent = emailTemplates.quoteAccepted(
-          artisanUser.firstName,
-          `${customer.firstName} ${customer.lastName}`,
+          artisanUser.firstName || 'Artisan',
+          customerName,
           booking.jobType,
           booking.quotedPrice!
         );
@@ -399,12 +405,15 @@ router.post('/:id/decline-quote', protect, async (req: Request, res: Response, n
 
     // Notify artisan
     const customer = await User.findById(userId);
+    const customerName = customer?.firstName && customer?.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : 'A customer';
     await createNotificationWithPush(
       booking.artisan.toString(),
       {
         type: 'quote_declined',
         title: 'Quote Declined',
-        message: `${customer?.firstName} ${customer?.lastName} declined your quote for ${booking.jobType}.`,
+        message: `${customerName} declined your quote for ${booking.jobType}.`,
         link: `/dashboard/artisan/bookings/${bookingId}`,
       }
     );
@@ -414,8 +423,8 @@ router.post('/:id/decline-quote', protect, async (req: Request, res: Response, n
       const artisanUser = await User.findById(booking.artisan);
       if (artisanUser && customer) {
         const emailContent = emailTemplates.quoteDeclined(
-          artisanUser.firstName,
-          `${customer.firstName} ${customer.lastName}`,
+          artisanUser.firstName || 'Artisan',
+          customerName,
           booking.jobType
         );
         await sendEmail({
@@ -484,12 +493,15 @@ router.post('/:id/cancel', protect, async (req: Request, res: Response, next: Ne
 
     // Notify artisan about the cancellation
     const customer = await User.findById(userId);
+    const customerName = customer?.firstName && customer?.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : 'A customer';
     await createNotificationWithPush(
       booking.artisan.toString(),
       {
         type: 'booking_rejected',
         title: 'Booking Cancelled',
-        message: `${customer?.firstName} ${customer?.lastName} cancelled their booking for ${booking.jobType}.${reason ? ` Reason: ${reason}` : ''}`,
+        message: `${customerName} cancelled their booking for ${booking.jobType}.${reason ? ` Reason: ${reason}` : ''}`,
         link: `/dashboard/artisan/bookings/${bookingId}`,
       }
     );
@@ -499,7 +511,7 @@ router.post('/:id/cancel', protect, async (req: Request, res: Response, next: Ne
       const artisanUser = await User.findById(booking.artisan);
       if (artisanUser) {
         const emailContent = emailTemplates.bookingCancelled(
-          artisanUser.firstName,
+          artisanUser.firstName || 'Artisan',
           'customer',
           booking.jobType,
           reason
@@ -679,10 +691,13 @@ router.put('/:id/status', protect, async (req: Request, res: Response, next: Nex
 
       // Send notification to customer
       const artisan = await User.findById(userId);
+      const artisanDisplayName = artisan?.firstName && artisan?.lastName
+        ? `${artisan.firstName} ${artisan.lastName}`
+        : artisanProfile?.businessName || 'An artisan';
       await createNotificationWithPush(
         booking.customer.toString(),
         notificationTemplates.bookingAccepted(
-          `${artisan?.firstName} ${artisan?.lastName}`,
+          artisanDisplayName,
           bookingId
         )
       );
@@ -726,10 +741,14 @@ router.put('/:id/status', protect, async (req: Request, res: Response, next: Nex
 
       // Send notification to customer
       const artisan = await User.findById(userId);
+      const artisanProfileForName = await ArtisanProfile.findOne({ user: userId });
+      const artisanDisplayName = artisan?.firstName && artisan?.lastName
+        ? `${artisan.firstName} ${artisan.lastName}`
+        : artisanProfileForName?.businessName || 'An artisan';
       await createNotificationWithPush(
         booking.customer.toString(),
         notificationTemplates.bookingCompleted(
-          `${artisan?.firstName} ${artisan?.lastName}`,
+          artisanDisplayName,
           bookingId
         )
       );
@@ -1099,10 +1118,13 @@ router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request
     // Send notification to customer
     const artisan = await User.findById(userId);
     const artisanProfile = await ArtisanProfile.findOne({ user: userId });
+    const artisanDisplayName = artisan?.firstName && artisan?.lastName
+      ? `${artisan.firstName} ${artisan.lastName}`
+      : artisanProfile?.businessName || 'An artisan';
     await createNotificationWithPush(
       booking.customer.toString(),
       notificationTemplates.bookingCompleted(
-        `${artisan?.firstName} ${artisan?.lastName}`,
+        artisanDisplayName,
         bookingId
       )
     );
@@ -1110,10 +1132,10 @@ router.post('/:id/complete', protect, restrictTo('artisan'), async (req: Request
     // Send email to customer about job completion
     try {
       const customerUser = await User.findById(booking.customer);
-      if (customerUser && artisan && artisanProfile) {
+      if (customerUser && artisanProfile) {
         const emailContent = emailTemplates.jobCompleted(
-          customerUser.firstName,
-          `${artisan.firstName} ${artisan.lastName}`,
+          customerUser.firstName || 'Customer',
+          artisanDisplayName,
           artisanProfile.businessName,
           booking.jobType
         );

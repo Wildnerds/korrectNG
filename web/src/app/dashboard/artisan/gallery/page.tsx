@@ -80,6 +80,8 @@ export default function ArtisanGalleryPage() {
         }
       }
 
+      const token = Cookies.get('token');
+
       for (const file of Array.from(files)) {
         const formData = new FormData();
         formData.append('image', file);
@@ -89,12 +91,16 @@ export default function ArtisanGalleryPage() {
           method: 'POST',
           credentials: 'include',
           headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` }),
             ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
           },
           body: formData,
         });
 
-        if (!uploadRes.ok) throw new Error('Upload failed');
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Upload failed');
+        }
 
         const uploadData = await uploadRes.json();
         uploadedImages.push({
