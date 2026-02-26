@@ -57,7 +57,7 @@ export default function Navbar() {
             {user ? (
               <>
                 <span className="text-brand-gray">
-                  Hi, <span className="font-medium text-brand-black">{user.firstName}</span>
+                  Hi, <span className="font-medium text-brand-black">{user.firstName || 'there'}</span>
                 </span>
                 <Link
                   href="/dashboard/notifications"
@@ -130,7 +130,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <span className="px-4 py-3 text-brand-gray min-h-[44px] flex items-center">
-                    Hi, <span className="font-medium text-brand-black ml-1">{user.firstName}</span>
+                    Hi, <span className="font-medium text-brand-black ml-1">{user.firstName || 'there'}</span>
                   </span>
                   <Link
                     href="/dashboard/notifications"
