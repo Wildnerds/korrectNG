@@ -113,10 +113,13 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
     // Send notification to artisan
     const customer = await User.findById(customerId);
     const artisanUser = artisanProfile.user as any;
+    const customerName = customer?.firstName && customer?.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : 'A customer';
     await createNotificationWithPush(
       artisanId.toString(),
       notificationTemplates.bookingRequest(
-        `${customer?.firstName} ${customer?.lastName}`,
+        customerName,
         jobType,
         booking._id.toString()
       )
@@ -125,8 +128,8 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
     // Send email to artisan
     try {
       const emailContent = emailTemplates.newBookingRequest(
-        artisanUser.firstName,
-        `${customer?.firstName} ${customer?.lastName}`,
+        artisanUser.firstName || 'Artisan',
+        customerName,
         jobType,
         description,
         location
@@ -1228,9 +1231,12 @@ router.post('/:id/certify', protect, async (req: Request, res: Response, next: N
       const artisanUser = await User.findById(booking.artisan);
       const customerUser = await User.findById(userId);
       if (artisanUser && customerUser) {
+        const certifyingCustomerName = customerUser.firstName && customerUser.lastName
+          ? `${customerUser.firstName} ${customerUser.lastName}`
+          : 'The customer';
         const emailContent = emailTemplates.jobCertified(
-          artisanUser.firstName,
-          `${customerUser.firstName} ${customerUser.lastName}`,
+          artisanUser.firstName || 'Artisan',
+          certifyingCustomerName,
           booking.jobType,
           booking.artisanEarnings
         );

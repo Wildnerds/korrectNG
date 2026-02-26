@@ -110,10 +110,13 @@ router.post('/conversations', messageLimiter, protect, async (req: Request, res:
 
     // Send notification to artisan
     const customer = await User.findById(customerId);
+    const customerName = customer?.firstName && customer?.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : 'A customer';
     await createNotification(
       artisanId,
       notificationTemplates.newMessage(
-        `${customer?.firstName} ${customer?.lastName}`,
+        customerName,
         conversation._id.toString()
       )
     );
@@ -235,10 +238,13 @@ router.post(
         : conversation.customer.toString();
 
       const sender = await User.findById(userId);
+      const senderName = sender?.firstName && sender?.lastName
+        ? `${sender.firstName} ${sender.lastName}`
+        : 'Someone';
       await createNotification(
         recipientId,
         notificationTemplates.newMessage(
-          `${sender?.firstName} ${sender?.lastName}`,
+          senderName,
           conversationId
         )
       );

@@ -202,9 +202,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
               const artisanUser = await User.findById(booking.artisan);
               const customerUser = await User.findById(booking.customer);
               if (artisanUser && customerUser) {
+                const customerName = customerUser.firstName && customerUser.lastName
+                  ? `${customerUser.firstName} ${customerUser.lastName}`
+                  : 'A customer';
                 const emailContent = emailTemplates.paymentReceived(
-                  artisanUser.firstName,
-                  `${customerUser.firstName} ${customerUser.lastName}`,
+                  artisanUser.firstName || 'Artisan',
+                  customerName,
                   booking.jobType,
                   booking.finalPrice!
                 );
