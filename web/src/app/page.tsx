@@ -111,7 +111,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Shop Materials */}
+      <section className="py-12 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-gradient-to-r from-brand-orange to-orange-500 rounded-2xl p-8 md:p-12 text-white">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
+                Need Building Materials?
+              </h2>
+              <p className="text-lg opacity-90 mb-6">
+                Browse verified merchants for quality materials at competitive prices.
+                Compare prices, read reviews, and order with escrow protection.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/merchants"
+                  className="px-8 py-3 bg-white text-brand-orange rounded-md hover:bg-gray-100 transition-colors font-semibold text-center"
+                >
+                  Shop Materials
+                </Link>
+                <Link
+                  href="/auth/register?role=merchant"
+                  className="px-8 py-3 border-2 border-white text-white rounded-md hover:bg-white hover:text-brand-orange transition-colors font-semibold text-center"
+                >
+                  Sell on KorrectNG
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA - Artisans */}
       <section className="py-20 bg-brand-green text-white text-center">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-5">Are You A Skilled Artisan?</h2>
@@ -132,6 +163,23 @@ export default async function HomePage() {
               Learn More
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* CTA - Merchants */}
+      <section className="py-16 bg-brand-light-gray text-center">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-5 text-brand-black">Sell Materials on KorrectNG</h2>
+          <p className="text-lg mb-8 text-brand-gray">
+            Join our marketplace and reach customers who need quality materials for their projects.
+            Low 5% commission, escrow protection, and trusted platform.
+          </p>
+          <Link
+            href="/auth/register?role=merchant"
+            className="inline-block px-8 py-3 bg-brand-orange text-white rounded-md hover:bg-orange-600 transition-colors font-semibold"
+          >
+            Become a Merchant
+          </Link>
         </div>
       </section>
     </>

@@ -4,22 +4,23 @@ export default function Footer() {
   return (
     <footer className="bg-brand-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 sm:gap-10 mb-10">
           <div className="sm:col-span-2 md:col-span-1">
             <h3 className="text-brand-green text-xl font-bold mb-4">
               Korrect<span className="text-brand-orange">NG</span>
             </h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Nigeria&apos;s leading platform for verified artisans. We connect customers with
-              skilled, accountable service providers across all trades.
+              Nigeria&apos;s leading platform for verified artisans and trusted merchants. We connect customers with
+              skilled service providers and quality materials.
             </p>
           </div>
           <div>
             <h4 className="font-semibold mb-4">For Customers</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/search" className="text-gray-400 hover:text-white transition-colors">Find Artisans</Link></li>
+              <li><Link href="/merchants" className="text-gray-400 hover:text-white transition-colors">Shop Materials</Link></li>
               <li><Link href="/#how-it-works" className="text-gray-400 hover:text-white transition-colors">How It Works</Link></li>
-              <li><Link href="/dashboard/customer" className="text-gray-400 hover:text-white transition-colors">Warranty Claims</Link></li>
+              <li><Link href="/dashboard/customer" className="text-gray-400 hover:text-white transition-colors">My Dashboard</Link></li>
             </ul>
           </div>
           <div>
@@ -27,6 +28,14 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/auth/register?role=artisan" className="text-gray-400 hover:text-white transition-colors">Get Verified</Link></li>
               <li><Link href="/dashboard/artisan" className="text-gray-400 hover:text-white transition-colors">Artisan Dashboard</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4">For Merchants</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/auth/register?role=merchant" className="text-gray-400 hover:text-white transition-colors">Become a Merchant</Link></li>
+              <li><Link href="/dashboard/merchant" className="text-gray-400 hover:text-white transition-colors">Merchant Dashboard</Link></li>
+              <li><Link href="/merchants" className="text-gray-400 hover:text-white transition-colors">Browse Merchants</Link></li>
             </ul>
           </div>
           <div>

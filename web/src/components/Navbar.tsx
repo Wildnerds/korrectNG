@@ -33,7 +33,9 @@ export default function Navbar() {
       ? '/admin'
       : user?.role === 'artisan'
         ? '/dashboard/artisan'
-        : '/dashboard/customer';
+        : user?.role === 'merchant'
+          ? '/dashboard/merchant'
+          : '/dashboard/customer';
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -50,6 +52,9 @@ export default function Navbar() {
             </Link>
             <Link href="/search" className="text-brand-black hover:text-brand-green font-medium">
               Find Artisans
+            </Link>
+            <Link href="/merchants" className="text-brand-black hover:text-brand-green font-medium">
+              Shop Materials
             </Link>
           </div>
 
@@ -126,6 +131,9 @@ export default function Navbar() {
             <div className="flex flex-col gap-2 pt-4">
               <Link href="/search" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
                 Find Artisans
+              </Link>
+              <Link href="/merchants" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
+                Shop Materials
               </Link>
               {user ? (
                 <>
