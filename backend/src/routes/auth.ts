@@ -154,8 +154,9 @@ router.post('/google', authLimiter, async (req, res, next) => {
     } else {
       // New user - create account
       // Support customer, artisan, and merchant roles
-      const validRoles = ['customer', 'artisan', 'merchant'];
-      const userRole = validRoles.includes(role) ? role : 'customer';
+      type UserRole = 'customer' | 'artisan' | 'merchant';
+      const validRoles: UserRole[] = ['customer', 'artisan', 'merchant'];
+      const userRole: UserRole = validRoles.includes(role as UserRole) ? (role as UserRole) : 'customer';
 
       user = await User.create({
         email,

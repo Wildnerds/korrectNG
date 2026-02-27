@@ -163,8 +163,10 @@ export const emailTemplates = {
     `,
   }),
 
-  welcome: (name: string, role: 'customer' | 'artisan') => ({
-    subject: 'Welcome to KorrectNG - Nigeria\'s Trusted Artisan Marketplace',
+  welcome: (name: string, role: 'customer' | 'artisan' | 'merchant') => ({
+    subject: role === 'merchant'
+      ? 'Welcome to KorrectNG - Start Selling Materials Today'
+      : 'Welcome to KorrectNG - Nigeria\'s Trusted Artisan Marketplace',
     html: `
       <!DOCTYPE html>
       <html>
@@ -172,9 +174,9 @@ export const emailTemplates = {
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #008751; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background-color: ${role === 'merchant' ? '#F97316' : '#008751'}; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
-            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .button { display: inline-block; background-color: ${role === 'merchant' ? '#F97316' : '#008751'}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
             .feature { background: white; border-radius: 8px; padding: 15px; margin: 10px 0; }
             .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
           </style>
@@ -183,11 +185,11 @@ export const emailTemplates = {
           <div class="container">
             <div class="header">
               <h1>Welcome to KorrectNG!</h1>
-              <p>Nigeria's Trusted Artisan Marketplace</p>
+              <p>${role === 'merchant' ? 'Nigeria\'s Trusted Materials Marketplace' : 'Nigeria\'s Trusted Artisan Marketplace'}</p>
             </div>
             <div class="content">
               <p>Hi ${name},</p>
-              <p>Welcome to KorrectNG! We're excited to have you join our community of ${role === 'artisan' ? 'skilled professionals' : 'valued customers'}.</p>
+              <p>Welcome to KorrectNG! We're excited to have you join our community of ${role === 'artisan' ? 'skilled professionals' : role === 'merchant' ? 'trusted merchants' : 'valued customers'}.</p>
 
               ${role === 'customer' ? `
               <h3>What You Can Do:</h3>
@@ -196,14 +198,14 @@ export const emailTemplates = {
                 Search for trusted mechanics, electricians, plumbers, and more in your area.
               </div>
               <div class="feature">
-                <strong>Read Real Reviews</strong><br>
-                Make informed decisions based on genuine customer feedback.
+                <strong>Shop Quality Materials</strong><br>
+                Browse verified merchants for building materials at competitive prices.
               </div>
               <div class="feature">
                 <strong>Escrow Payment Protection</strong><br>
                 Pay through the platform for escrow protection and a 7-day issue resolution window.
               </div>
-              ` : `
+              ` : role === 'artisan' ? `
               <h3>Getting Started as an Artisan:</h3>
               <div class="feature">
                 <strong>1. Complete Your Profile</strong><br>
@@ -217,10 +219,28 @@ export const emailTemplates = {
                 <strong>3. Start Receiving Jobs</strong><br>
                 Once verified, customers can find and contact you for work.
               </div>
+              ` : `
+              <h3>Getting Started as a Merchant:</h3>
+              <div class="feature">
+                <strong>1. Complete Your Store Profile</strong><br>
+                Add your business details, categories, and delivery areas.
+              </div>
+              <div class="feature">
+                <strong>2. Get Verified</strong><br>
+                Submit your business documents for verification to build trust with customers.
+              </div>
+              <div class="feature">
+                <strong>3. Add Your Products</strong><br>
+                List your materials with prices, images, and stock information.
+              </div>
+              <div class="feature">
+                <strong>4. Start Selling</strong><br>
+                Receive orders from customers and artisans. Only 5% platform fee!
+              </div>
               `}
 
               <p style="text-align: center;">
-                <a href="${process.env.CLIENT_URL}" class="button" style="color: white;">Go to Dashboard</a>
+                <a href="${process.env.CLIENT_URL}/dashboard/${role}" class="button" style="color: white;">Go to Dashboard</a>
               </p>
 
               <p>If you have any questions, our support team is here to help!</p>
