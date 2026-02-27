@@ -11,6 +11,7 @@ import { bookingLimiter } from '../middleware/rateLimiter';
 import trustService from '../services/trustService';
 import { payArtisan } from '../services/payoutService';
 import { sendEmail, emailTemplates } from '../utils/email';
+import { getMerchantQuotesForMaterials } from '../services/materialMatchingService';
 
 const router = Router();
 
@@ -1318,6 +1319,165 @@ router.get('/stats/me', protect, restrictTo('artisan'), async (req: Request, res
         completedJobs,
         pendingJobs,
         byStatus: stats,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Material Marketplace Integration ────────────────────────────────────────
+
+const quoteWithMaterialsSchema = z.object({
+  quotedPrice: z.number().min(1000),
+  quoteMessage: z.string().max(1000).optional(),
+  materialsList: z.array(z.object({
+    name: z.string().min(1),
+    quantity: z.number().min(1),
+    unit: z.string().min(1),
+    specs: z.string().optional(),
+  })).min(1),
+});
+
+/**
+ * @route   POST /api/v1/bookings/:id/quote-with-materials
+ * @desc    Artisan sends quote with materials list (no prices - platform shows all merchants)
+ * @access  Private (Artisan)
+ */
+router.post('/:id/quote-with-materials', protect, restrictTo('artisan'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const validation = quoteWithMaterialsSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error.errors[0].message,
+      });
+    }
+
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+    const { quotedPrice, quoteMessage, materialsList } = validation.data;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    if (booking.artisan.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to quote this booking',
+      });
+    }
+
+    if (booking.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only send quotes for pending booking requests',
+      });
+    }
+
+    // Update booking with quote and materials list
+    booking.status = 'quoted';
+    booking.quotedPrice = quotedPrice;
+    booking.quoteMessage = quoteMessage;
+    booking.quotedAt = new Date();
+    booking.materialsList = materialsList;
+    (booking as any)._statusChangedBy = userId;
+
+    // Record response time for trust metrics
+    const responseTimeMinutes = Math.round(
+      (Date.now() - booking.createdAt.getTime()) / (1000 * 60)
+    );
+    const artisanProfile = await ArtisanProfile.findOne({ user: userId });
+    if (artisanProfile) {
+      await trustService.recordResponseTime(artisanProfile._id.toString(), responseTimeMinutes);
+    }
+
+    await booking.save();
+
+    // Send notification to customer about the quote with materials
+    const artisan = await User.findById(userId);
+    const artisanName = artisan?.firstName && artisan?.lastName
+      ? `${artisan.firstName} ${artisan.lastName}`
+      : artisanProfile?.businessName || 'An artisan';
+    await createNotificationWithPush(
+      booking.customer.toString(),
+      {
+        type: 'quote_received',
+        title: 'Quote with Materials List Received',
+        message: `${artisanName} sent you a quote of NGN${quotedPrice.toLocaleString()} for ${booking.jobType}. Materials list included - compare prices from verified merchants.`,
+        link: `/dashboard/customer/bookings/${bookingId}`,
+      }
+    );
+
+    const populatedBooking = await Booking.findById(bookingId)
+      .populate('customer', 'firstName lastName email phone avatar')
+      .populate('artisan', 'firstName lastName email phone avatar')
+      .populate('artisanProfile', 'businessName slug trade');
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote with materials list sent successfully',
+      data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   GET /api/v1/bookings/:id/material-options
+ * @desc    Get matching products from all merchants for booking's materials list
+ * @access  Private (Customer or Artisan)
+ */
+router.get('/:id/material-options', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify user is participant
+    if (booking.customer.toString() !== userId.toString() &&
+        booking.artisan.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to view this booking',
+      });
+    }
+
+    if (!booking.materialsList || booking.materialsList.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'This booking has no materials list',
+      });
+    }
+
+    // Get merchant quotes for all materials
+    const merchantQuotes = await getMerchantQuotesForMaterials(
+      booking.materialsList,
+      booking.location
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        materialsList: booking.materialsList,
+        merchantQuotes,
+        deliveryLocation: booking.address,
       },
     });
   } catch (error) {

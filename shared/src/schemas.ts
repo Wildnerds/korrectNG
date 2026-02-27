@@ -12,6 +12,10 @@ import {
   DISPUTE_STATUSES,
   DISPUTE_CATEGORIES,
   DISPUTE_DECISIONS,
+  MERCHANT_CATEGORY_VALUES,
+  PRODUCT_UNIT_VALUES,
+  MATERIAL_ORDER_STATUSES,
+  DELIVERY_TYPES,
 } from './constants';
 
 // ─── Auth Schemas ────────────────────────────────────────────────────────────
@@ -28,7 +32,7 @@ export const registerSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  role: z.enum(['customer', 'artisan'] as const),
+  role: z.enum(['customer', 'artisan', 'merchant'] as const),
 });
 
 export const loginSchema = z.object({
@@ -263,3 +267,122 @@ export type CustomerCounterInput = z.infer<typeof customerCounterSchema>;
 export type ResolveDisputeInput = z.infer<typeof resolveDisputeSchema>;
 export type UploadEvidenceInput = z.infer<typeof uploadEvidenceSchema>;
 export type AcceptTermsInput = z.infer<typeof acceptTermsSchema>;
+
+// ─── Merchant Schemas ───────────────────────────────────────────────────────
+
+export const merchantProfileSchema = z.object({
+  businessName: z.string().min(2, 'Business name must be at least 2 characters').max(100),
+  category: z.enum(MERCHANT_CATEGORY_VALUES as unknown as [string, ...string[]]),
+  categories: z.array(z.enum(MERCHANT_CATEGORY_VALUES as unknown as [string, ...string[]])).optional(),
+  description: z.string().min(20, 'Description must be at least 20 characters').max(1000),
+  location: z.string().min(2, 'Location is required').max(100),
+  address: z.string().min(5, 'Address must be at least 5 characters').max(200),
+  whatsappNumber: z.string().min(10).max(15),
+  phoneNumber: z.string().min(10).max(15),
+  cacNumber: z.string().max(50).optional(),
+  deliveryAreas: z.array(z.string().max(100)).optional(),
+  defaultDeliveryFee: z.number().min(0).optional(),
+  freeDeliveryThreshold: z.number().min(0).optional(),
+});
+
+export const merchantSearchSchema = z.object({
+  category: z.string().optional(),
+  location: z.string().optional(),
+  q: z.string().optional(),
+  sort: z.enum(['rating', 'reviews', 'newest', 'orders']).optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(12),
+});
+
+export const productSchema = z.object({
+  name: z.string().min(2, 'Product name must be at least 2 characters').max(200),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(2000),
+  category: z.string().min(2).max(100),
+  subcategory: z.string().max(100).optional(),
+  price: z.number().min(0, 'Price must be positive'),
+  unit: z.enum(PRODUCT_UNIT_VALUES as unknown as [string, ...string[]]),
+  minOrderQuantity: z.number().min(1).default(1),
+  maxOrderQuantity: z.number().min(1).optional(),
+  bulkDiscounts: z.array(z.object({
+    qty: z.number().min(1),
+    price: z.number().min(0),
+  })).optional(),
+  brand: z.string().max(100).optional(),
+  sku: z.string().max(50).optional(),
+  specifications: z.record(z.string()).optional(),
+  stockQuantity: z.number().min(0).default(0),
+  lowStockThreshold: z.number().min(0).default(5),
+  trackInventory: z.boolean().default(true),
+  tags: z.array(z.string().max(50)).optional(),
+  compatibleTrades: z.array(z.enum(TRADE_VALUES as unknown as [string, ...string[]])).optional(),
+});
+
+export const productSearchSchema = z.object({
+  category: z.string().optional(),
+  merchant: z.string().optional(),
+  trade: z.string().optional(),
+  q: z.string().optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  sort: z.enum(['price_asc', 'price_desc', 'rating', 'newest']).optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(20),
+});
+
+export const materialOrderItemSchema = z.object({
+  product: z.string().min(1, 'Product ID is required'),
+  quantity: z.number().min(1, 'Quantity must be at least 1'),
+});
+
+export const createMaterialOrderSchema = z.object({
+  merchant: z.string().min(1, 'Merchant ID is required'),
+  items: z.array(materialOrderItemSchema).min(1, 'At least one item is required'),
+  booking: z.string().optional(),
+  deliveryType: z.enum(DELIVERY_TYPES as unknown as [string, ...string[]]),
+  deliveryAddress: z.string().min(5, 'Delivery address must be at least 5 characters').max(500),
+  deliveryInstructions: z.string().max(500).optional(),
+  scheduledDeliveryDate: z.string().optional(),
+});
+
+export const updateMaterialOrderStatusSchema = z.object({
+  status: z.enum(MATERIAL_ORDER_STATUSES as unknown as [string, ...string[]]),
+  note: z.string().max(500).optional(),
+});
+
+export const reportDefectSchema = z.object({
+  description: z.string().min(20, 'Description must be at least 20 characters').max(1000),
+  images: z.array(z.string().url()).optional(),
+});
+
+export const merchantBankAccountSchema = z.object({
+  bankCode: z.string().min(3).max(10),
+  accountNumber: z.string().min(10).max(10),
+  accountName: z.string().min(2).max(100),
+});
+
+export const merchantReviewSchema = z.object({
+  orderId: z.string().min(1, 'Order ID is required'),
+  rating: z.number().min(1).max(5),
+  title: z.string().min(3).max(100).optional(),
+  text: z.string().min(10, 'Review must be at least 10 characters').max(1000),
+  productQualityRating: z.number().min(1).max(5),
+  deliveryRating: z.number().min(1).max(5),
+});
+
+export const merchantReviewResponseSchema = z.object({
+  response: z.string().min(5, 'Response must be at least 5 characters').max(500),
+});
+
+// ─── Merchant Type Exports ──────────────────────────────────────────────────
+
+export type MerchantProfileInput = z.infer<typeof merchantProfileSchema>;
+export type MerchantSearchInput = z.infer<typeof merchantSearchSchema>;
+export type ProductInput = z.infer<typeof productSchema>;
+export type ProductSearchInput = z.infer<typeof productSearchSchema>;
+export type MaterialOrderItemInput = z.infer<typeof materialOrderItemSchema>;
+export type CreateMaterialOrderInput = z.infer<typeof createMaterialOrderSchema>;
+export type UpdateMaterialOrderStatusInput = z.infer<typeof updateMaterialOrderStatusSchema>;
+export type ReportDefectInput = z.infer<typeof reportDefectSchema>;
+export type MerchantBankAccountInput = z.infer<typeof merchantBankAccountSchema>;
+export type MerchantReviewInput = z.infer<typeof merchantReviewSchema>;
+export type MerchantReviewResponseInput = z.infer<typeof merchantReviewResponseSchema>;

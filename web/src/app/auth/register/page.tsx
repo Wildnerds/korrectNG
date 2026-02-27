@@ -3,21 +3,28 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/context/AuthContext';
 import { PasswordInput } from '@/components/PasswordInput';
-import { GoogleSignInButton } from '@/components/GoogleSignInButton';
+
+// Dynamically import GoogleSignInButton to avoid SSR issues
+const GoogleSignInButton = dynamic(
+  () => import('@/components/GoogleSignInButton').then(mod => mod.GoogleSignInButton),
+  { ssr: false, loading: () => <div className="h-10 bg-gray-100 rounded animate-pulse" /> }
+);
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialRole = searchParams.get('role') === 'artisan' ? 'artisan' : 'customer';
+  const roleParam = searchParams.get('role');
+  const initialRole = roleParam === 'artisan' ? 'artisan' : roleParam === 'merchant' ? 'merchant' : 'customer';
   const { register, refreshUser } = useAuth();
 
   const [form, setForm] = useState({
     email: '',
     password: '',
-    role: initialRole as 'customer' | 'artisan',
+    role: initialRole as 'customer' | 'artisan' | 'merchant',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,6 +37,8 @@ function RegisterForm() {
       await register(form);
       if (form.role === 'artisan') {
         router.push('/dashboard/artisan/verification');
+      } else if (form.role === 'merchant') {
+        router.push('/dashboard/merchant/verification');
       } else {
         router.push('/');
       }
@@ -44,7 +53,7 @@ function RegisterForm() {
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
         <h1 className="text-2xl font-bold text-brand-green mb-6 text-center">
-          {form.role === 'artisan' ? 'Get Verified as an Artisan' : 'Create Customer Account'}
+          {form.role === 'artisan' ? 'Get Verified as an Artisan' : form.role === 'merchant' ? 'Sell on KorrectNG Marketplace' : 'Create Customer Account'}
         </h1>
 
         {/* Role switcher */}
@@ -52,7 +61,7 @@ function RegisterForm() {
           <button
             type="button"
             onClick={() => setForm({ ...form, role: 'customer' })}
-            className={`flex-1 py-3 min-h-[44px] rounded-md font-medium transition-colors ${
+            className={`flex-1 py-2 min-h-[44px] rounded-md font-medium transition-colors text-sm ${
               form.role === 'customer'
                 ? 'bg-brand-green text-white'
                 : 'bg-gray-100 text-brand-gray hover:bg-gray-200'
@@ -63,13 +72,24 @@ function RegisterForm() {
           <button
             type="button"
             onClick={() => setForm({ ...form, role: 'artisan' })}
-            className={`flex-1 py-3 min-h-[44px] rounded-md font-medium transition-colors ${
+            className={`flex-1 py-2 min-h-[44px] rounded-md font-medium transition-colors text-sm ${
               form.role === 'artisan'
                 ? 'bg-brand-green text-white'
                 : 'bg-gray-100 text-brand-gray hover:bg-gray-200'
             }`}
           >
             Artisan
+          </button>
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, role: 'merchant' })}
+            className={`flex-1 py-2 min-h-[44px] rounded-md font-medium transition-colors text-sm ${
+              form.role === 'merchant'
+                ? 'bg-brand-green text-white'
+                : 'bg-gray-100 text-brand-gray hover:bg-gray-200'
+            }`}
+          >
+            Merchant
           </button>
         </div>
 
@@ -86,6 +106,8 @@ function RegisterForm() {
             refreshUser();
             if (form.role === 'artisan') {
               router.push('/dashboard/artisan/verification');
+            } else if (form.role === 'merchant') {
+              router.push('/dashboard/merchant/verification');
             } else {
               router.push('/');
             }
@@ -130,16 +152,22 @@ function RegisterForm() {
             disabled={loading}
             className="w-full py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : form.role === 'artisan' ? 'Start Verification' : 'Create Account'}
+            {loading ? 'Creating account...' : form.role === 'artisan' ? 'Start Verification' : form.role === 'merchant' ? 'Start Selling' : 'Create Account'}
           </button>
           <p className="text-center text-sm text-brand-gray">
-            You'll complete your profile before making your first booking
+            {form.role === 'merchant' ? "You'll verify your business before listing products" : "You'll complete your profile before making your first booking"}
           </p>
         </form>
 
         {form.role === 'artisan' && (
           <p className="text-center mt-4 text-sm text-brand-gray">
             Free to join • 10% commission on completed jobs only
+          </p>
+        )}
+
+        {form.role === 'merchant' && (
+          <p className="text-center mt-4 text-sm text-brand-gray">
+            Free to join • 5% commission on orders only • No subscription fees
           </p>
         )}
 

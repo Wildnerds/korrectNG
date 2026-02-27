@@ -831,4 +831,437 @@ export const emailTemplates = {
       </html>
     `,
   }),
+
+  // ─── Merchant Email Templates ───────────────────────────────────────────────
+
+  merchantVerificationApproved: (name: string, businessName: string) => ({
+    subject: 'Your Store is Now Live on KorrectNG Marketplace!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #008751; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .success-badge { background: #10B981; color: white; padding: 10px 20px; border-radius: 50px; display: inline-block; font-weight: bold; }
+            .next-step { background: white; border-left: 4px solid #008751; padding: 15px; margin: 10px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Store Verified!</h1>
+              <span class="success-badge">VERIFIED MERCHANT</span>
+            </div>
+            <div class="content">
+              <p>Hi ${name},</p>
+              <p>Great news! <strong>${businessName}</strong> has been verified and is now live on KorrectNG Marketplace.</p>
+
+              <p><strong>What's Next:</strong></p>
+              <div class="next-step">
+                <strong>1. Add Your Products</strong><br>
+                List your products with photos and competitive prices
+              </div>
+              <div class="next-step">
+                <strong>2. Set Up Delivery</strong><br>
+                Configure your delivery areas and fees
+              </div>
+              <div class="next-step">
+                <strong>3. Add Bank Details</strong><br>
+                Set up your payout account to receive earnings
+              </div>
+              <div class="next-step">
+                <strong>4. Start Selling!</strong><br>
+                Customers can now discover and order from your store
+              </div>
+
+              <p style="background: #EFF6FF; border-radius: 8px; padding: 15px; font-size: 14px;">
+                <strong>Note:</strong> We only charge a 5% platform fee on completed orders. No subscription fees!
+              </p>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/merchant" class="button" style="color: white;">Go to Dashboard</a>
+              </p>
+
+              <p>Welcome to the KorrectNG Marketplace family!</p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  merchantNewOrder: (merchantName: string, orderNumber: string, customerName: string, totalAmount: number, itemCount: number) => ({
+    subject: `New Order ${orderNumber} - KorrectNG Marketplace`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #3B82F6; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .order-box { background: #EFF6FF; border: 2px solid #3B82F6; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .amount { font-size: 28px; font-weight: bold; color: #1E40AF; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .urgent { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 15px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>New Order Received!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${merchantName},</p>
+              <p>You have a new order waiting for confirmation!</p>
+
+              <div class="order-box">
+                <p style="margin: 0; color: #6B7280;">Order Number</p>
+                <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">${orderNumber}</p>
+                <hr style="border: none; border-top: 1px solid #BFDBFE; margin: 15px 0;">
+                <p><strong>Customer:</strong> ${customerName}</p>
+                <p><strong>Items:</strong> ${itemCount} product(s)</p>
+                <p class="amount">NGN${totalAmount.toLocaleString()}</p>
+              </div>
+
+              <div class="urgent">
+                <strong>Action Required:</strong> Please confirm this order within 24 hours or it will be automatically cancelled.
+              </div>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/merchant/orders" class="button" style="color: white;">View & Confirm Order</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  materialOrderConfirmed: (customerName: string, orderNumber: string, merchantName: string, totalAmount: number) => ({
+    subject: `Order ${orderNumber} Confirmed - Pay to Proceed`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .confirm-box { background: #D1FAE5; border: 2px solid #10B981; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .amount { font-size: 28px; font-weight: bold; color: #047857; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Order Confirmed!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${customerName},</p>
+              <div class="confirm-box">
+                <p style="font-size: 18px; margin: 0;">Order ${orderNumber}</p>
+                <p><strong>${merchantName}</strong> has confirmed your order!</p>
+                <p class="amount">NGN${totalAmount.toLocaleString()}</p>
+              </div>
+
+              <p>The merchant has confirmed they have your items in stock. Please complete payment within 24 hours to proceed.</p>
+
+              <p style="background: #EFF6FF; border-radius: 8px; padding: 15px; font-size: 14px;">
+                <strong>Escrow Protection:</strong> Your payment will be held securely until you confirm receipt of the materials.
+              </p>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/customer/material-orders" class="button" style="color: white;">Pay Now</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  materialOrderShipped: (customerName: string, orderNumber: string, merchantName: string) => ({
+    subject: `Order ${orderNumber} Shipped - On Its Way!`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #6366F1; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .shipped-box { background: #EEF2FF; border: 2px solid #6366F1; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Your Order is On Its Way!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${customerName},</p>
+              <div class="shipped-box">
+                <p style="font-size: 40px; margin: 0;">🚚</p>
+                <p style="font-size: 18px; font-weight: bold;">Order ${orderNumber} Shipped</p>
+                <p>From: <strong>${merchantName}</strong></p>
+              </div>
+
+              <p>Your materials are on the way! The merchant will update the status when delivered.</p>
+
+              <p><strong>What's Next:</strong></p>
+              <ul>
+                <li>Wait for delivery notification</li>
+                <li>Inspect the materials upon arrival</li>
+                <li>Confirm receipt through the app</li>
+                <li>Report any issues within 72 hours</li>
+              </ul>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/customer/material-orders" class="button" style="color: white;">Track Order</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  materialOrderDelivered: (customerName: string, orderNumber: string, merchantName: string) => ({
+    subject: `Order ${orderNumber} Delivered - Please Confirm Receipt`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #14B8A6; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .delivered-box { background: #CCFBF1; border: 2px solid #14B8A6; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .warning { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 8px; padding: 15px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Order Delivered!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${customerName},</p>
+              <div class="delivered-box">
+                <p style="font-size: 40px; margin: 0;">📦✓</p>
+                <p style="font-size: 18px; font-weight: bold;">Order ${orderNumber}</p>
+                <p>Delivered by <strong>${merchantName}</strong></p>
+              </div>
+
+              <p>The merchant has marked your order as delivered. Please inspect the materials and confirm receipt.</p>
+
+              <div class="warning">
+                <strong>Important:</strong> You have 72 hours to confirm receipt or report any issues. After 72 hours, the order will be auto-confirmed and payment released to the merchant.
+              </div>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/customer/material-orders" class="button" style="color: white;">Confirm Receipt</a>
+              </p>
+
+              <p style="font-size: 14px; color: #6B7280;">
+                If there are any issues with the materials, you can report a defect from the order page.
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  materialEscrowReleased: (merchantName: string, orderNumber: string, amount: number) => ({
+    subject: `Payment Released - Order ${orderNumber} Completed!`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #10B981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .success-box { background: #D1FAE5; border: 2px solid #10B981; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .amount { font-size: 32px; font-weight: bold; color: #047857; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Payment Released!</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${merchantName},</p>
+              <div class="success-box">
+                <p style="font-size: 40px; margin: 0;">💰</p>
+                <p style="margin: 10px 0;">Order ${orderNumber} Completed</p>
+                <p class="amount">NGN${amount.toLocaleString()}</p>
+                <p style="color: #047857; margin: 0;">Transferred to your account</p>
+              </div>
+
+              <p>The customer has confirmed receipt of the materials and your payment has been released.</p>
+
+              <p>The funds will be transferred to your registered bank account. This usually takes 1-2 business days.</p>
+
+              <p>Thank you for your excellent service! Keep up the great work.</p>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/merchant/earnings" class="button" style="color: white;">View Earnings</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  materialDefectReported: (merchantName: string, orderNumber: string, customerName: string, description: string) => ({
+    subject: `Defect Reported - Order ${orderNumber}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .defect-box { background: #FEF2F2; border: 2px solid #EF4444; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Defect Reported</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${merchantName},</p>
+              <p>A customer has reported an issue with their order.</p>
+
+              <div class="defect-box">
+                <p><strong>Order:</strong> ${orderNumber}</p>
+                <p><strong>Customer:</strong> ${customerName}</p>
+                <p><strong>Issue:</strong></p>
+                <p style="background: white; padding: 10px; border-radius: 4px;">${description}</p>
+              </div>
+
+              <p><strong>What You Need to Do:</strong></p>
+              <ol>
+                <li>Review the customer's complaint carefully</li>
+                <li>Contact the customer to discuss resolution</li>
+                <li>Arrange for replacement or refund if needed</li>
+                <li>Update the order status accordingly</li>
+              </ol>
+
+              <p style="background: #FEF3C7; border-radius: 8px; padding: 15px; font-size: 14px;">
+                <strong>Note:</strong> Payment is held in escrow until this issue is resolved. Quick and fair resolution helps maintain your reputation.
+              </p>
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/merchant/orders" class="button" style="color: white;">View Order</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+
+  merchantNewReview: (merchantName: string, customerName: string, rating: number, orderNumber: string, reviewText: string) => ({
+    subject: `New ${rating}-Star Review for Order ${orderNumber}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: ${rating >= 4 ? '#008751' : rating >= 3 ? '#F59E0B' : '#EF4444'}; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .stars { font-size: 24px; color: #F59E0B; }
+            .review-box { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid ${rating >= 4 ? '#008751' : rating >= 3 ? '#F59E0B' : '#EF4444'}; }
+            .button { display: inline-block; background-color: #008751; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>New Review Received!</h1>
+              <div class="stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</div>
+            </div>
+            <div class="content">
+              <p>Hi ${merchantName},</p>
+              <p>You've received a new review for order ${orderNumber}!</p>
+
+              <div class="review-box">
+                <p><strong>From:</strong> ${customerName}</p>
+                <p><strong>Rating:</strong> ${rating}/5 stars</p>
+                <p><strong>Review:</strong></p>
+                <p style="font-style: italic;">"${reviewText}"</p>
+              </div>
+
+              ${rating >= 4 ? `
+              <p>Great job! Positive reviews help attract more customers to your store.</p>
+              ` : `
+              <p>We encourage you to respond professionally to this feedback. You can reply to the review from your dashboard.</p>
+              `}
+
+              <p style="text-align: center;">
+                <a href="${process.env.CLIENT_URL}/dashboard/merchant/reviews" class="button" style="color: white;">View & Respond</a>
+              </p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} KorrectNG. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
 };

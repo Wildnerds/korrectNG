@@ -18,7 +18,7 @@ export interface IUser extends Document {
   address?: string;
   password: string;
   googleId?: string;
-  role: 'customer' | 'artisan' | 'admin';
+  role: 'customer' | 'artisan' | 'merchant' | 'admin';
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isProfileComplete: boolean;
@@ -70,7 +70,7 @@ const userSchema = new Schema<IUser>(
     googleId: { type: String, sparse: true },
     role: {
       type: String,
-      enum: ['customer', 'artisan', 'admin'],
+      enum: ['customer', 'artisan', 'merchant', 'admin'],
       default: 'customer',
     },
     isEmailVerified: { type: Boolean, default: false },
@@ -133,6 +133,7 @@ userSchema.methods.checkProfileComplete = function (): boolean {
     return !!(this.firstName && this.lastName && this.phone && this.address);
   }
   // For artisans, profile completion is checked via ArtisanProfile.isProfileComplete
+  // For merchants, profile completion is checked via MerchantProfile.isProfileComplete
   return true;
 };
 

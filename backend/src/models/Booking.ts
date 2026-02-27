@@ -78,6 +78,15 @@ export interface IBooking extends Document {
   contract?: mongoose.Types.ObjectId;
   escrow?: mongoose.Types.ObjectId;
 
+  // Materials list (from artisan quote)
+  materialsList?: {
+    name: string;
+    quantity: number;
+    unit: string;
+    specs?: string;
+  }[];
+  linkedMaterialOrders?: mongoose.Types.ObjectId[];
+
   // Warranty (7-day grace period from certification)
   warrantyExpiresAt?: Date;
 
@@ -269,6 +278,18 @@ const bookingSchema = new Schema<IBooking>(
       type: Schema.Types.ObjectId,
       ref: 'EscrowPayment',
     },
+
+    // Materials list (from artisan quote)
+    materialsList: [{
+      name: { type: String, required: true },
+      quantity: { type: Number, required: true, min: 1 },
+      unit: { type: String, required: true },
+      specs: String,
+    }],
+    linkedMaterialOrders: [{
+      type: Schema.Types.ObjectId,
+      ref: 'MaterialOrder',
+    }],
 
     // Warranty (7-day grace period from certification)
     warrantyExpiresAt: {

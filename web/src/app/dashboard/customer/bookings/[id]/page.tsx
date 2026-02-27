@@ -5,7 +5,26 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/components/Toast';
+import { MaterialsList, MerchantComparison, MaterialOrderForm, MaterialOrderStatus } from '@/components/materials';
 import Cookies from 'js-cookie';
+
+interface MaterialItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  specs?: string;
+}
+
+interface MaterialOrder {
+  _id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  merchantProfile: {
+    businessName: string;
+    slug: string;
+  };
+}
 
 interface Booking {
   _id: string;
@@ -29,6 +48,8 @@ interface Booking {
   confirmedAt?: string;
   cancellationReason?: string;
   expiresAt?: string;
+  materialsList?: MaterialItem[];
+  linkedMaterialOrders?: MaterialOrder[];
   artisan: {
     _id: string;
     firstName: string;
@@ -74,6 +95,13 @@ export default function BookingDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
+
+  // Materials state
+  const [merchantQuotes, setMerchantQuotes] = useState<any[]>([]);
+  const [selectedMerchant, setSelectedMerchant] = useState<any | null>(null);
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
+  const [showMaterialsModal, setShowMaterialsModal] = useState(false);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const bookingId = params.id as string;
 
@@ -183,6 +211,55 @@ export default function BookingDetailPage() {
   };
 
   const canCancel = booking && ['pending', 'quoted', 'accepted', 'payment_pending'].includes(booking.status);
+
+  // Fetch merchant quotes for materials
+  const fetchMerchantQuotes = async () => {
+    if (!booking?.materialsList?.length) return;
+    setLoadingQuotes(true);
+    const token = Cookies.get('token');
+    try {
+      const response = await apiFetch<any[]>(`/bookings/${bookingId}/material-options`, { token });
+      setMerchantQuotes(response.data || []);
+    } catch (error: any) {
+      showToast(error.message || 'Failed to load merchant options', 'error');
+    } finally {
+      setLoadingQuotes(false);
+    }
+  };
+
+  // Create material order
+  const createMaterialOrder = async (orderData: {
+    deliveryType: string;
+    deliveryAddress: string;
+    deliveryInstructions?: string;
+    scheduledDeliveryDate?: string;
+  }) => {
+    if (!selectedMerchant) return;
+    setCreatingOrder(true);
+    const token = Cookies.get('token');
+    try {
+      await apiFetch(`/bookings/${bookingId}/create-material-order`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({
+          merchantId: selectedMerchant.merchant._id,
+          items: selectedMerchant.items.map((item: any) => ({
+            productId: item.product._id,
+            quantity: item.quantity,
+          })),
+          ...orderData,
+        }),
+      });
+      showToast('Material order created successfully!', 'success');
+      setShowMaterialsModal(false);
+      setSelectedMerchant(null);
+      fetchBooking();
+    } catch (error: any) {
+      showToast(error.message || 'Failed to create order', 'error');
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -380,6 +457,63 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {/* Materials Section */}
+        {booking.materialsList && booking.materialsList.length > 0 && (
+          <div className="bg-white rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Materials Required</h2>
+            <MaterialsList materials={booking.materialsList} showHeader={false} />
+
+            {/* Linked Material Orders */}
+            {booking.linkedMaterialOrders && booking.linkedMaterialOrders.length > 0 ? (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">Material Orders</h3>
+                <div className="space-y-2">
+                  {booking.linkedMaterialOrders.map((order) => (
+                    <Link
+                      key={order._id}
+                      href={`/dashboard/customer/material-orders/${order._id}`}
+                      className="block bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{order.orderNumber}</p>
+                          <p className="text-sm text-gray-500">
+                            {order.merchantProfile.businessName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <MaterialOrderStatus currentStatus={order.status} showTimeline={false} />
+                          <p className="text-sm font-medium mt-1">
+                            NGN{order.totalAmount.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Show option to order materials if quote is accepted/paid */
+              ['accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
+                <div className="mt-6">
+                  <button
+                    onClick={() => {
+                      fetchMerchantQuotes();
+                      setShowMaterialsModal(true);
+                    }}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Order Materials from Verified Merchants
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Compare prices from multiple merchants and order with escrow protection
+                  </p>
+                </div>
+              )
+            )}
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="space-y-3">
           {/* Accept/Decline Quote */}
@@ -483,6 +617,60 @@ export default function BookingDetailPage() {
                   {actionLoading ? 'Cancelling...' : 'Yes, Cancel'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Materials Order Modal */}
+        {showMaterialsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-xl p-6 max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Order Materials</h3>
+                <button
+                  onClick={() => {
+                    setShowMaterialsModal(false);
+                    setSelectedMerchant(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {!selectedMerchant ? (
+                /* Merchant Comparison View */
+                <MerchantComparison
+                  quotes={merchantQuotes}
+                  onSelectMerchant={setSelectedMerchant}
+                  loading={loadingQuotes}
+                />
+              ) : (
+                /* Order Form View */
+                <div>
+                  <button
+                    onClick={() => setSelectedMerchant(null)}
+                    className="text-brand-green hover:underline mb-4"
+                  >
+                    &larr; Back to merchant selection
+                  </button>
+                  <h4 className="font-semibold mb-4">
+                    Order from {selectedMerchant.merchant.businessName}
+                  </h4>
+                  <MaterialOrderForm
+                    merchant={selectedMerchant.merchant}
+                    items={selectedMerchant.items}
+                    subtotal={selectedMerchant.subtotal}
+                    deliveryFee={selectedMerchant.deliveryFee}
+                    totalAmount={selectedMerchant.totalPrice}
+                    bookingId={booking._id}
+                    artisanAddress={booking.address}
+                    onSubmit={createMaterialOrder}
+                    onCancel={() => setSelectedMerchant(null)}
+                    loading={creatingOrder}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

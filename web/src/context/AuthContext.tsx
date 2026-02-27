@@ -12,7 +12,7 @@ interface AuthContextType {
   register: (data: {
     email: string;
     password: string;
-    role: 'customer' | 'artisan';
+    role: 'customer' | 'artisan' | 'merchant';
     // Optional at registration - can be added during profile completion
     firstName?: string;
     lastName?: string;
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: {
     email: string;
     password: string;
-    role: 'customer' | 'artisan';
+    role: 'customer' | 'artisan' | 'merchant';
     firstName?: string;
     lastName?: string;
     phone?: string;

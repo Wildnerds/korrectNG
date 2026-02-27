@@ -39,3 +39,22 @@ export type { ISupplier } from './Supplier';
 
 export { default as WebPushSubscription } from './WebPushSubscription';
 export type { IWebPushSubscription } from './WebPushSubscription';
+
+// Merchant Marketplace Models
+export { MerchantProfile } from './MerchantProfile';
+export type { IMerchantProfile, IMerchantBadge, MerchantCategory } from './MerchantProfile';
+
+export { Product } from './Product';
+export type { IProduct, IProductImage, IBulkDiscount, ProductUnit } from './Product';
+
+export { MaterialOrder } from './MaterialOrder';
+export type { IMaterialOrder, IMaterialOrderItem, MaterialOrderStatus, DeliveryType } from './MaterialOrder';
+
+export { MaterialEscrow } from './MaterialEscrow';
+export type { IMaterialEscrow, MaterialEscrowStatus } from './MaterialEscrow';
+
+export { MerchantVerificationApplication } from './MerchantVerificationApplication';
+export type { IMerchantVerificationApplication, IMerchantVerificationDocument } from './MerchantVerificationApplication';
+
+export { MerchantReview } from './MerchantReview';
+export type { IMerchantReview } from './MerchantReview';

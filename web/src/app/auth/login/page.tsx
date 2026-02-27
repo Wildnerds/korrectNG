@@ -3,10 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { PasswordInput } from '@/components/PasswordInput';
-import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import Cookies from 'js-cookie';
+
+// Dynamically import GoogleSignInButton to avoid SSR issues
+const GoogleSignInButton = dynamic(
+  () => import('@/components/GoogleSignInButton').then(mod => mod.GoogleSignInButton),
+  { ssr: false, loading: () => <div className="h-10 bg-gray-100 rounded animate-pulse" /> }
+);
 
 export default function LoginPage() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-import { TRADES, PRICING } from './constants';
+import { TRADES, PRICING, MERCHANT_CATEGORIES, PRODUCT_UNITS } from './constants';
 
 export function slugify(text: string): string {
   return text
@@ -79,4 +79,19 @@ export function timeAgo(date: string | Date): string {
     }
   }
   return 'just now';
+}
+
+export function getMerchantCategoryLabel(value: string): string {
+  const category = MERCHANT_CATEGORIES.find((c) => c.value === value);
+  return category?.label ?? value;
+}
+
+export function getMerchantCategoryIcon(value: string): string {
+  const category = MERCHANT_CATEGORIES.find((c) => c.value === value);
+  return category?.icon ?? '📦';
+}
+
+export function getProductUnitLabel(value: string): string {
+  const unit = PRODUCT_UNITS.find((u) => u.value === value);
+  return unit?.label ?? value;
 }

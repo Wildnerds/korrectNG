@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/api';
 interface GoogleSignInButtonProps {
   onSuccess: (user: any, token: string) => void;
   onError?: (error: string) => void;
-  role?: 'customer' | 'artisan';
+  role?: 'customer' | 'artisan' | 'merchant';
   text?: 'signin_with' | 'signup_with' | 'continue_with';
 }
 

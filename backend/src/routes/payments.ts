@@ -1,12 +1,13 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
-import { Subscription, ArtisanProfile, VerificationApplication, User } from '../models';
+import { Subscription, ArtisanProfile, VerificationApplication, User, MaterialOrder, MaterialEscrow } from '../models';
 import Booking from '../models/Booking';
 import EscrowPayment from '../models/EscrowPayment';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { createNotification, createNotificationWithPush, notificationTemplates } from '../services/notifications';
 import { fundEscrow, confirmTransfer } from '../services/escrowStateMachine';
+import { fundMaterialEscrow, confirmTransfer as confirmMaterialTransfer } from '../services/materialEscrowStateMachine';
 import { log } from '../utils/logger';
 import { paymentLimiter } from '../middleware/rateLimiter';
 import { sendEmail, emailTemplates } from '../utils/email';
@@ -229,6 +230,29 @@ router.post('/webhook', async (req: Request, res: Response) => {
             await fundEscrow(escrow_id, customer_id, reference);
             log.info('Escrow funded via webhook', { escrowId: escrow_id, reference });
           }
+        } else if (metadata?.type === 'material_escrow') {
+          // Handle material order escrow funding
+          const { orderId, escrowId, customerId } = metadata;
+          const escrow = await MaterialEscrow.findById(escrowId);
+          if (escrow && escrow.status === 'created') {
+            await fundMaterialEscrow(escrowId, customerId, reference);
+            log.info('Material escrow funded via webhook', { escrowId, orderId, reference });
+
+            // Notify merchant that payment received
+            const order = await MaterialOrder.findById(orderId);
+            if (order) {
+              await createNotificationWithPush(
+                order.merchant.toString(),
+                {
+                  type: 'material_order_paid' as any,
+                  title: 'Payment Received!',
+                  message: `Payment of NGN${order.totalAmount.toLocaleString()} received for order ${order.orderNumber}. You can now prepare the order.`,
+                  link: `/dashboard/merchant/orders/${orderId}`,
+                  data: { orderId, amount: order.totalAmount },
+                }
+              );
+            }
+          }
         }
         break;
       }
@@ -293,21 +317,32 @@ router.post('/webhook', async (req: Request, res: Response) => {
       }
 
       case 'transfer.success': {
-        // Handle successful milestone payout
+        // Handle successful payout
         const transferRef = event.data.transfer_code;
         if (transferRef) {
-          await confirmTransfer(transferRef, true);
-          log.info('Transfer confirmed successful', { transferRef });
+          // Check if it's a material transfer or artisan transfer
+          if (transferRef.startsWith('MTRF_')) {
+            await confirmMaterialTransfer(transferRef, true);
+            log.info('Material transfer confirmed successful', { transferRef });
+          } else {
+            await confirmTransfer(transferRef, true);
+            log.info('Transfer confirmed successful', { transferRef });
+          }
         }
         break;
       }
 
       case 'transfer.failed': {
-        // Handle failed milestone payout
+        // Handle failed payout
         const transferRef = event.data.transfer_code;
         if (transferRef) {
-          await confirmTransfer(transferRef, false);
-          log.error('Transfer failed', { transferRef, reason: event.data.reason });
+          if (transferRef.startsWith('MTRF_')) {
+            await confirmMaterialTransfer(transferRef, false);
+            log.error('Material transfer failed', { transferRef, reason: event.data.reason });
+          } else {
+            await confirmTransfer(transferRef, false);
+            log.error('Transfer failed', { transferRef, reason: event.data.reason });
+          }
           // TODO: Notify admin for manual intervention
         }
         break;

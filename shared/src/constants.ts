@@ -51,7 +51,7 @@ export const PRICING = {
   currency: 'NGN',
 } as const;
 
-export const ROLES = ['customer', 'artisan', 'admin'] as const;
+export const ROLES = ['customer', 'artisan', 'merchant', 'admin'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const VERIFICATION_STEPS = [
@@ -245,3 +245,76 @@ export type BadgeType = (typeof BADGE_TYPES)[number];
 // ─── Platform Fee ───────────────────────────────────────────────────────────
 
 export const PLATFORM_FEE_PERCENTAGE = 10; // 10% platform fee
+
+// ─── Merchant System ───────────────────────────────────────────────────────
+
+export const MERCHANT_CATEGORIES = [
+  { value: 'building-materials', label: 'Building Materials', icon: '🧱' },
+  { value: 'electrical', label: 'Electrical Supplies', icon: '⚡' },
+  { value: 'plumbing', label: 'Plumbing Supplies', icon: '🔧' },
+  { value: 'automotive', label: 'Automotive Parts', icon: '🚗' },
+  { value: 'hvac', label: 'HVAC & Cooling', icon: '❄️' },
+  { value: 'tools', label: 'Tools & Equipment', icon: '🛠️' },
+  { value: 'phone-parts', label: 'Phone Parts', icon: '📱' },
+  { value: 'fabrics', label: 'Fabrics & Textiles', icon: '🧵' },
+  { value: 'general', label: 'General Supplies', icon: '📦' },
+] as const;
+
+export type MerchantCategory = (typeof MERCHANT_CATEGORIES)[number]['value'];
+export const MERCHANT_CATEGORY_VALUES = MERCHANT_CATEGORIES.map((c) => c.value);
+
+export const MATERIAL_ORDER_STATUSES = [
+  'pending',           // Created, waiting for merchant
+  'confirmed',         // Merchant confirmed availability
+  'payment_pending',   // Awaiting payment
+  'paid',              // Paid, in escrow
+  'preparing',         // Merchant preparing
+  'shipped',           // Out for delivery
+  'delivered',         // Delivered
+  'received',          // Customer/artisan confirmed receipt
+  'completed',         // Payment released
+  'disputed',          // Dispute raised
+  'cancelled',         // Cancelled
+  'refunded',          // Refunded
+] as const;
+
+export type MaterialOrderStatus = (typeof MATERIAL_ORDER_STATUSES)[number];
+
+export const MATERIAL_ESCROW_STATUSES = [
+  'created',
+  'funded',
+  'release_requested',
+  'released',
+  'disputed',
+  'refunded',
+  'partial_refund',
+] as const;
+
+export type MaterialEscrowStatus = (typeof MATERIAL_ESCROW_STATUSES)[number];
+
+export const PRODUCT_UNITS = [
+  { value: 'piece', label: 'Piece(s)' },
+  { value: 'bag', label: 'Bag(s)' },
+  { value: 'roll', label: 'Roll(s)' },
+  { value: 'meter', label: 'Meter(s)' },
+  { value: 'kg', label: 'Kilogram(s)' },
+  { value: 'litre', label: 'Litre(s)' },
+  { value: 'pack', label: 'Pack(s)' },
+  { value: 'set', label: 'Set(s)' },
+  { value: 'pair', label: 'Pair(s)' },
+] as const;
+
+export type ProductUnit = (typeof PRODUCT_UNITS)[number]['value'];
+export const PRODUCT_UNIT_VALUES = PRODUCT_UNITS.map((u) => u.value);
+
+export const MERCHANT_PLATFORM_FEE_PERCENTAGE = 5; // 5% for material orders (lower margin business)
+
+export const DELIVERY_TYPES = ['job_site', 'customer_address', 'pickup'] as const;
+export type DeliveryType = (typeof DELIVERY_TYPES)[number];
+
+export const MERCHANT_VERIFICATION_STEPS = [
+  'business-info',
+  'documents',
+  'review',
+] as const;
+export type MerchantVerificationStep = (typeof MERCHANT_VERIFICATION_STEPS)[number];

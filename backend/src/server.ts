@@ -33,9 +33,17 @@ import legalRoutes from './routes/legal';
 import priceRoutes from './routes/prices';
 import webPushRoutes from './routes/webPush';
 import payoutRoutes from './routes/payout';
+import merchantRoutes from './routes/merchants';
+import productRoutes from './routes/products';
+import merchantVerificationRoutes from './routes/merchantVerification';
+import materialOrderRoutes from './routes/materialOrders';
+import materialEscrowRoutes from './routes/materialEscrow';
+import merchantReviewRoutes from './routes/merchantReviews';
 import { startDisputeEscalationJob } from './jobs/disputeEscalation';
 import { startAutoCertificationJob } from './jobs/autoCertification';
 import { startBookingAutoCancelJob } from './jobs/bookingAutoCancel';
+import { startMaterialOrderAutoCancelJob } from './jobs/materialOrderAutoCancel';
+import { startMaterialAutoConfirmJob } from './jobs/materialAutoConfirm';
 
 const app = express();
 
@@ -122,6 +130,12 @@ app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/prices', priceRoutes);
 app.use('/api/v1/web-push', webPushRoutes);
 app.use('/api/v1/payout', payoutRoutes);
+app.use('/api/v1/merchants', merchantRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/merchant-verification', merchantVerificationRoutes);
+app.use('/api/v1/material-orders', materialOrderRoutes);
+app.use('/api/v1/material-escrow', materialEscrowRoutes);
+app.use('/api/v1/merchant-reviews', merchantReviewRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -151,6 +165,8 @@ async function start() {
       startDisputeEscalationJob();
       startAutoCertificationJob();
       startBookingAutoCancelJob();
+      startMaterialOrderAutoCancelJob();
+      startMaterialAutoConfirmJob();
     });
   } catch (error) {
     console.error('Failed to start server:', error);

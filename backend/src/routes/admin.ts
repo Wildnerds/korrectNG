@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { User, ArtisanProfile, Review, VerificationApplication, Subscription, SearchLog, WarrantyClaim } from '../models';
+import { User, ArtisanProfile, Review, VerificationApplication, Subscription, SearchLog, WarrantyClaim, MerchantProfile, MerchantVerificationApplication, Product, MaterialOrder } from '../models';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { adminLimiter } from '../middleware/rateLimiter';
@@ -262,6 +262,269 @@ router.patch('/warranty/:id', async (req: AuthRequest, res, next) => {
     await claim.save();
 
     res.status(200).json({ success: true, data: claim });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Merchant Admin Routes ───────────────────────────────────────────────────
+
+// GET /api/v1/admin/merchants
+router.get('/merchants', async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+
+    const filter: any = {};
+    if (status) filter.verificationStatus = status;
+
+    const [merchants, total] = await Promise.all([
+      MerchantProfile.find(filter)
+        .populate('user', 'firstName lastName email phone')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      MerchantProfile.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        data: merchants,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/admin/merchant-verifications
+router.get('/merchant-verifications', async (req, res, next) => {
+  try {
+    const status = req.query.status as string || 'in-review';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const [applications, total] = await Promise.all([
+      MerchantVerificationApplication.find({ status })
+        .populate({
+          path: 'merchant',
+          select: 'businessName category location user',
+          populate: { path: 'user', select: 'firstName lastName email phone' },
+        })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      MerchantVerificationApplication.countDocuments({ status }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        data: applications,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/admin/merchant-verifications/:id/approve
+router.post('/merchant-verifications/:id/approve', async (req: AuthRequest, res, next) => {
+  try {
+    const { adminNotes } = req.body;
+
+    const application = await MerchantVerificationApplication.findById(req.params.id);
+    if (!application) throw new AppError('Application not found', 404);
+
+    application.status = 'approved';
+    application.adminNotes = adminNotes;
+    application.reviewedBy = req.user!._id;
+    application.reviewedAt = new Date();
+    await application.save();
+
+    // Update merchant profile
+    const merchant = await MerchantProfile.findById(application.merchant);
+    if (merchant) {
+      merchant.verificationStatus = 'approved';
+      merchant.isPublished = true;
+      await merchant.save();
+    }
+
+    res.status(200).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/admin/merchant-verifications/:id/reject
+router.post('/merchant-verifications/:id/reject', async (req: AuthRequest, res, next) => {
+  try {
+    const { adminNotes, reason } = req.body;
+
+    if (!reason) {
+      throw new AppError('Rejection reason is required', 400);
+    }
+
+    const application = await MerchantVerificationApplication.findById(req.params.id);
+    if (!application) throw new AppError('Application not found', 404);
+
+    application.status = 'rejected';
+    application.adminNotes = adminNotes || reason;
+    application.reviewedBy = req.user!._id;
+    application.reviewedAt = new Date();
+    await application.save();
+
+    // Update merchant profile
+    const merchant = await MerchantProfile.findById(application.merchant);
+    if (merchant) {
+      merchant.verificationStatus = 'rejected';
+      await merchant.save();
+    }
+
+    res.status(200).json({ success: true, data: application });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/admin/products
+router.get('/products', async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const isApproved = req.query.isApproved as string;
+
+    const filter: any = {};
+    if (isApproved !== undefined) {
+      filter.isApproved = isApproved === 'true';
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .populate('merchant', 'businessName slug')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Product.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        data: products,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/admin/products/:id/approve
+router.post('/products/:id/approve', async (req: AuthRequest, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) throw new AppError('Product not found', 404);
+
+    product.isApproved = true;
+    await product.save();
+
+    res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/admin/products/:id/reject
+router.post('/products/:id/reject', async (req: AuthRequest, res, next) => {
+  try {
+    const { reason } = req.body;
+
+    const product = await Product.findById(req.params.id);
+    if (!product) throw new AppError('Product not found', 404);
+
+    product.isApproved = false;
+    product.isActive = false;
+    await product.save();
+
+    res.status(200).json({ success: true, data: product, message: 'Product rejected' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/admin/material-orders
+router.get('/material-orders', async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+
+    const filter: any = {};
+    if (status) filter.status = status;
+
+    const [orders, total] = await Promise.all([
+      MaterialOrder.find(filter)
+        .populate('customer', 'firstName lastName email')
+        .populate('merchantProfile', 'businessName')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      MaterialOrder.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        data: orders,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/admin/merchant-stats
+router.get('/merchant-stats', async (_req, res, next) => {
+  try {
+    const [totalMerchants, verifiedMerchants, pendingVerifications, totalProducts, pendingProducts, totalOrders, completedOrders] =
+      await Promise.all([
+        MerchantProfile.countDocuments(),
+        MerchantProfile.countDocuments({ verificationStatus: 'approved' }),
+        MerchantVerificationApplication.countDocuments({ status: 'in-review' }),
+        Product.countDocuments(),
+        Product.countDocuments({ isApproved: false, isActive: true }),
+        MaterialOrder.countDocuments(),
+        MaterialOrder.countDocuments({ status: 'completed' }),
+      ]);
+
+    // Calculate total merchant earnings from completed orders
+    const earningsAgg = await MaterialOrder.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, totalEarnings: { $sum: '$merchantEarnings' }, platformFees: { $sum: '$platformFee' } } },
+    ]);
+    const totalEarnings = earningsAgg[0]?.totalEarnings || 0;
+    const totalPlatformFees = earningsAgg[0]?.platformFees || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalMerchants,
+        verifiedMerchants,
+        pendingVerifications,
+        totalProducts,
+        pendingProducts,
+        totalOrders,
+        completedOrders,
+        totalEarnings,
+        totalPlatformFees,
+      },
+    });
   } catch (error) {
     next(error);
   }
