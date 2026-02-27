@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
+import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { MERCHANT_CATEGORIES, LOCATIONS } from '@korrectng/shared';
 import Cookies from 'js-cookie';
@@ -28,10 +29,16 @@ interface MerchantProfile {
 export default function MerchantProfilePage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState<MerchantProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPersonal, setSavingPersonal] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [personalInfo, setPersonalInfo] = useState({
+    firstName: '',
+    lastName: '',
+  });
 
   const [formData, setFormData] = useState({
     businessName: '',
@@ -81,6 +88,35 @@ export default function MerchantProfilePage() {
     }
     fetchProfile();
   }, []);
+
+  // Set personal info from user
+  useEffect(() => {
+    if (user) {
+      setPersonalInfo({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+      });
+    }
+  }, [user]);
+
+  const handlePersonalInfoSave = async () => {
+    setSavingPersonal(true);
+    const token = Cookies.get('token');
+
+    try {
+      await apiFetch('/auth/update-profile', {
+        method: 'PUT',
+        token,
+        body: JSON.stringify(personalInfo),
+      });
+      if (refreshUser) refreshUser();
+      showToast('Personal information updated!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to update personal information', 'error');
+    } finally {
+      setSavingPersonal(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -173,6 +209,42 @@ export default function MerchantProfilePage() {
             Back to Dashboard
           </button>
           <h1 className="text-2xl font-bold mt-2">Store Profile</h1>
+        </div>
+
+        {/* Personal Information */}
+        <div className="bg-white rounded-xl p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-2">Personal Information</h2>
+          <p className="text-sm text-brand-gray mb-4">Your real name helps build trust with customers.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">First Name</label>
+              <input
+                type="text"
+                value={personalInfo.firstName}
+                onChange={(e) => setPersonalInfo({ ...personalInfo, firstName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                placeholder="Your first name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Last Name</label>
+              <input
+                type="text"
+                value={personalInfo.lastName}
+                onChange={(e) => setPersonalInfo({ ...personalInfo, lastName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                placeholder="Your last name"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handlePersonalInfoSave}
+            disabled={savingPersonal}
+            className="mt-4 px-6 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-medium disabled:opacity-50"
+          >
+            {savingPersonal ? 'Saving...' : 'Update Name'}
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 space-y-6">

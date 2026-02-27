@@ -20,6 +20,12 @@ export default function ArtisanProfileEdit() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [personalInfo, setPersonalInfo] = useState({
+    firstName: '',
+    lastName: '',
+  });
+  const [savingPersonal, setSavingPersonal] = useState(false);
+
   const [profile, setProfile] = useState({
     businessName: '',
     trade: '',
@@ -53,9 +59,15 @@ export default function ArtisanProfileEdit() {
           });
         }
 
-        // Set current avatar from user
+        // Set current avatar and personal info from user
         if (user?.avatar) {
           setAvatar(user.avatar);
+        }
+        if (user) {
+          setPersonalInfo({
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+          });
         }
       } catch {
         // Handle error - profile may not exist yet
@@ -66,6 +78,26 @@ export default function ArtisanProfileEdit() {
 
     if (user) fetchProfile();
   }, [user]);
+
+  const handlePersonalInfoSave = async () => {
+    setSavingPersonal(true);
+    setMessage(null);
+
+    try {
+      const token = Cookies.get('token');
+      await apiFetch('/auth/update-profile', {
+        method: 'PUT',
+        token,
+        body: JSON.stringify(personalInfo),
+      });
+      if (refreshUser) refreshUser();
+      setMessage({ type: 'success', text: 'Personal information updated!' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update personal information' });
+    } finally {
+      setSavingPersonal(false);
+    }
+  };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -223,6 +255,42 @@ export default function ArtisanProfileEdit() {
                 <p className="text-xs text-gray-500 mt-2">JPG, PNG or GIF. Max 5MB.</p>
               </div>
             </div>
+          </div>
+
+          {/* Personal Information */}
+          <div className="bg-white rounded-xl p-6">
+            <h2 className="text-xl font-bold mb-4">Personal Information</h2>
+            <p className="text-sm text-brand-gray mb-4">Your real name helps build trust with customers.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={personalInfo.firstName}
+                  onChange={(e) => setPersonalInfo({ ...personalInfo, firstName: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                  placeholder="Your first name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Last Name</label>
+                <input
+                  type="text"
+                  value={personalInfo.lastName}
+                  onChange={(e) => setPersonalInfo({ ...personalInfo, lastName: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                  placeholder="Your last name"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handlePersonalInfoSave}
+              disabled={savingPersonal}
+              className="mt-4 px-6 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-medium disabled:opacity-50"
+            >
+              {savingPersonal ? 'Saving...' : 'Update Name'}
+            </button>
           </div>
 
           {/* Business Information */}
