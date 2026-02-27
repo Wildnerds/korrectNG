@@ -28,19 +28,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex">
         {/* Sidebar */}
         <aside className="w-64 bg-white shadow-sm min-h-screen p-4">
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             <Link
               href="/admin"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
             >
               Dashboard
             </Link>
+
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">Artisans</p>
+            </div>
             <Link
               href="/admin/verifications"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
             >
-              Verifications
+              Artisan Verifications
             </Link>
+
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">Merchants</p>
+            </div>
+            <Link
+              href="/admin/merchants"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              All Merchants
+            </Link>
+            <Link
+              href="/admin/merchant-verifications"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              Merchant Verifications
+            </Link>
+            <Link
+              href="/admin/products"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              Product Approvals
+            </Link>
+            <Link
+              href="/admin/material-orders"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              Material Orders
+            </Link>
+
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">General</p>
+            </div>
             <Link
               href="/admin/warranty"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"

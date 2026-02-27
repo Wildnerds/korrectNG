@@ -12,32 +12,58 @@ router.use(adminLimiter, protect, authorize('admin'));
 // GET /api/v1/admin/dashboard
 router.get('/dashboard', async (_req, res, next) => {
   try {
-    const [totalUsers, totalArtisans, totalReviews, pendingVerifications, activeSubscriptions, openWarrantyClaims] =
-      await Promise.all([
-        User.countDocuments(),
-        ArtisanProfile.countDocuments(),
-        Review.countDocuments(),
-        VerificationApplication.countDocuments({ status: 'in-review' }),
-        Subscription.countDocuments({ status: 'active' }),
-        WarrantyClaim.countDocuments({ status: { $in: ['open', 'in-progress'] } }),
-      ]);
+    const [
+      totalUsers,
+      totalArtisans,
+      totalMerchants,
+      totalReviews,
+      pendingVerifications,
+      pendingMerchantVerifications,
+      pendingProducts,
+      activeSubscriptions,
+      openWarrantyClaims,
+      totalMaterialOrders,
+    ] = await Promise.all([
+      User.countDocuments(),
+      ArtisanProfile.countDocuments(),
+      MerchantProfile.countDocuments(),
+      Review.countDocuments(),
+      VerificationApplication.countDocuments({ status: 'in-review' }),
+      MerchantVerificationApplication.countDocuments({ status: 'in-review' }),
+      Product.countDocuments({ isApproved: false, isActive: true }),
+      Subscription.countDocuments({ status: 'active' }),
+      WarrantyClaim.countDocuments({ status: { $in: ['open', 'in-progress'] } }),
+      MaterialOrder.countDocuments(),
+    ]);
 
-    const revenueAgg = await Subscription.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
+    const [revenueAgg, merchantRevenueAgg] = await Promise.all([
+      Subscription.aggregate([
+        { $match: { status: 'active' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]),
+      MaterialOrder.aggregate([
+        { $match: { status: 'completed' } },
+        { $group: { _id: null, total: { $sum: '$platformFee' } } },
+      ]),
     ]);
     const revenue = revenueAgg[0]?.total || 0;
+    const merchantRevenue = merchantRevenueAgg[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       data: {
         totalUsers,
         totalArtisans,
+        totalMerchants,
         totalReviews,
         pendingVerifications,
+        pendingMerchantVerifications,
+        pendingProducts,
         activeSubscriptions,
         openWarrantyClaims,
+        totalMaterialOrders,
         revenue,
+        merchantRevenue,
       },
     });
   } catch (error) {
@@ -277,7 +303,12 @@ router.get('/merchants', async (req, res, next) => {
     const status = req.query.status as string;
 
     const filter: any = {};
-    if (status) filter.verificationStatus = status;
+    if (status === 'verified') {
+      filter.verificationStatus = 'approved';
+    } else if (status === 'pending') {
+      filter.verificationStatus = { $in: ['pending', 'in-review'] };
+    }
+    // 'all' - no filter
 
     const [merchants, total] = await Promise.all([
       MerchantProfile.find(filter)
@@ -396,16 +427,20 @@ router.get('/products', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
-    const isApproved = req.query.isApproved as string;
+    const approval = req.query.approval as string;
 
     const filter: any = {};
-    if (isApproved !== undefined) {
-      filter.isApproved = isApproved === 'true';
+    if (approval === 'pending') {
+      filter.isApproved = false;
+      filter.isActive = true;
+    } else if (approval === 'approved') {
+      filter.isApproved = true;
     }
+    // 'all' - no filter
 
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .populate('merchant', 'businessName slug')
+        .populate('merchant', 'businessName slug verificationStatus')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
@@ -465,23 +500,48 @@ router.get('/material-orders', async (req, res, next) => {
     const status = req.query.status as string;
 
     const filter: any = {};
-    if (status) filter.status = status;
+    if (status && status !== 'all') filter.status = status;
 
-    const [orders, total] = await Promise.all([
-      MaterialOrder.find(filter)
-        .populate('customer', 'firstName lastName email')
-        .populate('merchantProfile', 'businessName')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit),
-      MaterialOrder.countDocuments(filter),
+    // Get stats
+    const [
+      total,
+      pending,
+      paid,
+      completed,
+      disputed,
+      revenueAgg,
+    ] = await Promise.all([
+      MaterialOrder.countDocuments(),
+      MaterialOrder.countDocuments({ status: 'pending' }),
+      MaterialOrder.countDocuments({ status: { $in: ['paid', 'preparing', 'shipped', 'delivered'] } }),
+      MaterialOrder.countDocuments({ status: 'completed' }),
+      MaterialOrder.countDocuments({ status: 'disputed' }),
+      MaterialOrder.aggregate([
+        { $match: { status: 'completed' } },
+        { $group: { _id: null, totalRevenue: { $sum: '$platformFee' } } },
+      ]),
     ]);
+
+    const orders = await MaterialOrder.find(filter)
+      .populate('customer', 'firstName lastName email')
+      .populate('merchantProfile', 'businessName')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
       data: {
         data: orders,
-        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+        stats: {
+          total,
+          pending,
+          paid,
+          completed,
+          disputed,
+          totalRevenue: revenueAgg[0]?.totalRevenue || 0,
+        },
+        pagination: { page, limit, total: await MaterialOrder.countDocuments(filter), pages: Math.ceil(total / limit) },
       },
     });
   } catch (error) {
