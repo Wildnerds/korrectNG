@@ -449,19 +449,17 @@ export default function MerchantOrderDetailPage() {
                       <p className="font-medium">{order.customer.firstName} {order.customer.lastName}</p>
                     </div>
                     {order.customer.phone && (
-                      <div className="flex flex-col gap-2">
-                        <a
-                          href={`tel:${order.customer.phone}`}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
-                        >
-                          <span>📞 Call Customer</span>
-                          <span>{order.customer.phone}</span>
-                        </a>
-                      </div>
+                      <a
+                        href={`tel:${order.customer.phone}`}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors w-full"
+                      >
+                        <span>📞</span>
+                        <span>Call {order.customer.phone}</span>
+                      </a>
                     )}
                     <div>
                       <p className="text-sm text-blue-600">Delivery Address</p>
-                      <p className="font-medium">{order.deliveryAddress}</p>
+                      <p className="font-medium break-words">{order.deliveryAddress}</p>
                     </div>
                   </div>
                 )}
@@ -474,32 +472,28 @@ export default function MerchantOrderDetailPage() {
                       <p className="font-medium">{order.artisan.firstName} {order.artisan.lastName}</p>
                     </div>
                     {(order.artisanProfile?.phoneNumber || order.artisan.phone) && (
-                      <div className="flex flex-col gap-2">
-                        <a
-                          href={`tel:${order.artisanProfile?.phoneNumber || order.artisan.phone}`}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
-                        >
-                          <span>📞 Call Artisan</span>
-                          <span>{order.artisanProfile?.phoneNumber || order.artisan.phone}</span>
-                        </a>
-                      </div>
+                      <a
+                        href={`tel:${order.artisanProfile?.phoneNumber || order.artisan.phone}`}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors w-full"
+                      >
+                        <span>📞</span>
+                        <span>Call {order.artisanProfile?.phoneNumber || order.artisan.phone}</span>
+                      </a>
                     )}
                     {order.artisanProfile?.whatsappNumber && (
-                      <div>
-                        <a
-                          href={`https://wa.me/${order.artisanProfile.whatsappNumber.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full"
-                        >
-                          <span>💬 WhatsApp</span>
-                          <span>{order.artisanProfile.whatsappNumber}</span>
-                        </a>
-                      </div>
+                      <a
+                        href={`https://wa.me/${order.artisanProfile.whatsappNumber.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full"
+                      >
+                        <span>💬</span>
+                        <span>WhatsApp {order.artisanProfile.whatsappNumber}</span>
+                      </a>
                     )}
                     <div>
                       <p className="text-sm text-blue-600">Delivery Address</p>
-                      <p className="font-medium">{order.artisanProfile?.address || order.deliveryAddress}</p>
+                      <p className="font-medium break-words">{order.artisanProfile?.address || order.deliveryAddress}</p>
                     </div>
                   </div>
                 )}
