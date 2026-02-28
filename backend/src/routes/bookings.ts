@@ -1463,8 +1463,9 @@ router.get('/:id/material-options', protect, async (req: Request, res: Response,
     }
 
     // Verify user is participant
-    if (booking.customer.toString() !== userId.toString() &&
-        booking.artisan.toString() !== userId.toString()) {
+    const isCustomer = booking.customer.toString() === userId.toString();
+    const isArtisan = booking.artisan && booking.artisan.toString() === userId.toString();
+    if (!isCustomer && !isArtisan) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to view this booking',

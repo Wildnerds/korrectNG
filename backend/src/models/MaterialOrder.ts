@@ -132,8 +132,8 @@ const materialOrderSchema = new Schema<IMaterialOrder>(
   {
     orderNumber: {
       type: String,
-      required: true,
       unique: true,
+      // Not required - auto-generated in pre-save hook
     },
 
     // Parties

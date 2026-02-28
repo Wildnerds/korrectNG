@@ -655,9 +655,82 @@ function ShopPageContent() {
             className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Image Gallery */}
+            {/* Close button - fixed at top */}
+            <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold truncate pr-4">{selectedProduct.name}</h2>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-200 text-xl flex-shrink-0"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Product Info & Action - FIRST */}
+            <div className="p-6 bg-brand-light-gray">
+              <p className="text-3xl font-bold text-brand-green mb-2">
+                NGN{selectedProduct.price.toLocaleString()}/{getProductUnitLabel(selectedProduct.unit)}
+              </p>
+              <p className={`text-sm font-medium mb-4 ${selectedProduct.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {selectedProduct.stockQuantity > 0 ? `In Stock (${selectedProduct.stockQuantity} available)` : 'Out of Stock'}
+              </p>
+
+              {/* Add to Cart Section - PROMINENT */}
+              {bookingId && selectedProduct.stockQuantity > 0 && (
+                <div className="bg-white rounded-xl p-4 border-2 border-brand-green">
+                  <p className="text-sm font-medium text-brand-gray mb-3">Add to your material order:</p>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setOrderQuantity(q => Math.max(1, q - 1))}
+                        className="w-12 h-12 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold text-xl"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={selectedProduct.stockQuantity}
+                        value={orderQuantity}
+                        onChange={(e) => setOrderQuantity(Math.min(selectedProduct.stockQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="w-20 text-center border-2 rounded-lg py-3 text-lg font-bold"
+                      />
+                      <button
+                        onClick={() => setOrderQuantity(q => Math.min(selectedProduct.stockQuantity, q + 1))}
+                        className="w-12 h-12 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold text-xl"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span className="text-xl font-bold text-brand-green">
+                      = NGN{(selectedProduct.price * orderQuantity).toLocaleString()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => addToCart(selectedProduct, orderQuantity)}
+                    className="w-full py-4 bg-brand-green text-white rounded-lg font-bold text-lg hover:bg-brand-green-dark transition-colors"
+                  >
+                    Add to Material Order
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Items will be verified by your artisan before checkout
+                  </p>
+                </div>
+              )}
+
+              {/* Show message if not from booking */}
+              {!bookingId && selectedProduct.stockQuantity > 0 && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Want to order?</strong> Start from your booking page to add materials to your order with artisan verification and escrow protection.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Image Gallery - Below action */}
             <div className="relative">
-              <div className="aspect-square bg-gray-100">
+              <div className="aspect-video bg-gray-100">
                 {selectedProduct.images?.[currentImageIndex]?.url ? (
                   <img
                     src={selectedProduct.images[currentImageIndex].url}
@@ -670,14 +743,6 @@ function ShopPageContent() {
                   </div>
                 )}
               </div>
-
-              {/* Close button */}
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 text-xl"
-              >
-                &times;
-              </button>
 
               {/* Image navigation */}
               {selectedProduct.images && selectedProduct.images.length > 1 && (
@@ -713,7 +778,7 @@ function ShopPageContent() {
 
             {/* Thumbnail strip */}
             {selectedProduct.images && selectedProduct.images.length > 1 && (
-              <div className="flex gap-2 p-4 overflow-x-auto">
+              <div className="flex gap-2 p-4 overflow-x-auto bg-gray-50">
                 {selectedProduct.images.map((img, idx) => (
                   <button
                     key={idx}
@@ -728,62 +793,13 @@ function ShopPageContent() {
               </div>
             )}
 
-            {/* Product Info */}
+            {/* Product Details */}
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-2">{selectedProduct.name}</h2>
-              <p className="text-2xl font-bold text-brand-green mb-4">
-                NGN{selectedProduct.price.toLocaleString()}/{getProductUnitLabel(selectedProduct.unit)}
-              </p>
-              <p className="text-brand-gray mb-4">{selectedProduct.description}</p>
-              <p className={`text-sm font-medium ${selectedProduct.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {selectedProduct.stockQuantity > 0 ? `In Stock (${selectedProduct.stockQuantity} available)` : 'Out of Stock'}
-              </p>
-
-              {/* Add to Cart Section - Only when shopping for booking */}
-              {bookingId && selectedProduct.stockQuantity > 0 && (
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center gap-4 mb-4">
-                    <label className="text-sm font-medium text-brand-gray">Quantity:</label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setOrderQuantity(q => Math.max(1, q - 1))}
-                        className="w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={selectedProduct.stockQuantity}
-                        value={orderQuantity}
-                        onChange={(e) => setOrderQuantity(Math.min(selectedProduct.stockQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-20 text-center border rounded-lg py-2"
-                      />
-                      <button
-                        onClick={() => setOrderQuantity(q => Math.min(selectedProduct.stockQuantity, q + 1))}
-                        className="w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <span className="text-lg font-bold text-brand-green">
-                      NGN{(selectedProduct.price * orderQuantity).toLocaleString()}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => addToCart(selectedProduct, orderQuantity)}
-                    className="w-full py-3 bg-brand-green text-white rounded-lg font-medium hover:bg-brand-green-dark transition-colors"
-                  >
-                    Add to Material Order
-                  </button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Items will be verified by your artisan before checkout
-                  </p>
-                </div>
-              )}
+              <h3 className="font-bold text-lg mb-2">Description</h3>
+              <p className="text-brand-gray mb-6">{selectedProduct.description}</p>
 
               {/* Merchant Info */}
-              <div className="mt-6 pt-6 border-t">
+              <div className="pt-4 border-t">
                 <p className="text-sm text-brand-gray mb-2">Sold by</p>
                 <Link
                   href={`/merchant/${selectedProduct.merchant.slug}`}
