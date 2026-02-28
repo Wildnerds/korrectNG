@@ -1,9 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { MERCHANT_CATEGORIES, LOCATIONS, getMerchantCategoryLabel, getProductUnitLabel } from '@korrectng/shared';
+import Cookies from 'js-cookie';
+
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
 
 interface Product {
   _id: string;
@@ -43,6 +50,14 @@ interface Pagination {
 type ViewMode = 'products' | 'merchants';
 
 export default function ShopPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Booking context from URL
+  const bookingId = searchParams.get('bookingId');
+  const materialsParam = searchParams.get('materials');
+  const materialNames: string[] = materialsParam ? JSON.parse(decodeURIComponent(materialsParam)) : [];
+
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
@@ -56,13 +71,118 @@ export default function ShopPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Cart for material orders
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [showCart, setShowCart] = useState(false);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [creatingOrder, setCreatingOrder] = useState(false);
+
+  // Add to cart function
+  const addToCart = (product: Product, quantity: number) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.product._id === product._id);
+      if (existing) {
+        return prev.map(item =>
+          item.product._id === product._id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+      return [...prev, { product, quantity }];
+    });
+    setSelectedProduct(null);
+    setOrderQuantity(1);
+  };
+
+  // Remove from cart
+  const removeFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.product._id !== productId));
+  };
+
+  // Calculate cart total
+  const cartTotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+  // Group cart by merchant
+  const cartByMerchant = cart.reduce((acc, item) => {
+    const merchantId = item.product.merchant._id;
+    if (!acc[merchantId]) {
+      acc[merchantId] = {
+        merchant: item.product.merchant,
+        items: [],
+        total: 0,
+      };
+    }
+    acc[merchantId].items.push(item);
+    acc[merchantId].total += item.product.price * item.quantity;
+    return acc;
+  }, {} as Record<string, { merchant: Product['merchant']; items: CartItem[]; total: number }>);
+
+  // Create material order for a merchant
+  const createOrder = async (merchantId: string) => {
+    if (!bookingId) {
+      alert('This feature requires a linked booking. Please start from your booking page.');
+      return;
+    }
+
+    const token = Cookies.get('token');
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    const merchantCart = cartByMerchant[merchantId];
+    if (!merchantCart) return;
+
+    setCreatingOrder(true);
+    try {
+      // Get merchant profile ID
+      const merchantRes = await apiFetch<{ _id: string }>(`/merchants/${merchantCart.merchant.slug}`, { token });
+      if (!merchantRes.data) throw new Error('Merchant not found');
+
+      const orderData = {
+        merchant: merchantRes.data._id,
+        items: merchantCart.items.map(item => ({
+          product: item.product._id,
+          quantity: item.quantity,
+        })),
+        booking: bookingId,
+        deliveryType: 'job_site',
+        deliveryAddress: 'Artisan location (from booking)',
+      };
+
+      const res = await apiFetch('/material-orders', {
+        method: 'POST',
+        token,
+        body: JSON.stringify(orderData),
+      });
+
+      if (res.data) {
+        // Remove ordered items from cart
+        setCart(prev => prev.filter(item => item.product.merchant._id !== merchantId));
+        alert('Order created! The artisan will verify your selection.');
+        router.push(`/dashboard/customer/material-orders/${(res.data as any)._id}`);
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to create order');
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
+  // Pre-fill search with first material name when coming from booking
+  useEffect(() => {
+    if (materialNames.length > 0 && !searchQuery) {
+      setSearchQuery(materialNames[0]);
+    }
+  }, []);
+
   useEffect(() => {
     if (viewMode === 'products') {
       fetchProducts();
     } else {
       fetchMerchants();
     }
-  }, [currentPage, categoryFilter, locationFilter, sortBy, viewMode]);
+  }, [currentPage, categoryFilter, locationFilter, sortBy, viewMode, searchQuery]);
 
   async function fetchProducts() {
     setLoading(true);
@@ -134,6 +254,43 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-brand-light-gray">
+      {/* Booking Context Banner */}
+      {bookingId && materialNames.length > 0 && (
+        <div className="bg-blue-600 text-white py-4">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <p className="font-medium flex items-center gap-2">
+                  <span className="text-xl">🔗</span>
+                  Shopping for your booking
+                </p>
+                <p className="text-blue-100 text-sm mt-1">
+                  Materials needed: {materialNames.join(', ')}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {cart.length > 0 && (
+                  <button
+                    onClick={() => setShowCart(true)}
+                    className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 flex items-center gap-2"
+                  >
+                    <span>🛒</span>
+                    Cart ({cart.length})
+                    <span className="font-bold">NGN{cartTotal.toLocaleString()}</span>
+                  </button>
+                )}
+                <Link
+                  href={`/dashboard/customer/bookings/${bookingId}`}
+                  className="px-4 py-2 bg-blue-500 rounded-lg font-medium hover:bg-blue-400 text-sm"
+                >
+                  Back to Booking
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-brand-green text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
@@ -158,6 +315,31 @@ export default function ShopPage() {
               Search
             </button>
           </form>
+
+          {/* Material search chips when coming from booking */}
+          {materialNames.length > 0 && (
+            <div className="mt-4">
+              <p className="text-green-100 text-sm mb-2">Quick search for your materials:</p>
+              <div className="flex flex-wrap gap-2">
+                {materialNames.map((material, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setSearchQuery(material);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      searchQuery === material
+                        ? 'bg-white text-brand-green'
+                        : 'bg-green-600 text-white hover:bg-green-500'
+                    }`}
+                  >
+                    {material}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -528,6 +710,49 @@ export default function ShopPage() {
                 {selectedProduct.stockQuantity > 0 ? `In Stock (${selectedProduct.stockQuantity} available)` : 'Out of Stock'}
               </p>
 
+              {/* Add to Cart Section - Only when shopping for booking */}
+              {bookingId && selectedProduct.stockQuantity > 0 && (
+                <div className="mt-6 pt-6 border-t">
+                  <div className="flex items-center gap-4 mb-4">
+                    <label className="text-sm font-medium text-brand-gray">Quantity:</label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setOrderQuantity(q => Math.max(1, q - 1))}
+                        className="w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={selectedProduct.stockQuantity}
+                        value={orderQuantity}
+                        onChange={(e) => setOrderQuantity(Math.min(selectedProduct.stockQuantity, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="w-20 text-center border rounded-lg py-2"
+                      />
+                      <button
+                        onClick={() => setOrderQuantity(q => Math.min(selectedProduct.stockQuantity, q + 1))}
+                        className="w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span className="text-lg font-bold text-brand-green">
+                      NGN{(selectedProduct.price * orderQuantity).toLocaleString()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => addToCart(selectedProduct, orderQuantity)}
+                    className="w-full py-3 bg-brand-green text-white rounded-lg font-medium hover:bg-brand-green-dark transition-colors"
+                  >
+                    Add to Material Order
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Items will be verified by your artisan before checkout
+                  </p>
+                </div>
+              )}
+
               {/* Merchant Info */}
               <div className="mt-6 pt-6 border-t">
                 <p className="text-sm text-brand-gray mb-2">Sold by</p>
@@ -551,6 +776,118 @@ export default function ShopPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Cart Sidebar */}
+      {showCart && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50"
+          onClick={() => setShowCart(false)}
+        >
+          <div
+            className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Your Cart</h2>
+                <button
+                  onClick={() => setShowCart(false)}
+                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {cart.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-4xl mb-4">🛒</p>
+                  <p>Your cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(cartByMerchant).map(([merchantId, { merchant, items, total }]) => (
+                    <div key={merchantId} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center gap-3 mb-4 pb-3 border-b">
+                        <div className="w-8 h-8 bg-brand-light-gray rounded-full flex items-center justify-center text-sm">
+                          🏪
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{merchant.businessName}</p>
+                          <p className="text-xs text-gray-500">{merchant.location}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <div key={item.product._id} className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {item.product.images?.[0]?.url ? (
+                                <img src={item.product.images[0].url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>📦</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{item.product.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {item.quantity} × NGN{item.product.price.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-sm">NGN{(item.product.price * item.quantity).toLocaleString()}</p>
+                              <button
+                                onClick={() => removeFromCart(item.product._id)}
+                                className="text-xs text-red-500 hover:underline"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t flex items-center justify-between">
+                        <span className="font-medium">Subtotal</span>
+                        <span className="font-bold text-brand-green">NGN{total.toLocaleString()}</span>
+                      </div>
+
+                      <button
+                        onClick={() => createOrder(merchantId)}
+                        disabled={creatingOrder}
+                        className="w-full mt-4 py-3 bg-brand-green text-white rounded-lg font-medium hover:bg-brand-green-dark disabled:opacity-50"
+                      >
+                        {creatingOrder ? 'Creating Order...' : 'Create Order with This Merchant'}
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
+                    <p className="font-medium mb-1">How it works:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                      <li>Create orders with each merchant</li>
+                      <li>Your artisan verifies the items</li>
+                      <li>Merchant confirms availability</li>
+                      <li>You pay securely via escrow</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Cart Button - Shows when shopping for booking with items in cart */}
+      {bookingId && cart.length > 0 && !showCart && (
+        <button
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-6 right-6 bg-brand-green text-white px-6 py-4 rounded-full shadow-lg hover:bg-brand-green-dark transition-all hover:scale-105 flex items-center gap-3 z-40"
+        >
+          <span className="text-xl">🛒</span>
+          <span className="font-medium">{cart.length} items</span>
+          <span className="font-bold">NGN{cartTotal.toLocaleString()}</span>
+        </button>
       )}
     </div>
   );

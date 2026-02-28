@@ -44,6 +44,12 @@ interface Order {
     _id: string;
     firstName: string;
     lastName: string;
+    phone?: string;
+  };
+  artisanProfile?: {
+    phoneNumber?: string;
+    whatsappNumber?: string;
+    address?: string;
   };
   items: OrderItem[];
   subtotal: number;
@@ -373,6 +379,47 @@ export default function MerchantOrderDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* Delivery Contact - Show when order is paid/preparing/shipped */}
+            {['paid', 'preparing', 'shipped'].includes(order.status) && order.artisan && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                <h2 className="text-lg font-bold mb-4 text-blue-800">Delivery Contact</h2>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-blue-600">Deliver to (Artisan)</p>
+                    <p className="font-medium">{order.artisan.firstName} {order.artisan.lastName}</p>
+                  </div>
+                  {(order.artisanProfile?.phoneNumber || order.artisan.phone) && (
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href={`tel:${order.artisanProfile?.phoneNumber || order.artisan.phone}`}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
+                      >
+                        <span>Call</span>
+                        <span>{order.artisanProfile?.phoneNumber || order.artisan.phone}</span>
+                      </a>
+                    </div>
+                  )}
+                  {order.artisanProfile?.whatsappNumber && (
+                    <div>
+                      <a
+                        href={`https://wa.me/${order.artisanProfile.whatsappNumber.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full"
+                      >
+                        <span>WhatsApp</span>
+                        <span>{order.artisanProfile.whatsappNumber}</span>
+                      </a>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-blue-600">Delivery Address</p>
+                    <p className="font-medium">{order.artisanProfile?.address || order.deliveryAddress}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Customer Info */}
             <div className="bg-white rounded-xl p-6">

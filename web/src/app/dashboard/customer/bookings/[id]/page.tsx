@@ -552,7 +552,7 @@ export default function BookingDetailPage() {
             ) : (
               /* Show option to order materials if quote is accepted/paid */
               ['accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
-                <div className="mt-6">
+                <div className="mt-6 space-y-3">
                   <button
                     onClick={() => {
                       fetchMerchantQuotes();
@@ -560,9 +560,15 @@ export default function BookingDetailPage() {
                     }}
                     className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                   >
-                    Order Materials from Verified Merchants
+                    Get Merchant Quotes for Materials
                   </button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
+                  <Link
+                    href={`/shop?bookingId=${booking._id}&materials=${encodeURIComponent(JSON.stringify(booking.materialsList?.map(m => m.name) || []))}`}
+                    className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
+                  >
+                    Browse Shop for These Materials
+                  </Link>
+                  <p className="text-xs text-gray-500 text-center">
                     Compare prices from multiple merchants and order with escrow protection
                   </p>
                 </div>

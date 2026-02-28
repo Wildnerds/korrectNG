@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createMaterialOrderSchema, reportDefectSchema } from '@korrectng/shared';
-import { MaterialOrder, Product, MerchantProfile } from '../models';
+import { MaterialOrder, Product, MerchantProfile, User } from '../models';
 import Booking from '../models/Booking';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -8,6 +8,7 @@ import { AppError } from '../middleware/errorHandler';
 import { createNotification } from '../services/notifications';
 import { createMaterialEscrow, fundMaterialEscrow, releaseMaterialEscrow, requestRelease } from '../services/materialEscrowStateMachine';
 import { recordResponseTime, onOrderCompleted, onOrderCancelled, onDefectReported } from '../services/merchantTrustService';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -220,7 +221,7 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
       .populate('customer', 'firstName lastName email phone')
       .populate('merchant', 'firstName lastName')
       .populate('merchantProfile', 'businessName slug location phoneNumber whatsappNumber')
-      .populate('artisan', 'firstName lastName')
+      .populate('artisan', 'firstName lastName phone')
       .populate('booking', 'jobType description')
       .populate('escrow');
 
@@ -238,7 +239,21 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
       throw new AppError('Not authorized to view this order', 403);
     }
 
-    res.status(200).json({ success: true, data: order });
+    // For merchants, also get artisan profile for contact info
+    const orderData = order.toObject();
+    if (isMerchant && order.artisan) {
+      const { ArtisanProfile } = await import('../models/ArtisanProfile');
+      const artisanProfile = await ArtisanProfile.findOne({ user: order.artisan._id });
+      if (artisanProfile) {
+        (orderData as any).artisanProfile = {
+          phoneNumber: artisanProfile.phoneNumber,
+          whatsappNumber: artisanProfile.whatsappNumber,
+          address: artisanProfile.address,
+        };
+      }
+    }
+
+    res.status(200).json({ success: true, data: orderData });
   } catch (error) {
     next(error);
   }
@@ -288,6 +303,20 @@ router.post('/:id/artisan-approve', protect, authorize('artisan'), async (req: A
       link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
+
+    // Send email to merchant about new order
+    const merchant = await User.findById(order.merchant);
+    const customer = await User.findById(order.customer);
+    if (merchant?.email && merchantProfile) {
+      const template = emailTemplates.merchantNewOrder(
+        merchantProfile.businessName || merchant.firstName || 'Merchant',
+        order.orderNumber,
+        `${customer?.firstName || ''} ${customer?.lastName || 'Customer'}`.trim(),
+        order.totalAmount,
+        order.items.length
+      );
+      sendEmail({ to: merchant.email, ...template }).catch(() => {});
+    }
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
@@ -369,6 +398,19 @@ router.post('/:id/confirm', protect, authorize('merchant'), async (req: AuthRequ
       link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
+
+    // Send email to customer
+    const customer = await User.findById(order.customer);
+    const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+    if (customer?.email) {
+      const template = emailTemplates.materialOrderConfirmed(
+        customer.firstName || 'Customer',
+        order.orderNumber,
+        merchantProfile?.businessName || 'Merchant',
+        order.totalAmount
+      );
+      sendEmail({ to: customer.email, ...template }).catch(() => {});
+    }
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
@@ -462,6 +504,18 @@ router.post('/:id/ship', protect, authorize('merchant'), async (req: AuthRequest
       data: { orderId: order._id },
     });
 
+    // Send email to customer
+    const customer = await User.findById(order.customer);
+    const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+    if (customer?.email) {
+      const template = emailTemplates.materialOrderShipped(
+        customer.firstName || 'Customer',
+        order.orderNumber,
+        merchantProfile?.businessName || 'Merchant'
+      );
+      sendEmail({ to: customer.email, ...template }).catch(() => {});
+    }
+
     res.status(200).json({ success: true, data: order });
   } catch (error) {
     next(error);
@@ -505,6 +559,18 @@ router.post('/:id/deliver', protect, authorize('merchant'), async (req: AuthRequ
       link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
+
+    // Send email to customer
+    const customer = await User.findById(order.customer);
+    const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+    if (customer?.email) {
+      const template = emailTemplates.materialOrderDelivered(
+        customer.firstName || 'Customer',
+        order.orderNumber,
+        merchantProfile?.businessName || 'Merchant'
+      );
+      sendEmail({ to: customer.email, ...template }).catch(() => {});
+    }
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
@@ -566,6 +632,18 @@ router.post('/:id/receive', protect, authorize('artisan'), async (req: AuthReque
       data: { orderId: order._id },
     });
 
+    // Send email to merchant - payment released
+    const merchant = await User.findById(order.merchant);
+    const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+    if (merchant?.email) {
+      const template = emailTemplates.materialEscrowReleased(
+        merchantProfile?.businessName || merchant.firstName || 'Merchant',
+        order.orderNumber,
+        order.merchantEarnings
+      );
+      sendEmail({ to: merchant.email, ...template }).catch(() => {});
+    }
+
     res.status(200).json({ success: true, data: order });
   } catch (error) {
     next(error);
@@ -615,6 +693,20 @@ router.post(
         link: `/dashboard/merchant/orders/${order._id}`,
         data: { orderId: order._id, description },
       });
+
+      // Send email to merchant
+      const merchant = await User.findById(order.merchant);
+      const customer = await User.findById(order.customer);
+      const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+      if (merchant?.email) {
+        const template = emailTemplates.materialDefectReported(
+          merchantProfile?.businessName || merchant.firstName || 'Merchant',
+          order.orderNumber,
+          `${customer?.firstName || ''} ${customer?.lastName || 'Customer'}`.trim(),
+          description
+        );
+        sendEmail({ to: merchant.email, ...template }).catch(() => {});
+      }
 
       res.status(200).json({ success: true, data: order });
     } catch (error) {
