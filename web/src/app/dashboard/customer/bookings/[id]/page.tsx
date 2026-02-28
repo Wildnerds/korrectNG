@@ -550,8 +550,8 @@ export default function BookingDetailPage() {
                 </div>
               </div>
             ) : (
-              /* Show option to order materials if quote is accepted/paid */
-              ['accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
+              /* Show option to browse/order materials if quote has materials */
+              ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
                 <div className="mt-6 space-y-3">
                   <button
                     onClick={() => {
@@ -571,6 +571,11 @@ export default function BookingDetailPage() {
                   <p className="text-xs text-gray-500 text-center">
                     Compare prices from multiple merchants and order with escrow protection
                   </p>
+                  {booking.status === 'quoted' && (
+                    <p className="text-xs text-orange-600 text-center">
+                      Note: Accept the quote first before placing material orders
+                    </p>
+                  )}
                 </div>
               )
             )}
