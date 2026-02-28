@@ -36,7 +36,12 @@ export type NotificationType =
   | 'material_order_completed'
   | 'material_payment_released'
   | 'material_refund_processed'
-  | 'material_dispute_opened';
+  | 'material_dispute_opened'
+  // Merchant review & trust notifications
+  | 'new_merchant_review'
+  | 'merchant_review_response'
+  | 'trust_level_changed'
+  | 'badge_earned';
 
 export interface INotification extends Document {
   user: mongoose.Types.ObjectId;
@@ -99,6 +104,11 @@ const notificationSchema = new Schema<INotification>(
         'material_payment_released',
         'material_refund_processed',
         'material_dispute_opened',
+        // Merchant review & trust notifications
+        'new_merchant_review',
+        'merchant_review_response',
+        'trust_level_changed',
+        'badge_earned',
       ],
       required: true,
     },

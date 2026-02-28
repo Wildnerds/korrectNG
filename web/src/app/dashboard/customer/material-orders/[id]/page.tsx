@@ -405,17 +405,47 @@ export default function CustomerMaterialOrderDetailPage() {
             <h2 className="text-lg font-semibold mb-4">Order Timeline</h2>
             <div className="space-y-4">
               {order.statusHistory.map((entry, idx) => {
-                const entryStatus = STATUS_LABELS[entry.status] || { label: entry.status, color: '' };
+                const statusIcons: Record<string, { icon: string; color: string }> = {
+                  pending_artisan_approval: { icon: '📋', color: 'bg-orange-500' },
+                  pending: { icon: '🏪', color: 'bg-yellow-500' },
+                  confirmed: { icon: '✅', color: 'bg-blue-500' },
+                  payment_pending: { icon: '💳', color: 'bg-blue-400' },
+                  paid: { icon: '💰', color: 'bg-green-500' },
+                  preparing: { icon: '🔧', color: 'bg-purple-500' },
+                  shipped: { icon: '🚚', color: 'bg-indigo-500' },
+                  delivered: { icon: '📍', color: 'bg-teal-500' },
+                  received: { icon: '✔️', color: 'bg-green-600' },
+                  completed: { icon: '🎉', color: 'bg-green-700' },
+                  cancelled: { icon: '❌', color: 'bg-red-500' },
+                  disputed: { icon: '⚠️', color: 'bg-red-600' },
+                };
+                const entryStatus = STATUS_LABELS[entry.status] || { label: entry.status.replace(/_/g, ' '), color: '' };
+                const iconInfo = statusIcons[entry.status] || { icon: '•', color: 'bg-gray-500' };
+
                 return (
-                  <div key={idx} className="flex gap-3">
-                    <div className="w-3 h-3 bg-brand-green rounded-full mt-1.5 flex-shrink-0" />
-                    <div>
+                  <div key={idx} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-8 h-8 rounded-full ${iconInfo.color} flex items-center justify-center text-white text-sm flex-shrink-0`}>
+                        {iconInfo.icon}
+                      </div>
+                      {idx < order.statusHistory.length - 1 && (
+                        <div className="w-0.5 h-full bg-gray-200 mt-1" />
+                      )}
+                    </div>
+                    <div className="pb-4">
                       <p className="font-medium">{entryStatus.label}</p>
                       <p className="text-sm text-brand-gray">
-                        {new Date(entry.timestamp).toLocaleString()}
+                        {new Date(entry.timestamp).toLocaleString('en-NG', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </p>
                       {entry.note && (
-                        <p className="text-sm text-brand-gray mt-1">{entry.note}</p>
+                        <p className="text-sm text-gray-600 mt-1 bg-gray-50 px-2 py-1 rounded">{entry.note}</p>
                       )}
                     </div>
                   </div>
