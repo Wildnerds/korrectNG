@@ -125,7 +125,7 @@ export default async function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/merchants"
+                  href="/shop"
                   className="px-8 py-3 bg-white text-brand-orange rounded-md hover:bg-gray-100 transition-colors font-semibold text-center"
                 >
                   Shop Materials

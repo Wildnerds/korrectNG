@@ -60,6 +60,23 @@ export default function MerchantProductsPage() {
     }
   };
 
+  const deleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+      return;
+    }
+    const token = Cookies.get('token');
+    try {
+      await apiFetch(`/products/${productId}`, {
+        method: 'DELETE',
+        token,
+      });
+      // Remove from local state
+      setProducts(products.filter(p => p._id !== productId));
+    } catch {
+      alert('Failed to delete product');
+    }
+  };
+
   const filteredProducts = products.filter(p => {
     if (filter === 'all') return true;
     if (filter === 'active') return p.isActive && p.isApproved;
@@ -194,6 +211,12 @@ export default function MerchantProductsPage() {
                       {product.isActive ? 'Deactivate' : 'Activate'}
                     </button>
                   </div>
+                  <button
+                    onClick={() => deleteProduct(product._id, product.name)}
+                    className="w-full mt-2 px-3 py-2 border border-red-300 text-red-600 rounded text-sm font-medium hover:bg-red-50 transition-colors"
+                  >
+                    Delete Product
+                  </button>
                 </div>
               </div>
             ))}

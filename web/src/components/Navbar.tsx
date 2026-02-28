@@ -53,7 +53,7 @@ export default function Navbar() {
             <Link href="/search" className="text-brand-black hover:text-brand-green font-medium">
               Find Artisans
             </Link>
-            <Link href="/merchants" className="text-brand-black hover:text-brand-green font-medium">
+            <Link href="/shop" className="text-brand-black hover:text-brand-green font-medium">
               Shop Materials
             </Link>
           </div>
@@ -132,7 +132,7 @@ export default function Navbar() {
               <Link href="/search" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
                 Find Artisans
               </Link>
-              <Link href="/merchants" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
+              <Link href="/shop" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
                 Shop Materials
               </Link>
               {user ? (

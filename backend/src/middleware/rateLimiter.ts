@@ -14,15 +14,16 @@ function getUserKeyGenerator(req: Request): string {
 }
 
 /**
- * Global rate limiter - 100 requests per 15 minutes
+ * Global rate limiter - 500 requests per 15 minutes
  * Applied to all API routes
  */
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 500,
   message: { success: false, error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getUserKeyGenerator,
 });
 
 /**
