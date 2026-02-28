@@ -22,6 +22,7 @@ export type NotificationType =
   | 'welcome'
   | 'system'
   // Material Order notifications
+  | 'new_material_order'
   | 'material_order_verification'
   | 'material_order_artisan_approved'
   | 'material_order_artisan_rejected'
@@ -83,6 +84,7 @@ const notificationSchema = new Schema<INotification>(
         'welcome',
         'system',
         // Material Order notifications
+        'new_material_order',
         'material_order_verification',
         'material_order_artisan_approved',
         'material_order_artisan_rejected',

@@ -259,6 +259,32 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
       }
     }
 
+    // For artisan verification, fetch full product details (images, description, specs)
+    if (isArtisan && order.status === 'pending_artisan_approval') {
+      const { Product } = await import('../models/Product');
+      const productIds = order.items.map(item => item.product);
+      const products = await Product.find({ _id: { $in: productIds } })
+        .select('name description images brand specifications category unit');
+
+      const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+      (orderData as any).items = orderData.items.map((item: any) => {
+        const fullProduct = productMap.get(item.product.toString());
+        return {
+          ...item,
+          fullProduct: fullProduct ? {
+            name: fullProduct.name,
+            description: fullProduct.description,
+            images: fullProduct.images,
+            brand: fullProduct.brand,
+            specifications: fullProduct.specifications,
+            category: fullProduct.category,
+            unit: fullProduct.unit,
+          } : null,
+        };
+      });
+    }
+
     res.status(200).json({ success: true, data: orderData });
   } catch (error) {
     next(error);

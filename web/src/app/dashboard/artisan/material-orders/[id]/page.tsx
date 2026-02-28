@@ -7,6 +7,21 @@ import { apiFetch } from '@/lib/api';
 import { useToast } from '@/components/Toast';
 import Cookies from 'js-cookie';
 
+interface ProductImage {
+  url: string;
+  publicId: string;
+}
+
+interface FullProduct {
+  name: string;
+  description: string;
+  images: ProductImage[];
+  brand?: string;
+  specifications?: Record<string, string>;
+  category: string;
+  unit: string;
+}
+
 interface MaterialOrderItem {
   product: string;
   productSnapshot: {
@@ -16,6 +31,7 @@ interface MaterialOrderItem {
     merchantName: string;
     image?: string;
   };
+  fullProduct?: FullProduct;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -137,6 +153,10 @@ export default function ArtisanMaterialOrderDetailPage() {
   const [receiptNote, setReceiptNote] = useState('');
   const [showDefectModal, setShowDefectModal] = useState(false);
   const [defectDescription, setDefectDescription] = useState('');
+
+  // Product detail modal
+  const [selectedItem, setSelectedItem] = useState<MaterialOrderItem | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const orderId = params.id as string;
 
@@ -327,9 +347,21 @@ export default function ArtisanMaterialOrderDetailPage() {
         {/* Items */}
         <div className="bg-white rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Items to Verify</h2>
+          {order.status === 'pending_artisan_approval' && (
+            <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg mb-4">
+              Tap on each item to view full details, images, and specifications before approving
+            </p>
+          )}
           <div className="space-y-4">
             {order.items.map((item, idx) => (
-              <div key={idx} className="flex gap-4 p-3 bg-gray-50 rounded-lg">
+              <button
+                key={idx}
+                onClick={() => {
+                  setSelectedItem(item);
+                  setCurrentImageIndex(0);
+                }}
+                className="w-full flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
                 <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                   {item.productSnapshot.image ? (
                     <img
@@ -352,7 +384,12 @@ export default function ArtisanMaterialOrderDetailPage() {
                     ₦{item.totalPrice.toLocaleString()}
                   </p>
                 </div>
-              </div>
+                <div className="flex items-center text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
             ))}
           </div>
 
@@ -595,6 +632,170 @@ export default function ArtisanMaterialOrderDetailPage() {
                 className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 {actionLoading ? 'Submitting...' : 'Report Issue'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      {selectedItem && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+          onClick={() => setSelectedItem(null)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white z-10 flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold truncate pr-4">{selectedItem.productSnapshot.name}</h2>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center hover:bg-gray-200 text-xl flex-shrink-0"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Image Gallery */}
+            <div className="relative bg-gray-100">
+              {(() => {
+                const images = selectedItem.fullProduct?.images ||
+                  (selectedItem.productSnapshot.image ? [{ url: selectedItem.productSnapshot.image, publicId: '' }] : []);
+
+                if (images.length === 0) {
+                  return (
+                    <div className="aspect-video flex items-center justify-center text-gray-400">
+                      No images available
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="aspect-video">
+                      <img
+                        src={images[currentImageIndex]?.url}
+                        alt={selectedItem.productSnapshot.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* Image navigation */}
+                    {images.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentImageIndex(i => (i - 1 + images.length) % images.length)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={() => setCurrentImageIndex(i => (i + 1) % images.length)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70"
+                        >
+                          ›
+                        </button>
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                          {currentImageIndex + 1} / {images.length}
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Thumbnail strip */}
+            {selectedItem.fullProduct?.images && selectedItem.fullProduct.images.length > 1 && (
+              <div className="flex gap-2 p-3 overflow-x-auto bg-gray-50">
+                {selectedItem.fullProduct.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 ${
+                      idx === currentImageIndex ? 'border-brand-green' : 'border-transparent'
+                    }`}
+                  >
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product Details */}
+            <div className="p-6 space-y-4">
+              {/* Price & Quantity */}
+              <div className="bg-brand-light-gray rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-2xl font-bold text-brand-green">
+                      ₦{selectedItem.unitPrice.toLocaleString()}/{selectedItem.productSnapshot.unit}
+                    </p>
+                    <p className="text-gray-500">Quantity ordered: {selectedItem.quantity}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-xl font-bold">₦{selectedItem.totalPrice.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Brand */}
+              {selectedItem.fullProduct?.brand && (
+                <div>
+                  <p className="text-sm text-gray-500">Brand</p>
+                  <p className="font-medium">{selectedItem.fullProduct.brand}</p>
+                </div>
+              )}
+
+              {/* Category */}
+              {selectedItem.fullProduct?.category && (
+                <div>
+                  <p className="text-sm text-gray-500">Category</p>
+                  <p className="font-medium capitalize">{selectedItem.fullProduct.category.replace(/-/g, ' ')}</p>
+                </div>
+              )}
+
+              {/* Description */}
+              {selectedItem.fullProduct?.description && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Description</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{selectedItem.fullProduct.description}</p>
+                </div>
+              )}
+
+              {/* Specifications */}
+              {selectedItem.fullProduct?.specifications && Object.keys(selectedItem.fullProduct.specifications).length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Specifications</p>
+                  <div className="bg-gray-50 rounded-lg divide-y">
+                    {Object.entries(selectedItem.fullProduct.specifications).map(([key, value]) => (
+                      <div key={key} className="flex justify-between py-2 px-3">
+                        <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}</span>
+                        <span className="font-medium">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Merchant */}
+              <div className="pt-4 border-t">
+                <p className="text-sm text-gray-500">Sold by</p>
+                <p className="font-medium">{selectedItem.productSnapshot.merchantName}</p>
+              </div>
+            </div>
+
+            {/* Close button at bottom */}
+            <div className="sticky bottom-0 bg-white border-t p-4">
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+              >
+                Close
               </button>
             </div>
           </div>
