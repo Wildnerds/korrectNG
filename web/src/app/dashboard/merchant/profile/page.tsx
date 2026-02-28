@@ -150,18 +150,27 @@ export default function MerchantProfilePage() {
     uploadFormData.append('folder', 'merchant-logos');
 
     try {
-      const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
+      // Use raw fetch for file uploads (avoid CSRF/header issues with FormData)
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: uploadFormData,
-        token,
       });
 
-      if (uploadRes.data) {
-        setLogoPreview(uploadRes.data.url);
+      if (!uploadRes.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const uploadData = await uploadRes.json();
+
+      if (uploadData.data) {
+        setLogoPreview(uploadData.data.url);
         // Save to profile immediately
         await apiFetch('/merchants/my-profile', {
           method: 'PATCH',
-          body: JSON.stringify({ businessLogo: uploadRes.data.url }),
+          body: JSON.stringify({ businessLogo: uploadData.data.url }),
           token,
         });
         showToast('Logo updated', 'success');

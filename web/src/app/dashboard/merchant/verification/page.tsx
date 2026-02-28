@@ -114,19 +114,28 @@ export default function MerchantVerificationPage() {
     setValidating(type);
 
     try {
-      const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
+      // Use raw fetch for file uploads (avoid CSRF/header issues with FormData)
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
-        token,
       });
 
-      if (uploadRes.data) {
+      if (!uploadRes.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const uploadData = await uploadRes.json();
+
+      if (uploadData.data) {
         const docRes = await apiFetch<MerchantVerificationApplication>('/merchant-verification/upload-document', {
           method: 'POST',
           body: JSON.stringify({
             type,
-            url: uploadRes.data.url,
-            publicId: uploadRes.data.publicId,
+            url: uploadData.data.url,
+            publicId: uploadData.data.publicId,
           }),
           token,
         });
