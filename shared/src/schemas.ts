@@ -315,6 +315,10 @@ export const productSchema = z.object({
   trackInventory: z.boolean().default(true),
   tags: z.array(z.string().max(50)).optional(),
   compatibleTrades: z.array(z.enum(TRADE_VALUES as unknown as [string, ...string[]])).optional(),
+  images: z.array(z.object({
+    url: z.string().url(),
+    publicId: z.string(),
+  })).optional(),
 });
 
 export const productSearchSchema = z.object({

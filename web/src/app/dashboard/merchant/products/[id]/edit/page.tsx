@@ -178,6 +178,7 @@ export default function EditProductPage() {
       for (const file of formData.newImages) {
         const imageFormData = new FormData();
         imageFormData.append('image', file);
+        imageFormData.append('folder', 'products');
 
         const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
           method: 'POST',
