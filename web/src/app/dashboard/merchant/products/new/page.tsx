@@ -106,7 +106,7 @@ export default function NewProductPage() {
         const imageFormData = new FormData();
         imageFormData.append('image', file);
 
-        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/image`, {
+        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,

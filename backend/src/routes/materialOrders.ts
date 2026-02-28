@@ -105,46 +105,54 @@ router.post(
 
       const totalAmount = subtotal + deliveryFee;
 
-      // Create order
+      // Get booking and artisan info
+      const booking = bookingId ? await Booking.findById(bookingId) : null;
+      const artisanId = booking?.artisan;
+
+      if (!artisanId) {
+        throw new AppError('This order must be linked to a booking with an artisan', 400);
+      }
+
+      // Get artisan's address for delivery
+      const { ArtisanProfile } = await import('../models/ArtisanProfile');
+      const artisanProfile = await ArtisanProfile.findOne({ user: artisanId });
+      const artisanDeliveryAddress = artisanProfile?.address || deliveryAddress;
+
+      // Create order - starts with pending_artisan_approval
       const order = await MaterialOrder.create({
         customer: req.user!._id,
         merchant: merchantProfile.user,
         merchantProfile: merchantProfile._id,
-        booking: bookingId || undefined,
-        artisan: bookingId ? (await Booking.findById(bookingId))?.artisan : undefined,
+        booking: bookingId,
+        artisan: artisanId,
         items: processedItems,
         subtotal,
         deliveryFee,
         totalAmount,
-        deliveryType,
-        deliveryAddress,
+        deliveryType: 'artisan_location', // Always deliver to artisan
+        deliveryAddress: artisanDeliveryAddress,
         deliveryInstructions,
         scheduledDeliveryDate: scheduledDeliveryDate ? new Date(scheduledDeliveryDate) : undefined,
-        status: 'pending',
+        status: 'pending_artisan_approval',
+        artisanApprovalStatus: 'pending',
         statusHistory: [{
-          status: 'pending',
+          status: 'pending_artisan_approval',
           timestamp: new Date(),
           by: req.user!._id,
         }],
       });
 
-      // Link order to booking if provided
-      if (bookingId) {
-        await Booking.findByIdAndUpdate(bookingId, {
-          $push: { linkedMaterialOrders: order._id },
-        });
-      }
+      // Link order to booking
+      await Booking.findByIdAndUpdate(bookingId, {
+        $push: { linkedMaterialOrders: order._id },
+      });
 
-      // Update merchant stats
-      merchantProfile.totalOrdersReceived += 1;
-      await merchantProfile.save();
-
-      // Notify merchant
-      await createNotification(merchantProfile.user.toString(), {
-        type: 'new_material_order' as any,
-        title: 'New Order Received!',
-        message: `You have a new order for NGN${totalAmount.toLocaleString()}. Please confirm availability.`,
-        link: `/dashboard/merchant/orders/${order._id}`,
+      // Notify artisan to verify item selection
+      await createNotification(artisanId.toString(), {
+        type: 'material_order_verification' as any,
+        title: 'Verify Material Selection',
+        message: `Customer selected materials for your job. Please verify the items are correct.`,
+        link: `/dashboard/artisan/material-orders/${order._id}`,
         data: { orderId: order._id, totalAmount },
       });
 
@@ -236,7 +244,99 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
   }
 });
 
-// POST /api/v1/material-orders/:id/confirm - Merchant confirms
+// POST /api/v1/material-orders/:id/artisan-approve - Artisan approves item selection
+router.post('/:id/artisan-approve', protect, authorize('artisan'), async (req: AuthRequest, res, next) => {
+  try {
+    const { note } = req.body;
+    const order = await MaterialOrder.findById(req.params.id);
+    if (!order) throw new AppError('Order not found', 404);
+
+    if (order.artisan?.toString() !== req.user!._id.toString()) {
+      throw new AppError('Not authorized - only the assigned artisan can approve', 403);
+    }
+
+    if (order.status !== 'pending_artisan_approval') {
+      throw new AppError('Order is not awaiting artisan approval', 400);
+    }
+
+    // Approve and move to pending (merchant confirmation)
+    order.status = 'pending';
+    order.artisanApprovalStatus = 'approved';
+    order.artisanApprovalNote = note;
+    (order as any)._statusChangedBy = req.user!._id;
+    await order.save();
+
+    // Get merchant profile for notification
+    const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+    merchantProfile!.totalOrdersReceived += 1;
+    await merchantProfile!.save();
+
+    // Notify merchant about new order
+    await createNotification(order.merchant.toString(), {
+      type: 'new_material_order' as any,
+      title: 'New Order Received!',
+      message: `You have a new order for NGN${order.totalAmount.toLocaleString()}. Please confirm availability.`,
+      link: `/dashboard/merchant/orders/${order._id}`,
+      data: { orderId: order._id, totalAmount: order.totalAmount },
+    });
+
+    // Notify customer that artisan approved
+    await createNotification(order.customer.toString(), {
+      type: 'material_order_artisan_approved' as any,
+      title: 'Item Selection Verified!',
+      message: `The artisan confirmed your material selection is correct. Waiting for merchant to confirm availability.`,
+      link: `/dashboard/customer/material-orders/${order._id}`,
+      data: { orderId: order._id },
+    });
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/material-orders/:id/artisan-reject - Artisan rejects item selection
+router.post('/:id/artisan-reject', protect, authorize('artisan'), async (req: AuthRequest, res, next) => {
+  try {
+    const { note } = req.body;
+    if (!note) {
+      throw new AppError('Please provide a reason for rejection', 400);
+    }
+
+    const order = await MaterialOrder.findById(req.params.id);
+    if (!order) throw new AppError('Order not found', 404);
+
+    if (order.artisan?.toString() !== req.user!._id.toString()) {
+      throw new AppError('Not authorized - only the assigned artisan can reject', 403);
+    }
+
+    if (order.status !== 'pending_artisan_approval') {
+      throw new AppError('Order is not awaiting artisan approval', 400);
+    }
+
+    // Reject - customer needs to select different items
+    order.status = 'cancelled';
+    order.artisanApprovalStatus = 'rejected';
+    order.artisanApprovalNote = note;
+    (order as any)._statusChangedBy = req.user!._id;
+    await order.save();
+
+    // Notify customer that artisan rejected the selection
+    await createNotification(order.customer.toString(), {
+      type: 'material_order_artisan_rejected' as any,
+      title: 'Item Selection Not Correct',
+      message: `The artisan says the selected items are not correct: "${note}". Please select different items.`,
+      link: `/dashboard/customer/material-orders/${order._id}`,
+      data: { orderId: order._id, reason: note },
+    });
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/material-orders/:id/confirm - Merchant confirms availability
 router.post('/:id/confirm', protect, authorize('merchant'), async (req: AuthRequest, res, next) => {
   try {
     const order = await MaterialOrder.findById(req.params.id);
@@ -247,11 +347,11 @@ router.post('/:id/confirm', protect, authorize('merchant'), async (req: AuthRequ
     }
 
     if (order.status !== 'pending') {
-      throw new AppError('Order cannot be confirmed in current state', 400);
+      throw new AppError('Order cannot be confirmed in current state. Artisan must approve first.', 400);
     }
 
     // Calculate response time
-    const responseTimeMinutes = Math.round((Date.now() - order.createdAt.getTime()) / 60000);
+    const responseTimeMinutes = Math.round((Date.now() - (order.artisanApprovedAt || order.createdAt).getTime()) / 60000);
     await recordResponseTime(order.merchantProfile.toString(), responseTimeMinutes);
 
     order.status = 'confirmed';
@@ -324,7 +424,7 @@ router.post('/:id/pay', protect, authorize('customer'), async (req: AuthRequest,
   }
 });
 
-// POST /api/v1/material-orders/:id/ship - Mark shipped
+// POST /api/v1/material-orders/:id/ship - Mark shipped (delivering to artisan)
 router.post('/:id/ship', protect, authorize('merchant'), async (req: AuthRequest, res, next) => {
   try {
     const order = await MaterialOrder.findById(req.params.id);
@@ -342,25 +442,25 @@ router.post('/:id/ship', protect, authorize('merchant'), async (req: AuthRequest
     (order as any)._statusChangedBy = req.user!._id;
     await order.save();
 
+    // Notify artisan (materials are being delivered to them)
+    if (order.artisan) {
+      await createNotification(order.artisan.toString(), {
+        type: 'material_order_shipped' as any,
+        title: 'Materials On The Way!',
+        message: `Materials for your job are being delivered to you. Order: ${order.orderNumber}`,
+        link: `/dashboard/artisan/material-orders/${order._id}`,
+        data: { orderId: order._id },
+      });
+    }
+
     // Notify customer
     await createNotification(order.customer.toString(), {
       type: 'material_order_shipped' as any,
       title: 'Order Shipped!',
-      message: `Your order ${order.orderNumber} is on the way!`,
+      message: `Your order ${order.orderNumber} is on the way to the artisan!`,
       link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
-
-    // Notify artisan if linked
-    if (order.artisan) {
-      await createNotification(order.artisan.toString(), {
-        type: 'material_order_shipped' as any,
-        title: 'Materials Shipped!',
-        message: `Materials for your job are on the way!`,
-        link: `/dashboard/artisan/bookings/${order.booking}`,
-        data: { orderId: order._id },
-      });
-    }
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {
@@ -368,7 +468,7 @@ router.post('/:id/ship', protect, authorize('merchant'), async (req: AuthRequest
   }
 });
 
-// POST /api/v1/material-orders/:id/deliver - Mark delivered
+// POST /api/v1/material-orders/:id/deliver - Mark delivered (to artisan)
 router.post('/:id/deliver', protect, authorize('merchant'), async (req: AuthRequest, res, next) => {
   try {
     const order = await MaterialOrder.findById(req.params.id);
@@ -386,11 +486,22 @@ router.post('/:id/deliver', protect, authorize('merchant'), async (req: AuthRequ
     (order as any)._statusChangedBy = req.user!._id;
     await order.save();
 
+    // Notify artisan to confirm receipt
+    if (order.artisan) {
+      await createNotification(order.artisan.toString(), {
+        type: 'material_order_delivered' as any,
+        title: 'Materials Delivered!',
+        message: `Materials for order ${order.orderNumber} have been delivered. Please confirm receipt and condition.`,
+        link: `/dashboard/artisan/material-orders/${order._id}`,
+        data: { orderId: order._id },
+      });
+    }
+
     // Notify customer
     await createNotification(order.customer.toString(), {
       type: 'material_order_delivered' as any,
-      title: 'Order Delivered!',
-      message: `Your order ${order.orderNumber} has been delivered. Please confirm receipt.`,
+      title: 'Order Delivered to Artisan!',
+      message: `Your order ${order.orderNumber} has been delivered to the artisan. Waiting for receipt confirmation.`,
       link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
@@ -401,18 +512,16 @@ router.post('/:id/deliver', protect, authorize('merchant'), async (req: AuthRequ
   }
 });
 
-// POST /api/v1/material-orders/:id/receive - Confirm receipt
-router.post('/:id/receive', protect, async (req: AuthRequest, res, next) => {
+// POST /api/v1/material-orders/:id/receive - Artisan confirms receipt and item condition
+router.post('/:id/receive', protect, authorize('artisan'), async (req: AuthRequest, res, next) => {
   try {
+    const { note } = req.body;
     const order = await MaterialOrder.findById(req.params.id);
     if (!order) throw new AppError('Order not found', 404);
 
-    // Customer or artisan can confirm receipt
-    const isCustomer = order.customer.toString() === req.user!._id.toString();
-    const isArtisan = order.artisan?.toString() === req.user!._id.toString();
-
-    if (!isCustomer && !isArtisan) {
-      throw new AppError('Not authorized', 403);
+    // Only the assigned artisan can confirm receipt
+    if (order.artisan?.toString() !== req.user!._id.toString()) {
+      throw new AppError('Not authorized - only the assigned artisan can confirm receipt', 403);
     }
 
     if (order.status !== 'delivered') {
@@ -421,15 +530,15 @@ router.post('/:id/receive', protect, async (req: AuthRequest, res, next) => {
 
     order.status = 'received';
     order.receivedBy = req.user!._id;
-    order.receivedByType = isCustomer ? 'customer' : 'artisan';
+    order.receivedByType = 'artisan';
+    order.receiptNote = note;
     (order as any)._statusChangedBy = req.user!._id;
     await order.save();
 
-    // Request escrow release
+    // Request escrow release and auto-release
     if (order.escrow) {
-      await requestRelease(order.escrow.toString(), req.user!._id, 'Order received and confirmed');
-      // Auto-release escrow since receipt is confirmed
-      await releaseMaterialEscrow(order.escrow.toString(), req.user!._id, 'Receipt confirmed by customer/artisan');
+      await requestRelease(order.escrow.toString(), req.user!._id, 'Order received and confirmed by artisan');
+      await releaseMaterialEscrow(order.escrow.toString(), req.user!._id, 'Receipt confirmed by artisan - item intact');
     }
 
     // Check if delivery was on time
@@ -439,12 +548,21 @@ router.post('/:id/receive', protect, async (req: AuthRequest, res, next) => {
     }
     await onOrderCompleted(order.merchantProfile.toString(), wasOnTime);
 
-    // Notify merchant
+    // Notify merchant - payment released
     await createNotification(order.merchant.toString(), {
       type: 'material_order_received' as any,
-      title: 'Delivery Confirmed!',
-      message: `Order ${order.orderNumber} delivery has been confirmed. Payment will be released.`,
+      title: 'Delivery Confirmed - Payment Released!',
+      message: `Artisan confirmed receipt for order ${order.orderNumber}. Payment has been released to your account.`,
       link: `/dashboard/merchant/orders/${order._id}`,
+      data: { orderId: order._id },
+    });
+
+    // Notify customer - materials received by artisan
+    await createNotification(order.customer.toString(), {
+      type: 'material_order_received' as any,
+      title: 'Materials Received by Artisan!',
+      message: `The artisan has received and verified the materials for order ${order.orderNumber}. Job can now proceed.`,
+      link: `/dashboard/customer/material-orders/${order._id}`,
       data: { orderId: order._id },
     });
 
@@ -521,7 +639,7 @@ router.post('/:id/cancel', protect, async (req: AuthRequest, res, next) => {
     }
 
     // Only cancellable in certain states
-    if (!['pending', 'confirmed', 'payment_pending'].includes(order.status)) {
+    if (!['pending_artisan_approval', 'pending', 'confirmed', 'payment_pending'].includes(order.status)) {
       throw new AppError('Order cannot be cancelled in current state', 400);
     }
 

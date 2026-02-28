@@ -1,20 +1,21 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type MaterialOrderStatus =
-  | 'pending'           // Created, waiting for merchant
-  | 'confirmed'         // Merchant confirmed availability
-  | 'payment_pending'   // Awaiting payment
-  | 'paid'              // Paid, in escrow
-  | 'preparing'         // Merchant preparing
-  | 'shipped'           // Out for delivery
-  | 'delivered'         // Delivered
-  | 'received'          // Customer/artisan confirmed receipt
-  | 'completed'         // Payment released
-  | 'disputed'          // Dispute raised
-  | 'cancelled'         // Cancelled
-  | 'refunded';         // Refunded
+  | 'pending_artisan_approval'  // Customer selected items, waiting for artisan to verify
+  | 'pending'                   // Artisan approved, waiting for merchant to confirm
+  | 'confirmed'                 // Merchant confirmed availability
+  | 'payment_pending'           // Awaiting payment
+  | 'paid'                      // Paid, in escrow
+  | 'preparing'                 // Merchant preparing
+  | 'shipped'                   // Out for delivery
+  | 'delivered'                 // Delivered to artisan
+  | 'received'                  // Artisan confirmed receipt & item intact
+  | 'completed'                 // Payment released to merchant
+  | 'disputed'                  // Dispute raised
+  | 'cancelled'                 // Cancelled
+  | 'refunded';                 // Refunded
 
-export type DeliveryType = 'job_site' | 'customer_address' | 'pickup';
+export type DeliveryType = 'artisan_location' | 'job_site' | 'customer_address' | 'pickup';
 
 export interface IMaterialOrderItem {
   product: mongoose.Types.ObjectId;
@@ -69,6 +70,7 @@ export interface IMaterialOrder extends Document {
   statusHistory: IStatusHistory[];
 
   // Timestamps
+  artisanApprovedAt?: Date;
   confirmedAt?: Date;
   paidAt?: Date;
   shippedAt?: Date;
@@ -76,9 +78,14 @@ export interface IMaterialOrder extends Document {
   receivedAt?: Date;
   completedAt?: Date;
 
-  // Confirmation
+  // Artisan approval (verifies item is correct before order proceeds)
+  artisanApprovalStatus?: 'pending' | 'approved' | 'rejected';
+  artisanApprovalNote?: string;
+
+  // Confirmation (artisan confirms receipt)
   receivedBy?: mongoose.Types.ObjectId;
   receivedByType?: 'customer' | 'artisan';
+  receiptNote?: string;
 
   // Defects
   hasDefect: boolean;
@@ -169,7 +176,7 @@ const materialOrderSchema = new Schema<IMaterialOrder>(
     // Delivery
     deliveryType: {
       type: String,
-      enum: ['job_site', 'customer_address', 'pickup'],
+      enum: ['artisan_location', 'job_site', 'customer_address', 'pickup'],
       required: true,
     },
     deliveryAddress: { type: String, required: true, maxlength: 500 },
@@ -180,11 +187,11 @@ const materialOrderSchema = new Schema<IMaterialOrder>(
     status: {
       type: String,
       enum: [
-        'pending', 'confirmed', 'payment_pending', 'paid', 'preparing',
+        'pending_artisan_approval', 'pending', 'confirmed', 'payment_pending', 'paid', 'preparing',
         'shipped', 'delivered', 'received', 'completed', 'disputed',
         'cancelled', 'refunded',
       ],
-      default: 'pending',
+      default: 'pending_artisan_approval',
       index: true,
     },
     statusHistory: [{
@@ -195,6 +202,7 @@ const materialOrderSchema = new Schema<IMaterialOrder>(
     }],
 
     // Timestamps
+    artisanApprovedAt: Date,
     confirmedAt: Date,
     paidAt: Date,
     shippedAt: Date,
@@ -202,9 +210,18 @@ const materialOrderSchema = new Schema<IMaterialOrder>(
     receivedAt: Date,
     completedAt: Date,
 
-    // Confirmation
+    // Artisan approval (verifies item is correct before order proceeds)
+    artisanApprovalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    artisanApprovalNote: { type: String, maxlength: 500 },
+
+    // Confirmation (artisan confirms receipt)
     receivedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     receivedByType: { type: String, enum: ['customer', 'artisan'] },
+    receiptNote: { type: String, maxlength: 500 },
 
     // Defects
     hasDefect: { type: Boolean, default: false },
@@ -279,6 +296,11 @@ materialOrderSchema.pre('save', function (next) {
     // Set timestamps based on status
     const now = new Date();
     switch (this.status) {
+      case 'pending':
+        // Moving from pending_artisan_approval to pending means artisan approved
+        this.artisanApprovedAt = now;
+        this.artisanApprovalStatus = 'approved';
+        break;
       case 'confirmed':
         this.confirmedAt = now;
         break;
@@ -300,7 +322,10 @@ materialOrderSchema.pre('save', function (next) {
     }
 
     // Set auto-expiry based on status
-    if (this.status === 'pending') {
+    if (this.status === 'pending_artisan_approval') {
+      // Artisan has 24 hours to approve/reject
+      this.expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    } else if (this.status === 'pending') {
       // Merchant has 24 hours to confirm
       this.expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     } else if (this.status === 'confirmed') {
