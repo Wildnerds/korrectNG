@@ -45,6 +45,8 @@ interface MerchantComparisonProps {
   onSelectMerchant: (quote: MerchantQuote) => void;
   selectedMerchantId?: string;
   loading?: boolean;
+  onAlternativeSelected?: (option: 'customer_sources' | 'artisan_sources') => void;
+  selectedAlternative?: 'customer_sources' | 'artisan_sources' | null;
 }
 
 export function MerchantComparison({
@@ -52,6 +54,8 @@ export function MerchantComparison({
   onSelectMerchant,
   selectedMerchantId,
   loading = false,
+  onAlternativeSelected,
+  selectedAlternative,
 }: MerchantComparisonProps) {
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'reviews'>('price');
 
@@ -68,13 +72,89 @@ export function MerchantComparison({
 
   if (!quotes || quotes.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-8 text-center">
-        <div className="text-4xl mb-4">😕</div>
-        <h3 className="font-semibold mb-2">No Merchants Found</h3>
-        <p className="text-brand-gray text-sm">
-          No merchants currently have all the materials you need in stock.
-          Try contacting merchants directly or adjusting your materials list.
-        </p>
+      <div className="space-y-4">
+        <div className="bg-white rounded-xl p-6">
+          <div className="text-center mb-6">
+            <div className="text-4xl mb-4">📦</div>
+            <h3 className="font-semibold text-lg mb-2">No Merchants Found</h3>
+            <p className="text-brand-gray text-sm">
+              No verified merchants currently have all the materials you need in stock.
+              Choose how you'd like to proceed:
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {/* Customer Sources Materials */}
+            <button
+              onClick={() => onAlternativeSelected?.('customer_sources')}
+              className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                selectedAlternative === 'customer_sources'
+                  ? 'border-brand-green bg-green-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🛒</div>
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">I'll source the materials myself</h4>
+                  <p className="text-sm text-brand-gray">
+                    Purchase materials from your preferred vendor. Share receipts with the artisan for transparency.
+                  </p>
+                  {selectedAlternative === 'customer_sources' && (
+                    <div className="mt-2 text-sm text-brand-green font-medium flex items-center gap-1">
+                      <span>✓</span> Selected
+                    </div>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            {/* Artisan Sources Materials */}
+            <button
+              onClick={() => onAlternativeSelected?.('artisan_sources')}
+              className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                selectedAlternative === 'artisan_sources'
+                  ? 'border-brand-orange bg-orange-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🔧</div>
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">Let the artisan source materials</h4>
+                  <p className="text-sm text-brand-gray">
+                    The artisan will purchase materials and add the cost to your total.
+                    Receipts will be provided for transparency.
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    Note: This cost is outside of our escrow protection
+                  </p>
+                  {selectedAlternative === 'artisan_sources' && (
+                    <div className="mt-2 text-sm text-brand-orange font-medium flex items-center gap-1">
+                      <span>✓</span> Selected
+                    </div>
+                  )}
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Info Box */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-800 mb-2">Why no merchants?</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Materials may be specialized or uncommon</li>
+            <li>• Local merchants may not have registered yet</li>
+            <li>• Stock may be temporarily unavailable</li>
+          </ul>
+          <p className="text-sm text-blue-700 mt-2">
+            <Link href="/merchants" className="underline font-medium">
+              Browse all merchants
+            </Link>
+            {' '}to see what's available
+          </p>
+        </div>
       </div>
     );
   }

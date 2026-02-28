@@ -43,6 +43,7 @@ export async function runMaterialAutoConfirmCheck(): Promise<void> {
           status: 'received',
           timestamp: now,
           note: 'Auto-confirmed: No response within 72 hours after delivery',
+          by: order.customer,
         });
 
         await order.save();
@@ -58,6 +59,7 @@ export async function runMaterialAutoConfirmCheck(): Promise<void> {
               status: 'release_requested',
               timestamp: now,
               note: 'Auto-requested release after 72h auto-confirm',
+              by: order.customer,
             });
             await escrow.save();
 
@@ -95,6 +97,7 @@ export async function runMaterialAutoConfirmCheck(): Promise<void> {
           status: 'completed',
           timestamp: now,
           note: 'Order completed after auto-confirm',
+          by: order.customer,
         });
         await order.save();
 

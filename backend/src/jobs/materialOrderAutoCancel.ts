@@ -39,6 +39,7 @@ export async function runMaterialOrderAutoCancelCheck(): Promise<void> {
           status: 'cancelled',
           timestamp: now,
           note: `Auto-cancelled: No action taken within the required timeframe`,
+          by: order.customer,
         });
         order.expiresAt = undefined;
 

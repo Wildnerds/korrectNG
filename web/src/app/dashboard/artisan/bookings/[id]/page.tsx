@@ -72,6 +72,30 @@ export default function ArtisanBookingDetailPage() {
   const [quotedPrice, setQuotedPrice] = useState('');
   const [quoteMessage, setQuoteMessage] = useState('');
 
+  // Materials list state
+  const [materialsList, setMaterialsList] = useState<Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    specs?: string;
+  }>>([]);
+  const [newMaterial, setNewMaterial] = useState({
+    name: '',
+    quantity: 1,
+    unit: 'piece',
+    specs: '',
+  });
+
+  const addMaterial = () => {
+    if (!newMaterial.name.trim()) return;
+    setMaterialsList([...materialsList, { ...newMaterial, name: newMaterial.name.trim() }]);
+    setNewMaterial({ name: '', quantity: 1, unit: 'piece', specs: '' });
+  };
+
+  const removeMaterial = (index: number) => {
+    setMaterialsList(materialsList.filter((_, i) => i !== index));
+  };
+
   const bookingId = params.id as string;
 
   useEffect(() => {
@@ -105,10 +129,12 @@ export default function ArtisanBookingDetailPage() {
         body: JSON.stringify({
           quotedPrice: parseInt(quotedPrice),
           quoteMessage: quoteMessage || undefined,
+          materialsList: materialsList.length > 0 ? materialsList : undefined,
         }),
       });
       showToast('Quote sent successfully!', 'success');
       setShowQuoteForm(false);
+      setMaterialsList([]);
       fetchBooking();
     } catch (error: any) {
       showToast(error.message || 'Failed to send quote', 'error');
@@ -421,17 +447,103 @@ export default function ArtisanBookingDetailPage() {
               <h3 className="text-lg font-semibold mb-4">Send Quote</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Price (₦)</label>
+                  <label className="block text-sm text-gray-600 mb-1">Labor Price (₦)</label>
                   <input
                     type="number"
                     value={quotedPrice}
                     onChange={(e) => setQuotedPrice(e.target.value)}
-                    placeholder="Enter your price"
+                    placeholder="Enter your labor price"
                     min="1000"
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-lg"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Minimum ₦1,000</p>
+                  <p className="text-xs text-gray-400 mt-1">Minimum ₦1,000 - This is your labor charge only</p>
                 </div>
+
+                {/* Materials List Section */}
+                <div className="border-t pt-4">
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Materials Needed (Optional)
+                  </label>
+                  <p className="text-xs text-gray-400 mb-3">
+                    List materials the customer needs to purchase. They can buy from verified merchants or source independently.
+                  </p>
+
+                  {/* Added Materials */}
+                  {materialsList.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      {materialsList.map((material, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{material.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {material.quantity} {material.unit}
+                              {material.specs && ` • ${material.specs}`}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeMaterial(index)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Material Form */}
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={newMaterial.name}
+                        onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
+                        placeholder="Material name (e.g., PVC Pipes)"
+                        className="col-span-2 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-sm"
+                      />
+                      <input
+                        type="number"
+                        value={newMaterial.quantity}
+                        onChange={(e) => setNewMaterial({ ...newMaterial, quantity: parseInt(e.target.value) || 1 })}
+                        placeholder="Qty"
+                        min="1"
+                        className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-sm"
+                      />
+                      <select
+                        value={newMaterial.unit}
+                        onChange={(e) => setNewMaterial({ ...newMaterial, unit: e.target.value })}
+                        className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-sm"
+                      >
+                        <option value="piece">Piece(s)</option>
+                        <option value="bag">Bag(s)</option>
+                        <option value="roll">Roll(s)</option>
+                        <option value="meter">Meter(s)</option>
+                        <option value="kg">Kilogram(s)</option>
+                        <option value="litre">Litre(s)</option>
+                        <option value="pack">Pack(s)</option>
+                        <option value="set">Set(s)</option>
+                        <option value="pair">Pair(s)</option>
+                      </select>
+                    </div>
+                    <input
+                      type="text"
+                      value={newMaterial.specs}
+                      onChange={(e) => setNewMaterial({ ...newMaterial, specs: e.target.value })}
+                      placeholder="Specifications (optional, e.g., 2 inch diameter)"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-brand-green text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={addMaterial}
+                      disabled={!newMaterial.name.trim()}
+                      className="w-full py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 font-medium text-sm disabled:opacity-50"
+                    >
+                      + Add Material
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Message (Optional)</label>
                   <textarea

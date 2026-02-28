@@ -101,17 +101,17 @@ export default function MerchantEarningsPage() {
     const token = Cookies.get('token');
 
     try {
-      const res = await apiFetch<{ account_name: string }>('/payout/verify-account', {
+      const res = await apiFetch<{ accountName: string }>('/payout/verify-account', {
         method: 'POST',
         body: JSON.stringify({
-          bank_code: bankForm.bankCode,
-          account_number: bankForm.accountNumber,
+          bankCode: bankForm.bankCode,
+          accountNumber: bankForm.accountNumber,
         }),
         token,
       });
 
-      if (res.data?.account_name) {
-        setVerifiedAccountName(res.data.account_name);
+      if (res.data?.accountName) {
+        setVerifiedAccountName(res.data.accountName);
         showToast('Account verified successfully', 'success');
       }
     } catch (err: any) {

@@ -35,7 +35,7 @@ router.get('/banks', async (_req, res: Response, next) => {
  * POST /api/v1/payout/verify-account
  * Verify a bank account number
  */
-router.post('/verify-account', protect, authorize('artisan'), async (req: AuthRequest, res: Response, next) => {
+router.post('/verify-account', protect, authorize('artisan', 'merchant'), async (req: AuthRequest, res: Response, next) => {
   try {
     const { accountNumber, bankCode } = req.body;
 

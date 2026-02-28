@@ -79,7 +79,8 @@ export function requireVerifiedEmail(req: AuthRequest, res: Response, next: Next
 // Require profile to be complete before allowing certain actions
 // For customers: Check firstName, lastName, phone, address
 // For artisans: Check ArtisanProfile exists with all required fields
-export function requireProfileComplete(userType?: 'customer' | 'artisan') {
+// For merchants: Check MerchantProfile exists with all required fields
+export function requireProfileComplete(userType?: 'customer' | 'artisan' | 'merchant') {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const user = req.user;
@@ -124,6 +125,26 @@ export function requireProfileComplete(userType?: 'customer' | 'artisan') {
             error: 'Please complete your artisan profile before proceeding',
             code: 'PROFILE_INCOMPLETE',
             requiredFields: ['businessName', 'trade', 'description', 'location', 'address', 'whatsappNumber', 'phoneNumber']
+          });
+        }
+      } else if (user.role === 'merchant') {
+        // For merchants, check MerchantProfile exists and is complete
+        const { MerchantProfile } = await import('../models/MerchantProfile');
+        const merchantProfile = await MerchantProfile.findOne({ user: user._id });
+        if (!merchantProfile) {
+          return res.status(403).json({
+            success: false,
+            error: 'Please create your merchant profile before proceeding',
+            code: 'PROFILE_INCOMPLETE',
+            requiredFields: ['businessName', 'category', 'description', 'location', 'address', 'whatsappNumber', 'phoneNumber']
+          });
+        }
+        if (!merchantProfile.isProfileComplete) {
+          return res.status(403).json({
+            success: false,
+            error: 'Please complete your merchant profile before proceeding',
+            code: 'PROFILE_INCOMPLETE',
+            requiredFields: ['businessName', 'category', 'description', 'location', 'address', 'whatsappNumber', 'phoneNumber']
           });
         }
       }

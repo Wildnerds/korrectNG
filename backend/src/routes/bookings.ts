@@ -30,6 +30,12 @@ const createBookingSchema = z.object({
 const sendQuoteSchema = z.object({
   quotedPrice: z.number().min(1000), // Minimum ₦1,000
   quoteMessage: z.string().max(1000).optional(),
+  materialsList: z.array(z.object({
+    name: z.string().min(1),
+    quantity: z.number().min(1),
+    unit: z.string().min(1),
+    specs: z.string().optional(),
+  })).optional(),
 });
 
 const updateStatusSchema = z.object({
@@ -177,7 +183,7 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
 
     const userId = (req as any).user._id;
     const bookingId = req.params.id;
-    const { quotedPrice, quoteMessage } = validation.data;
+    const { quotedPrice, quoteMessage, materialsList } = validation.data;
 
     const booking = await Booking.findById(bookingId);
 
@@ -209,6 +215,9 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
     booking.quotedPrice = quotedPrice;
     booking.quoteMessage = quoteMessage;
     booking.quotedAt = new Date();
+    if (materialsList && materialsList.length > 0) {
+      booking.materialsList = materialsList as { name: string; quantity: number; unit: string; specs?: string }[];
+    }
     (booking as any)._statusChangedBy = userId;
 
     // Record response time for trust metrics
@@ -227,12 +236,15 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
     const artisanName = artisan?.firstName && artisan?.lastName
       ? `${artisan.firstName} ${artisan.lastName}`
       : artisanProfile?.businessName || 'An artisan';
+    const hasMaterials = materialsList && materialsList.length > 0;
     await createNotificationWithPush(
       booking.customer.toString(),
       {
         type: 'quote_received',
-        title: 'Quote Received',
-        message: `${artisanName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request`,
+        title: hasMaterials ? 'Quote with Materials List Received' : 'Quote Received',
+        message: hasMaterials
+          ? `${artisanName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request. Materials list included - compare prices from verified merchants.`
+          : `${artisanName} sent you a quote of ₦${quotedPrice.toLocaleString()} for your ${booking.jobType} request`,
         link: `/dashboard/customer/bookings/${bookingId}`,
       }
     );
@@ -1387,7 +1399,7 @@ router.post('/:id/quote-with-materials', protect, restrictTo('artisan'), async (
     booking.quotedPrice = quotedPrice;
     booking.quoteMessage = quoteMessage;
     booking.quotedAt = new Date();
-    booking.materialsList = materialsList;
+    booking.materialsList = materialsList as { name: string; quantity: number; unit: string; specs?: string }[];
     (booking as any)._statusChangedBy = userId;
 
     // Record response time for trust metrics
