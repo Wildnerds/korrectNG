@@ -59,14 +59,14 @@ export function GoogleSignInButton({
   }
 
   return (
-    <div className="flex justify-center">
+    <div className="w-full flex justify-center">
       <GoogleLogin
         onSuccess={handleGoogleSuccess}
         onError={handleGoogleError}
         text={text}
         shape="rectangular"
         size="large"
-        width="100%"
+        width={400}
         useOneTap={false}
       />
     </div>

@@ -86,11 +86,13 @@ app.use(
 // HTTP request logging
 app.use(httpLogger);
 
-// Rate limiting
+// Rate limiting - generous limit for normal usage
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 1000, // 1000 requests per 15 minutes per IP
   message: { success: false, error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api/', limiter);
 
