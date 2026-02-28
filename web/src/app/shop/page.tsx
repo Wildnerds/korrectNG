@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
@@ -49,14 +49,26 @@ interface Pagination {
 
 type ViewMode = 'products' | 'merchants';
 
-export default function ShopPage() {
+// Helper to safely parse materials from URL
+function parseMaterials(param: string | null): string[] {
+  if (!param) return [];
+  try {
+    const decoded = decodeURIComponent(param);
+    const parsed = JSON.parse(decoded);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function ShopPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Booking context from URL
+  // Booking context from URL (optional - shop works without it)
   const bookingId = searchParams.get('bookingId');
   const materialsParam = searchParams.get('materials');
-  const materialNames: string[] = materialsParam ? JSON.parse(decodeURIComponent(materialsParam)) : [];
+  const materialNames = useMemo(() => parseMaterials(materialsParam), [materialsParam]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [products, setProducts] = useState<Product[]>([]);
@@ -169,20 +181,37 @@ export default function ShopPage() {
     }
   };
 
+  // Track if initial search has been set
+  const [initialSearchSet, setInitialSearchSet] = useState(false);
+
   // Pre-fill search with first material name when coming from booking
   useEffect(() => {
-    if (materialNames.length > 0 && !searchQuery) {
+    if (materialNames.length > 0 && !initialSearchSet) {
       setSearchQuery(materialNames[0]);
+      setInitialSearchSet(true);
     }
-  }, []);
+  }, [materialNames, initialSearchSet]);
 
+  // Fetch data when filters change
   useEffect(() => {
     if (viewMode === 'products') {
       fetchProducts();
     } else {
       fetchMerchants();
     }
-  }, [currentPage, categoryFilter, locationFilter, sortBy, viewMode, searchQuery]);
+  }, [currentPage, categoryFilter, locationFilter, sortBy, viewMode]);
+
+  // Debounced search - only fetch when user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (viewMode === 'products') {
+        fetchProducts();
+      } else {
+        fetchMerchants();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   async function fetchProducts() {
     setLoading(true);
@@ -890,5 +919,18 @@ export default function ShopPage() {
         </button>
       )}
     </div>
+  );
+}
+
+// Wrap with Suspense for useSearchParams
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-light-gray flex items-center justify-center">
+        <div className="text-brand-green text-xl">Loading shop...</div>
+      </div>
+    }>
+      <ShopPageContent />
+    </Suspense>
   );
 }
