@@ -20,7 +20,22 @@ export type NotificationType =
   | 'quote_declined'
   | 'payment_received'
   | 'welcome'
-  | 'system';
+  | 'system'
+  // Material Order notifications
+  | 'material_order_verification'
+  | 'material_order_artisan_approved'
+  | 'material_order_artisan_rejected'
+  | 'material_order_confirmed'
+  | 'material_order_paid'
+  | 'material_order_shipped'
+  | 'material_order_delivered'
+  | 'material_order_received'
+  | 'material_order_preparing'
+  | 'material_order_cancelled'
+  | 'material_order_completed'
+  | 'material_payment_released'
+  | 'material_refund_processed'
+  | 'material_dispute_opened';
 
 export interface INotification extends Document {
   user: mongoose.Types.ObjectId;
@@ -67,6 +82,21 @@ const notificationSchema = new Schema<INotification>(
         'payment_received',
         'welcome',
         'system',
+        // Material Order notifications
+        'material_order_verification',
+        'material_order_artisan_approved',
+        'material_order_artisan_rejected',
+        'material_order_confirmed',
+        'material_order_paid',
+        'material_order_shipped',
+        'material_order_delivered',
+        'material_order_received',
+        'material_order_preparing',
+        'material_order_cancelled',
+        'material_order_completed',
+        'material_payment_released',
+        'material_refund_processed',
+        'material_dispute_opened',
       ],
       required: true,
     },
