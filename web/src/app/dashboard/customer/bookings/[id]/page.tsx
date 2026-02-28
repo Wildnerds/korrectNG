@@ -227,7 +227,22 @@ export default function BookingDetailPage() {
     }
   };
 
-  // Create material order
+  // Alternative sourcing state
+  const [selectedAlternative, setSelectedAlternative] = useState<'customer_sources' | 'artisan_sources' | null>(null);
+
+  // Handle alternative selection
+  const handleAlternativeSelected = (option: 'customer_sources' | 'artisan_sources') => {
+    setSelectedAlternative(option);
+    setShowMaterialsModal(false);
+    showToast(
+      option === 'customer_sources'
+        ? 'You\'ve chosen to source materials yourself. The artisan will proceed with labor only.'
+        : 'The artisan will source materials. Labor charges are protected by escrow.',
+      'success'
+    );
+  };
+
+  // Create material order - sends to artisan for verification first
   const createMaterialOrder = async (orderData: {
     deliveryType: string;
     deliveryAddress: string;
@@ -238,19 +253,24 @@ export default function BookingDetailPage() {
     setCreatingOrder(true);
     const token = Cookies.get('token');
     try {
-      await apiFetch(`/bookings/${bookingId}/create-material-order`, {
+      // Use material-orders endpoint with booking reference
+      await apiFetch(`/material-orders`, {
         method: 'POST',
         token,
         body: JSON.stringify({
-          merchantId: selectedMerchant.merchant._id,
+          merchant: selectedMerchant.merchant._id,
+          booking: bookingId,
           items: selectedMerchant.items.map((item: any) => ({
-            productId: item.product._id,
+            product: item.product._id,
             quantity: item.quantity,
           })),
-          ...orderData,
+          deliveryType: 'artisan_location', // Always deliver to artisan
+          deliveryAddress: orderData.deliveryAddress,
+          deliveryInstructions: orderData.deliveryInstructions,
+          scheduledDeliveryDate: orderData.scheduledDeliveryDate,
         }),
       });
-      showToast('Material order created successfully!', 'success');
+      showToast('Order created! Artisan will verify the items.', 'success');
       setShowMaterialsModal(false);
       setSelectedMerchant(null);
       fetchBooking();
@@ -492,6 +512,43 @@ export default function BookingDetailPage() {
                   ))}
                 </div>
               </div>
+            ) : selectedAlternative ? (
+              /* Show selected alternative sourcing option */
+              <div className="mt-6">
+                <div className={`rounded-lg p-4 ${
+                  selectedAlternative === 'customer_sources'
+                    ? 'bg-blue-50 border border-blue-200'
+                    : 'bg-orange-50 border border-orange-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">
+                      {selectedAlternative === 'customer_sources' ? '🛒' : '🔧'}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {selectedAlternative === 'customer_sources'
+                          ? 'You\'re sourcing materials yourself'
+                          : 'Artisan will source materials'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {selectedAlternative === 'customer_sources'
+                          ? 'Get the materials listed above and provide them to the artisan.'
+                          : 'Material costs are handled outside the platform. Labor is protected by escrow.'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedAlternative(null);
+                        fetchMerchantQuotes();
+                        setShowMaterialsModal(true);
+                      }}
+                      className="text-sm text-gray-500 hover:text-gray-700 underline"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               /* Show option to order materials if quote is accepted/paid */
               ['accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
@@ -644,6 +701,8 @@ export default function BookingDetailPage() {
                   quotes={merchantQuotes}
                   onSelectMerchant={setSelectedMerchant}
                   loading={loadingQuotes}
+                  onAlternativeSelected={handleAlternativeSelected}
+                  selectedAlternative={selectedAlternative}
                 />
               ) : (
                 /* Order Form View */
