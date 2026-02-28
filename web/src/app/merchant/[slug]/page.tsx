@@ -65,6 +65,8 @@ export default function MerchantStorePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'products' | 'reviews' | 'about'>('products');
   const [productCategory, setProductCategory] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -290,8 +292,15 @@ export default function MerchantStorePage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <div key={product._id} className="bg-white rounded-xl overflow-hidden">
-                    <div className="aspect-square bg-gray-100">
+                  <div
+                    key={product._id}
+                    className="bg-white rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setCurrentImageIndex(0);
+                    }}
+                  >
+                    <div className="aspect-square bg-gray-100 relative">
                       {product.images?.[0] ? (
                         <img
                           src={product.images[0].url}
@@ -302,6 +311,11 @@ export default function MerchantStorePage() {
                         <div className="w-full h-full flex items-center justify-center text-4xl text-gray-300">
                           📦
                         </div>
+                      )}
+                      {product.images && product.images.length > 1 && (
+                        <span className="absolute bottom-2 right-2 px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded">
+                          +{product.images.length - 1} more
+                        </span>
                       )}
                     </div>
                     <div className="p-4">
@@ -447,6 +461,122 @@ export default function MerchantStorePage() {
           </div>
         )}
       </div>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image Gallery */}
+            <div className="relative">
+              <div className="aspect-square bg-gray-100">
+                {selectedProduct.images?.[currentImageIndex] ? (
+                  <img
+                    src={selectedProduct.images[currentImageIndex].url}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl text-gray-300">
+                    📦
+                  </div>
+                )}
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70"
+              >
+                &times;
+              </button>
+
+              {/* Image navigation */}
+              {selectedProduct.images && selectedProduct.images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentImageIndex((i) => (i > 0 ? i - 1 : selectedProduct.images!.length - 1))}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70"
+                  >
+                    &larr;
+                  </button>
+                  <button
+                    onClick={() => setCurrentImageIndex((i) => (i < selectedProduct.images!.length - 1 ? i + 1 : 0))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70"
+                  >
+                    &rarr;
+                  </button>
+
+                  {/* Image indicators */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {selectedProduct.images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          idx === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnail strip */}
+            {selectedProduct.images && selectedProduct.images.length > 1 && (
+              <div className="flex gap-2 p-4 overflow-x-auto">
+                {selectedProduct.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                      idx === currentImageIndex ? 'border-brand-green' : 'border-transparent'
+                    }`}
+                  >
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product Info */}
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-2">{selectedProduct.name}</h2>
+              {selectedProduct.brand && (
+                <p className="text-brand-gray mb-2">Brand: {selectedProduct.brand}</p>
+              )}
+              <p className="text-2xl font-bold text-brand-green mb-4">
+                NGN{selectedProduct.price.toLocaleString()}/{getProductUnitLabel(selectedProduct.unit)}
+              </p>
+              <p className="text-brand-gray mb-4">{selectedProduct.description}</p>
+              <p className={`text-sm font-medium ${selectedProduct.stockQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {selectedProduct.stockQuantity > 0 ? `In Stock (${selectedProduct.stockQuantity} available)` : 'Out of Stock'}
+              </p>
+
+              {/* Contact merchant */}
+              {merchant && (
+                <div className="mt-6 pt-6 border-t">
+                  <p className="text-sm text-brand-gray mb-3">Interested in this product?</p>
+                  <a
+                    href={getWhatsAppLink(merchant.whatsappNumber, `Hi, I'm interested in ${selectedProduct.name} (NGN${selectedProduct.price.toLocaleString()}) from your store on KorrectNG.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                  >
+                    Contact on WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
