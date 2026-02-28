@@ -582,6 +582,23 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {/* Shop for Materials - Show when no materials list but booking is active */}
+        {(!booking.materialsList || booking.materialsList.length === 0) &&
+         ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
+          <div className="bg-white rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-2">Need Materials?</h2>
+            <p className="text-gray-500 text-sm mb-4">
+              Browse our marketplace to find materials from verified merchants with escrow protection.
+            </p>
+            <Link
+              href={`/shop?bookingId=${booking._id}`}
+              className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
+            >
+              Browse Material Shop
+            </Link>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="space-y-3">
           {/* Accept/Decline Quote */}
