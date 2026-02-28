@@ -228,6 +228,12 @@ export default function ArtisanDashboard() {
                 View Booking Requests
               </Link>
               <Link
+                href="/dashboard/artisan/material-orders"
+                className="block w-full px-4 py-3 bg-brand-orange text-white rounded-md hover:bg-orange-600 transition-colors text-center font-semibold"
+              >
+                Material Orders
+              </Link>
+              <Link
                 href="/dashboard/artisan/profile"
                 className="block w-full px-4 py-3 bg-brand-light-gray rounded-md hover:bg-gray-200 transition-colors text-center font-medium"
               >
