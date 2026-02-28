@@ -229,10 +229,15 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
       throw new AppError('Order not found', 404);
     }
 
-    // Authorization check
-    const isCustomer = order.customer._id.toString() === req.user!._id.toString();
-    const isMerchant = order.merchant.toString() === req.user!._id.toString();
-    const isArtisan = order.artisan?.toString() === req.user!._id.toString();
+    // Authorization check - handle both populated and non-populated fields
+    const userId = req.user!._id.toString();
+    const customerId = order.customer._id?.toString() || order.customer.toString();
+    const merchantId = order.merchant._id?.toString() || order.merchant.toString();
+    const artisanId = order.artisan?._id?.toString() || order.artisan?.toString();
+
+    const isCustomer = customerId === userId;
+    const isMerchant = merchantId === userId;
+    const isArtisan = artisanId === userId;
     const isAdmin = req.user!.role === 'admin';
 
     if (!isCustomer && !isMerchant && !isArtisan && !isAdmin) {
@@ -243,7 +248,8 @@ router.get('/:id', protect, async (req: AuthRequest, res, next) => {
     const orderData = order.toObject();
     if (isMerchant && order.artisan) {
       const { ArtisanProfile } = await import('../models/ArtisanProfile');
-      const artisanProfile = await ArtisanProfile.findOne({ user: order.artisan._id });
+      const artisanUserId = order.artisan._id?.toString() || order.artisan.toString();
+      const artisanProfile = await ArtisanProfile.findOne({ user: artisanUserId });
       if (artisanProfile) {
         (orderData as any).artisanProfile = {
           phoneNumber: artisanProfile.phoneNumber,
