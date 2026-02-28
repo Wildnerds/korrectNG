@@ -253,12 +253,23 @@ export default function MerchantOrderDetailPage() {
               <h2 className="text-lg font-bold mb-4">Delivery Information</h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-brand-gray">Delivery Type</p>
-                  <p className="font-medium capitalize">{order.deliveryType.replace('_', ' ')}</p>
+                  <p className="text-sm text-brand-gray">Deliver To</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                      order.deliveryType === 'customer_address'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {order.deliveryType === 'customer_address'
+                        ? `👤 Customer: ${order.customer.firstName} ${order.customer.lastName}`
+                        : `🔧 Artisan: ${order.artisan?.firstName || ''} ${order.artisan?.lastName || ''}`
+                      }
+                    </span>
+                  </div>
                 </div>
                 {order.deliveryType !== 'pickup' && (
                   <div>
-                    <p className="text-sm text-brand-gray">Delivery Address</p>
+                    <p className="text-sm text-brand-gray">Address</p>
                     <p className="font-medium">{order.deliveryAddress}</p>
                   </div>
                 )}
@@ -381,43 +392,85 @@ export default function MerchantOrderDetailPage() {
             </div>
 
             {/* Delivery Contact - Show when order is paid/preparing/shipped */}
-            {['paid', 'preparing', 'shipped'].includes(order.status) && order.artisan && (
+            {['paid', 'preparing', 'shipped'].includes(order.status) && (
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                <h2 className="text-lg font-bold mb-4 text-blue-800">Delivery Contact</h2>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-blue-600">Deliver to (Artisan)</p>
-                    <p className="font-medium">{order.artisan.firstName} {order.artisan.lastName}</p>
-                  </div>
-                  {(order.artisanProfile?.phoneNumber || order.artisan.phone) && (
-                    <div className="flex flex-col gap-2">
-                      <a
-                        href={`tel:${order.artisanProfile?.phoneNumber || order.artisan.phone}`}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
-                      >
-                        <span>Call</span>
-                        <span>{order.artisanProfile?.phoneNumber || order.artisan.phone}</span>
-                      </a>
-                    </div>
-                  )}
-                  {order.artisanProfile?.whatsappNumber && (
-                    <div>
-                      <a
-                        href={`https://wa.me/${order.artisanProfile.whatsappNumber.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full"
-                      >
-                        <span>WhatsApp</span>
-                        <span>{order.artisanProfile.whatsappNumber}</span>
-                      </a>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm text-blue-600">Delivery Address</p>
-                    <p className="font-medium">{order.artisanProfile?.address || order.deliveryAddress}</p>
-                  </div>
+                <h2 className="text-lg font-bold mb-4 text-blue-800">
+                  📍 Delivery Contact
+                </h2>
+
+                {/* Delivery Type Badge */}
+                <div className="mb-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    order.deliveryType === 'customer_address'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {order.deliveryType === 'customer_address' ? '👤 Deliver to Customer' : '🔧 Deliver to Artisan'}
+                  </span>
                 </div>
+
+                {/* Customer Delivery */}
+                {order.deliveryType === 'customer_address' && (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-blue-600">Customer Name</p>
+                      <p className="font-medium">{order.customer.firstName} {order.customer.lastName}</p>
+                    </div>
+                    {order.customer.phone && (
+                      <div className="flex flex-col gap-2">
+                        <a
+                          href={`tel:${order.customer.phone}`}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
+                        >
+                          <span>📞 Call Customer</span>
+                          <span>{order.customer.phone}</span>
+                        </a>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-blue-600">Delivery Address</p>
+                      <p className="font-medium">{order.deliveryAddress}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Artisan Delivery */}
+                {order.deliveryType !== 'customer_address' && order.artisan && (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-blue-600">Artisan Name</p>
+                      <p className="font-medium">{order.artisan.firstName} {order.artisan.lastName}</p>
+                    </div>
+                    {(order.artisanProfile?.phoneNumber || order.artisan.phone) && (
+                      <div className="flex flex-col gap-2">
+                        <a
+                          href={`tel:${order.artisanProfile?.phoneNumber || order.artisan.phone}`}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg text-sm font-medium hover:bg-brand-green-dark transition-colors"
+                        >
+                          <span>📞 Call Artisan</span>
+                          <span>{order.artisanProfile?.phoneNumber || order.artisan.phone}</span>
+                        </a>
+                      </div>
+                    )}
+                    {order.artisanProfile?.whatsappNumber && (
+                      <div>
+                        <a
+                          href={`https://wa.me/${order.artisanProfile.whatsappNumber.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full"
+                        >
+                          <span>💬 WhatsApp</span>
+                          <span>{order.artisanProfile.whatsappNumber}</span>
+                        </a>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-blue-600">Delivery Address</p>
+                      <p className="font-medium">{order.artisanProfile?.address || order.deliveryAddress}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

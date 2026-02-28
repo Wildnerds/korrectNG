@@ -88,6 +88,8 @@ function ShopPageContent() {
   const [showCart, setShowCart] = useState(false);
   const [orderQuantity, setOrderQuantity] = useState(1);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [deliveryType, setDeliveryType] = useState<'artisan_location' | 'customer_address'>('artisan_location');
+  const [customerAddress, setCustomerAddress] = useState('');
 
   // Add to cart function
   const addToCart = (product: Product, quantity: number) => {
@@ -158,8 +160,8 @@ function ShopPageContent() {
           quantity: item.quantity,
         })),
         booking: bookingId,
-        deliveryType: 'job_site',
-        deliveryAddress: 'Artisan location (from booking)',
+        deliveryType,
+        deliveryAddress: deliveryType === 'customer_address' ? customerAddress : undefined,
       };
 
       const res = await apiFetch('/material-orders', {
@@ -906,6 +908,52 @@ function ShopPageContent() {
                       </button>
                     </div>
                   ))}
+
+                  {/* Delivery Options */}
+                  <div className="bg-white rounded-xl p-4 border border-gray-200">
+                    <p className="font-medium mb-3">Deliver to:</p>
+                    <div className="space-y-3">
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                        deliveryType === 'artisan_location' ? 'border-brand-green bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryType"
+                          checked={deliveryType === 'artisan_location'}
+                          onChange={() => setDeliveryType('artisan_location')}
+                          className="mt-1"
+                        />
+                        <div>
+                          <p className="font-medium">Artisan Location</p>
+                          <p className="text-sm text-gray-500">Materials delivered directly to your artisan for the job</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                        deliveryType === 'customer_address' ? 'border-brand-green bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryType"
+                          checked={deliveryType === 'customer_address'}
+                          onChange={() => setDeliveryType('customer_address')}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">My Address</p>
+                          <p className="text-sm text-gray-500 mb-2">I want to receive the materials myself</p>
+                          {deliveryType === 'customer_address' && (
+                            <textarea
+                              value={customerAddress}
+                              onChange={(e) => setCustomerAddress(e.target.value)}
+                              placeholder="Enter your delivery address..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-brand-green"
+                              rows={2}
+                            />
+                          )}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
 
                   <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
                     <p className="font-medium mb-1">How it works:</p>

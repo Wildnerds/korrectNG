@@ -117,7 +117,20 @@ router.post(
       // Get artisan's address for delivery
       const { ArtisanProfile } = await import('../models/ArtisanProfile');
       const artisanProfile = await ArtisanProfile.findOne({ user: artisanId });
-      const artisanDeliveryAddress = artisanProfile?.address || deliveryAddress;
+      const artisanAddress = artisanProfile?.address || '';
+
+      // Determine final delivery address based on deliveryType
+      let finalDeliveryType = deliveryType || 'artisan_location';
+      let finalDeliveryAddress = deliveryAddress;
+
+      if (finalDeliveryType === 'artisan_location') {
+        finalDeliveryAddress = artisanAddress || 'Artisan location (address to be confirmed)';
+      } else if (finalDeliveryType === 'customer_address') {
+        if (!deliveryAddress) {
+          throw new AppError('Delivery address is required for customer delivery', 400);
+        }
+        finalDeliveryAddress = deliveryAddress;
+      }
 
       // Create order - starts with pending_artisan_approval
       const order = await MaterialOrder.create({
@@ -130,8 +143,8 @@ router.post(
         subtotal,
         deliveryFee,
         totalAmount,
-        deliveryType: 'artisan_location', // Always deliver to artisan
-        deliveryAddress: artisanDeliveryAddress,
+        deliveryType: finalDeliveryType,
+        deliveryAddress: finalDeliveryAddress,
         deliveryInstructions,
         scheduledDeliveryDate: scheduledDeliveryDate ? new Date(scheduledDeliveryDate) : undefined,
         status: 'pending_artisan_approval',
