@@ -428,7 +428,7 @@ export default function CustomerMaterialOrderDetailPage() {
                       <div className={`w-8 h-8 rounded-full ${iconInfo.color} flex items-center justify-center text-white text-sm flex-shrink-0`}>
                         {iconInfo.icon}
                       </div>
-                      {idx < order.statusHistory.length - 1 && (
+                      {idx < (order.statusHistory?.length ?? 0) - 1 && (
                         <div className="w-0.5 h-full bg-gray-200 mt-1" />
                       )}
                     </div>
