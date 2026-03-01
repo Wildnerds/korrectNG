@@ -353,7 +353,7 @@ export default function ArtisanMaterialOrderDetailPage() {
             </p>
           )}
           <div className="space-y-4">
-            {order.items.map((item, idx) => (
+            {(order.items || []).map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => {

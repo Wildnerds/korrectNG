@@ -197,7 +197,7 @@ export default function MerchantOrderDetailPage() {
             <div className="bg-white rounded-xl p-6">
               <h2 className="text-lg font-bold mb-4">Order Items</h2>
               <div className="space-y-4">
-                {order.items.map((item, idx) => (
+                {(order.items || []).map((item, idx) => (
                   <div key={idx} className="flex items-center gap-4 pb-4 border-b last:border-0 last:pb-0">
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       {item.productSnapshot.image ? (

@@ -278,7 +278,7 @@ export default function CustomerMaterialOrderDetailPage() {
         <div className="bg-white rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Order Items</h2>
           <div className="space-y-4">
-            {order.items.map((item, idx) => (
+            {(order.items || []).map((item, idx) => (
               <div key={idx} className="flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                 <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                   {item.productSnapshot.image ? (
