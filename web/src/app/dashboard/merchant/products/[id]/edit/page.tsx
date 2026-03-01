@@ -180,22 +180,19 @@ export default function EditProductPage() {
         imageFormData.append('image', file);
         imageFormData.append('folder', 'products');
 
-        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
+        const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           body: imageFormData,
+          token,
         });
 
-        if (!uploadRes.ok) {
+        if (!uploadRes.data) {
           throw new Error('Failed to upload image');
         }
 
-        const uploadData = await uploadRes.json();
         uploadedImages.push({
-          url: uploadData.data.url,
-          publicId: uploadData.data.publicId,
+          url: uploadRes.data.url,
+          publicId: uploadRes.data.publicId,
         });
       }
 

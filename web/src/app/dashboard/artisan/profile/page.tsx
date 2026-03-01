@@ -122,29 +122,21 @@ export default function ArtisanProfileEdit() {
       // Get auth token
       const token = Cookies.get('token');
 
-      // Upload to Cloudinary using raw fetch (avoid CSRF/header issues with FormData)
+      // Upload to Cloudinary using apiFetch (handles credentials and CORS properly)
       const formData = new FormData();
       formData.append('image', file);
       formData.append('folder', 'avatars');
 
-      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
+      const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
+        token,
       });
 
-      if (!uploadRes.ok) {
+      if (!uploadRes.data?.url) {
         throw new Error('Failed to upload image');
       }
-
-      const uploadData = await uploadRes.json();
-
-      if (!uploadData.data?.url) {
-        throw new Error('Failed to upload image');
-      }
-      const imageUrl = uploadData.data.url;
+      const imageUrl = uploadRes.data.url;
 
       // Update user profile with new avatar
       await apiFetch('/auth/update-profile', {

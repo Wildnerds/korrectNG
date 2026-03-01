@@ -62,24 +62,6 @@ export default function ArtisanGalleryPage() {
     try {
       const uploadedImages: GalleryImage[] = [];
 
-      // Get CSRF token for upload requests
-      let csrfToken = Cookies.get('csrf_token');
-
-      // Fetch CSRF token if not available
-      if (!csrfToken) {
-        try {
-          const csrfRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/csrf-token`, {
-            credentials: 'include',
-          });
-          if (csrfRes.ok) {
-            const csrfData = await csrfRes.json();
-            csrfToken = csrfData.data?.csrfToken;
-          }
-        } catch {
-          // Continue without CSRF token - will fail on protected endpoints
-        }
-      }
-
       const token = Cookies.get('token');
 
       for (const file of Array.from(files)) {
@@ -87,25 +69,20 @@ export default function ArtisanGalleryPage() {
         formData.append('image', file);
         formData.append('folder', 'gallery');
 
-        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/single`, {
+        // Use apiFetch for file uploads (handles credentials and CORS properly)
+        const uploadRes = await apiFetch<{ url: string; publicId: string }>('/upload/single', {
           method: 'POST',
-          credentials: 'include',
-          headers: {
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-            ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
-          },
           body: formData,
+          token,
         });
 
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Upload failed');
+        if (!uploadRes.data) {
+          throw new Error('Upload failed');
         }
 
-        const uploadData = await uploadRes.json();
         uploadedImages.push({
-          url: uploadData.data.url,
-          publicId: uploadData.data.publicId,
+          url: uploadRes.data.url,
+          publicId: uploadRes.data.publicId,
           category: uploadCategory,
           order: images.length + uploadedImages.length,
         });

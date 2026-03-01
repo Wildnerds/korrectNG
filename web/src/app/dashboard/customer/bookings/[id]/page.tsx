@@ -552,25 +552,61 @@ export default function BookingDetailPage() {
             ) : (
               /* Show option to browse/order materials if quote has materials */
               ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
-                <div className="mt-6 space-y-3">
-                  <button
-                    onClick={() => {
-                      fetchMerchantQuotes();
-                      setShowMaterialsModal(true);
-                    }}
-                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    Get Merchant Quotes for Materials
-                  </button>
-                  <Link
-                    href={`/shop?bookingId=${booking._id}&materials=${encodeURIComponent(JSON.stringify(booking.materialsList?.map(m => m.name) || []))}`}
-                    className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
-                  >
-                    Browse Shop for These Materials
-                  </Link>
-                  <p className="text-xs text-gray-500 text-center">
-                    Compare prices from multiple merchants and order with escrow protection
-                  </p>
+                <div className="mt-6 space-y-4">
+                  {/* Protected options through KorrectNG */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🛡️</span>
+                      <p className="font-medium text-green-800">Protected by KorrectNG Escrow</p>
+                    </div>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          fetchMerchantQuotes();
+                          setShowMaterialsModal(true);
+                        }}
+                        className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      >
+                        Get Merchant Quotes for Materials
+                      </button>
+                      <Link
+                        href={`/shop?bookingId=${booking._id}&materials=${encodeURIComponent(JSON.stringify(booking.materialsList?.map(m => m.name) || []))}`}
+                        className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
+                      >
+                        Browse Shop for These Materials
+                      </Link>
+                    </div>
+                    <p className="text-xs text-green-700 text-center mt-2">
+                      Compare prices from verified merchants. Payment held in escrow until materials delivered.
+                    </p>
+                  </div>
+
+                  {/* Alternative options - Not covered by KorrectNG */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-3">Or choose an alternative (not covered by escrow):</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleAlternativeSelected('customer_sources')}
+                        className="py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-left"
+                      >
+                        <span className="text-lg block mb-1">🛒</span>
+                        <span className="block">I'll source materials myself</span>
+                        <span className="text-xs text-gray-500 block mt-1">Buy from your own vendor</span>
+                      </button>
+                      <button
+                        onClick={() => handleAlternativeSelected('artisan_sources')}
+                        className="py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-left"
+                      >
+                        <span className="text-lg block mb-1">🔧</span>
+                        <span className="block">Artisan sources materials</span>
+                        <span className="text-xs text-gray-500 block mt-1">Pay artisan for materials</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-orange-600 text-center mt-2">
+                      ⚠️ Materials purchased outside KorrectNG are not covered by our buyer protection
+                    </p>
+                  </div>
+
                   {booking.status === 'quoted' && (
                     <p className="text-xs text-orange-600 text-center">
                       Note: Accept the quote first before placing material orders
