@@ -620,18 +620,89 @@ export default function BookingDetailPage() {
 
         {/* Shop for Materials - Show when no materials list but booking is active */}
         {(!booking.materialsList || booking.materialsList.length === 0) &&
-         ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && (
+         ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && !selectedAlternative && (
           <div className="bg-white rounded-xl p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-2">Need Materials?</h2>
-            <p className="text-gray-500 text-sm mb-4">
-              Browse our marketplace to find materials from verified merchants with escrow protection.
-            </p>
-            <Link
-              href={`/shop?bookingId=${booking._id}`}
-              className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
-            >
-              Browse Material Shop
-            </Link>
+            <h2 className="text-lg font-semibold mb-4">Materials for This Job</h2>
+
+            {/* Protected option through KorrectNG */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🛡️</span>
+                <p className="font-medium text-green-800">Protected by KorrectNG Escrow</p>
+              </div>
+              <p className="text-gray-500 text-sm mb-3">
+                Browse our marketplace to find materials from verified merchants with escrow protection.
+              </p>
+              <Link
+                href={`/shop?bookingId=${booking._id}`}
+                className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center"
+              >
+                Browse Material Shop
+              </Link>
+            </div>
+
+            {/* Alternative options - Not covered by KorrectNG */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-500 mb-3">Or choose an alternative (not covered by escrow):</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleAlternativeSelected('customer_sources')}
+                  className="py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-left"
+                >
+                  <span className="text-lg block mb-1">🛒</span>
+                  <span className="block">I'll source materials myself</span>
+                  <span className="text-xs text-gray-500 block mt-1">Buy from your own vendor</span>
+                </button>
+                <button
+                  onClick={() => handleAlternativeSelected('artisan_sources')}
+                  className="py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-left"
+                >
+                  <span className="text-lg block mb-1">🔧</span>
+                  <span className="block">Artisan sources materials</span>
+                  <span className="text-xs text-gray-500 block mt-1">Pay artisan for materials</span>
+                </button>
+              </div>
+              <p className="text-xs text-orange-600 text-center mt-2">
+                ⚠️ Materials purchased outside KorrectNG are not covered by our buyer protection
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Show selected alternative when no materials list */}
+        {(!booking.materialsList || booking.materialsList.length === 0) &&
+         ['quoted', 'accepted', 'payment_pending', 'paid', 'in_progress'].includes(booking.status) && selectedAlternative && (
+          <div className="bg-white rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Materials for This Job</h2>
+            <div className={`rounded-lg p-4 ${
+              selectedAlternative === 'customer_sources'
+                ? 'bg-blue-50 border border-blue-200'
+                : 'bg-orange-50 border border-orange-200'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">
+                  {selectedAlternative === 'customer_sources' ? '🛒' : '🔧'}
+                </span>
+                <div className="flex-1">
+                  <p className="font-medium">
+                    {selectedAlternative === 'customer_sources'
+                      ? 'You\'re sourcing materials yourself'
+                      : 'Artisan will source materials'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {selectedAlternative === 'customer_sources'
+                      ? 'Get the materials and provide them to the artisan.'
+                      : 'Material costs are handled outside the platform. Labor is protected by escrow.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedAlternative(null)}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Change
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
