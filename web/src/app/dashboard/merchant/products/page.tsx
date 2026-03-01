@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/components/Toast';
 import { getProductUnitLabel } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 
@@ -23,6 +24,7 @@ interface Product {
 }
 
 export default function MerchantProductsPage() {
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all');
@@ -72,8 +74,9 @@ export default function MerchantProductsPage() {
       });
       // Remove from local state
       setProducts(products.filter(p => p._id !== productId));
+      showToast('Product deleted', 'success');
     } catch {
-      alert('Failed to delete product');
+      showToast('Failed to delete product', 'error');
     }
   };
 

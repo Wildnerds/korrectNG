@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/components/Toast';
 import ContractView from '@/components/contracts/ContractView';
 import ContractSigner from '@/components/contracts/ContractSigner';
 import Cookies from 'js-cookie';
@@ -12,6 +13,7 @@ import type { JobContract } from '@korrectng/shared';
 export default function ArtisanContractDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const [contract, setContract] = useState<JobContract | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,9 +46,10 @@ export default function ArtisanContractDetailPage() {
         method: 'POST',
         token,
       });
+      showToast('Contract sent to customer', 'success');
       fetchContract();
     } catch (err: any) {
-      alert(err.message || 'Failed to send contract');
+      showToast(err.message || 'Failed to send contract', 'error');
     } finally {
       setSending(false);
     }
@@ -64,9 +67,10 @@ export default function ArtisanContractDetailPage() {
         token,
         body: JSON.stringify({ reason }),
       });
+      showToast('Contract cancelled', 'success');
       router.push('/dashboard/artisan/contracts');
     } catch (err: any) {
-      alert(err.message || 'Failed to cancel contract');
+      showToast(err.message || 'Failed to cancel contract', 'error');
     } finally {
       setCancelling(false);
     }

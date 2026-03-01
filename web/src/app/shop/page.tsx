@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/components/Toast';
 import { MERCHANT_CATEGORIES, LOCATIONS, getMerchantCategoryLabel, getProductUnitLabel } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 
@@ -64,6 +65,7 @@ function parseMaterials(param: string | null): string[] {
 function ShopPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { showToast } = useToast();
 
   // Booking context from URL (optional - shop works without it)
   const bookingId = searchParams.get('bookingId');
@@ -134,7 +136,7 @@ function ShopPageContent() {
   // Create material order for a merchant
   const createOrder = async (merchantId: string) => {
     if (!bookingId) {
-      alert('This feature requires a linked booking. Please start from your booking page.');
+      showToast('This feature requires a linked booking. Please start from your booking page.', 'error');
       return;
     }
 
@@ -173,11 +175,11 @@ function ShopPageContent() {
       if (res.data) {
         // Remove ordered items from cart
         setCart(prev => prev.filter(item => item.product.merchant._id !== merchantId));
-        alert('Order created! The artisan will verify your selection.');
+        showToast('Order created! The artisan will verify your selection.', 'success');
         router.push(`/dashboard/customer/material-orders/${(res.data as any)._id}`);
       }
     } catch (error: any) {
-      alert(error.message || 'Failed to create order');
+      showToast(error.message || 'Failed to create order', 'error');
     } finally {
       setCreatingOrder(false);
     }

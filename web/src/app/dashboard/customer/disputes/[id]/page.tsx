@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/components/Toast';
 import { DisputeTimeline, EvidenceUploader } from '@/components/disputes';
 import { FormTextarea } from '@/components/FormInput';
 import Cookies from 'js-cookie';
@@ -20,6 +21,7 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
 
 export default function CustomerDisputeDetailPage() {
   const { id } = useParams();
+  const { showToast } = useToast();
   const [dispute, setDispute] = useState<Dispute | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -57,8 +59,9 @@ export default function CustomerDisputeDetailPage() {
       });
       fetchDispute();
       setCounter('');
+      showToast('Counter submitted successfully', 'success');
     } catch (err: any) {
-      alert(err.message || 'Failed to submit counter');
+      showToast(err.message || 'Failed to submit counter', 'error');
     } finally {
       setSubmitting(false);
     }
