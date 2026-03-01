@@ -309,7 +309,7 @@ export const PRODUCT_UNIT_VALUES = PRODUCT_UNITS.map((u) => u.value);
 
 export const MERCHANT_PLATFORM_FEE_PERCENTAGE = 5; // 5% for material orders (lower margin business)
 
-export const DELIVERY_TYPES = ['job_site', 'customer_address', 'pickup'] as const;
+export const DELIVERY_TYPES = ['artisan_location', 'job_site', 'customer_address', 'pickup'] as const;
 export type DeliveryType = (typeof DELIVERY_TYPES)[number];
 
 export const MERCHANT_VERIFICATION_STEPS = [

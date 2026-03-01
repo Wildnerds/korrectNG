@@ -342,8 +342,8 @@ export const createMaterialOrderSchema = z.object({
   merchant: z.string().min(1, 'Merchant ID is required'),
   items: z.array(materialOrderItemSchema).min(1, 'At least one item is required'),
   booking: z.string().optional(),
-  deliveryType: z.enum(DELIVERY_TYPES as unknown as [string, ...string[]]),
-  deliveryAddress: z.string().min(5, 'Delivery address must be at least 5 characters').max(500),
+  deliveryType: z.enum(['artisan_location', 'job_site', 'customer_address', 'pickup']),
+  deliveryAddress: z.string().max(500).optional(), // Optional for artisan_location (uses artisan's address)
   deliveryInstructions: z.string().max(500).optional(),
   scheduledDeliveryDate: z.string().optional(),
 });
