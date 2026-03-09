@@ -20,7 +20,20 @@ router.get('/', searchLimiter, validateQuery(artisanSearchSchema), async (req, r
       // subscriptionActive: true, // TODO: Re-enable when ready to monetize
     };
 
-    if (trade) filter.trade = trade;
+    // Handle trade filter - could be a default trade or a custom trade
+    if (trade) {
+      // Check if it's a default trade value
+      const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+
+      if (defaultTrades.includes(trade)) {
+        filter.trade = trade;
+      } else {
+        // It's a custom trade - search in customTrade field
+        filter.trade = 'other';
+        filter.customTrade = trade.toLowerCase();
+      }
+    }
     if (location) filter.location = { $regex: location, $options: 'i' };
     if (q) filter.$text = { $search: q };
 
@@ -148,6 +161,15 @@ router.patch(
         updateData.slug = baseSlug;
       }
 
+      // Handle customTrade normalization and clearing
+      if (updateData.trade && updateData.trade !== 'other') {
+        // Clear customTrade if trade is not 'other'
+        updateData.customTrade = undefined;
+      } else if (updateData.customTrade) {
+        // Normalize customTrade: lowercase, trim
+        updateData.customTrade = updateData.customTrade.toLowerCase().trim();
+      }
+
       // Try to find existing profile
       let artisan = await ArtisanProfile.findOne({ user: req.user!._id });
 
@@ -161,6 +183,10 @@ router.patch(
             !updateData.location || !updateData.address || !updateData.whatsappNumber ||
             !updateData.phoneNumber) {
           throw new AppError('All required fields must be provided for new profile', 400);
+        }
+        // Validate customTrade is provided when trade is 'other'
+        if (updateData.trade === 'other' && !updateData.customTrade) {
+          throw new AppError('Custom trade is required when selecting "Other Services"', 400);
         }
         artisan = await ArtisanProfile.create({
           user: req.user!._id,

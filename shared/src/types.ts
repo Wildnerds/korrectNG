@@ -68,6 +68,7 @@ export interface ArtisanProfile extends Timestamps {
   businessName: string;
   slug: string;
   trade: TradeValue;
+  customTrade?: string;
   description: string;
   location: string;
   address: string;

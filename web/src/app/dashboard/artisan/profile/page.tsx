@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { TRADES, LOCATIONS } from '@korrectng/shared';
+import { TRADES, LOCATIONS, formatCustomTradeLabel } from '@korrectng/shared';
 import type { ArtisanProfile } from '@korrectng/shared';
 import Cookies from 'js-cookie';
 import { NotificationPrompt } from '@/components/NotificationPrompt';
@@ -29,6 +29,7 @@ export default function ArtisanProfileEdit() {
   const [profile, setProfile] = useState({
     businessName: '',
     trade: '',
+    customTrade: '',
     description: '',
     location: '',
     address: '',
@@ -37,6 +38,24 @@ export default function ArtisanProfileEdit() {
     yearsOfExperience: '',
     workingHours: '',
   });
+
+  // Custom trade suggestions
+  const [customTradeSuggestions, setCustomTradeSuggestions] = useState<{ value: string; label: string }[]>([]);
+  const [showCustomTradeSuggestions, setShowCustomTradeSuggestions] = useState(false);
+  const [customTradeQuery, setCustomTradeQuery] = useState('');
+  const customTradeRef = useRef<HTMLDivElement>(null);
+
+  // Fetch custom trade suggestions
+  const fetchCustomTradeSuggestions = useCallback(async () => {
+    try {
+      const res = await apiFetch<{ value: string; label: string }[]>('/services/custom-trades');
+      if (res.data) {
+        setCustomTradeSuggestions(res.data);
+      }
+    } catch {
+      // Ignore errors - suggestions are optional
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -49,6 +68,7 @@ export default function ArtisanProfileEdit() {
           setProfile({
             businessName: artisanProfile.businessName || '',
             trade: artisanProfile.trade || '',
+            customTrade: (artisanProfile as any).customTrade || '',
             description: artisanProfile.description || '',
             location: artisanProfile.location || '',
             address: artisanProfile.address || '',
@@ -57,6 +77,10 @@ export default function ArtisanProfileEdit() {
             yearsOfExperience: artisanProfile.yearsOfExperience?.toString() || '',
             workingHours: artisanProfile.workingHours || '',
           });
+          // Set the display value for custom trade input
+          if ((artisanProfile as any).customTrade) {
+            setCustomTradeQuery(formatCustomTradeLabel((artisanProfile as any).customTrade));
+          }
         }
 
         // Set current avatar and personal info from user
@@ -76,8 +100,22 @@ export default function ArtisanProfileEdit() {
       }
     }
 
-    if (user) fetchProfile();
-  }, [user]);
+    if (user) {
+      fetchProfile();
+      fetchCustomTradeSuggestions();
+    }
+  }, [user, fetchCustomTradeSuggestions]);
+
+  // Close custom trade suggestions when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (customTradeRef.current && !customTradeRef.current.contains(event.target as Node)) {
+        setShowCustomTradeSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handlePersonalInfoSave = async () => {
     setSavingPersonal(true);
@@ -160,12 +198,25 @@ export default function ArtisanProfileEdit() {
     setSaving(true);
     setMessage(null);
 
+    // Validate customTrade when trade is 'other'
+    if (profile.trade === 'other' && !profile.customTrade.trim()) {
+      setMessage({ type: 'error', text: 'Please specify your custom service type' });
+      setSaving(false);
+      return;
+    }
+
     try {
       // Convert yearsOfExperience to number before sending
-      const profileData = {
+      const profileData: Record<string, any> = {
         ...profile,
         yearsOfExperience: parseInt(profile.yearsOfExperience) || 0,
       };
+
+      // Only include customTrade if trade is 'other'
+      if (profile.trade !== 'other') {
+        delete profileData.customTrade;
+      }
+
       await apiFetch('/artisans/profile', {
         method: 'PATCH',
         body: JSON.stringify(profileData),
@@ -177,6 +228,37 @@ export default function ArtisanProfileEdit() {
       setSaving(false);
     }
   };
+
+  // Handle trade change - clear customTrade when switching away from 'other'
+  const handleTradeChange = (value: string) => {
+    setProfile({
+      ...profile,
+      trade: value,
+      customTrade: value === 'other' ? profile.customTrade : '',
+    });
+    if (value !== 'other') {
+      setCustomTradeQuery('');
+    }
+  };
+
+  // Handle custom trade input change
+  const handleCustomTradeInput = (value: string) => {
+    setCustomTradeQuery(value);
+    setProfile({ ...profile, customTrade: value.toLowerCase().trim() });
+    setShowCustomTradeSuggestions(true);
+  };
+
+  // Handle custom trade suggestion selection
+  const handleCustomTradeSelect = (suggestion: { value: string; label: string }) => {
+    setCustomTradeQuery(suggestion.label);
+    setProfile({ ...profile, customTrade: suggestion.value });
+    setShowCustomTradeSuggestions(false);
+  };
+
+  // Filter suggestions based on input
+  const filteredSuggestions = customTradeSuggestions.filter((s) =>
+    s.label.toLowerCase().includes(customTradeQuery.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -311,7 +393,7 @@ export default function ArtisanProfileEdit() {
                 <label className="block text-sm font-medium mb-1">Trade</label>
                 <select
                   value={profile.trade}
-                  onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
+                  onChange={(e) => handleTradeChange(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                   required
                 >
@@ -323,6 +405,48 @@ export default function ArtisanProfileEdit() {
                   ))}
                 </select>
               </div>
+
+              {/* Custom Trade Input - shown when 'other' is selected */}
+              {profile.trade === 'other' && (
+                <div ref={customTradeRef} className="relative">
+                  <label className="block text-sm font-medium mb-1">
+                    Custom Service Type <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customTradeQuery}
+                    onChange={(e) => handleCustomTradeInput(e.target.value)}
+                    onFocus={() => setShowCustomTradeSuggestions(true)}
+                    placeholder="e.g., Catering, Event Planning, Photography..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Describe your service. Type a new one or select from suggestions below.
+                  </p>
+
+                  {/* Autocomplete suggestions dropdown */}
+                  {showCustomTradeSuggestions && filteredSuggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-48 overflow-y-auto">
+                      {filteredSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.value}
+                          type="button"
+                          onClick={() => handleCustomTradeSelect(suggestion)}
+                          className={`w-full px-4 py-2 text-left hover:bg-brand-green/5 flex items-center gap-2 transition-colors ${
+                            profile.customTrade === suggestion.value
+                              ? 'bg-brand-green/10 text-brand-green'
+                              : ''
+                          }`}
+                        >
+                          <span className="text-lg">✨</span>
+                          <span>{suggestion.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>

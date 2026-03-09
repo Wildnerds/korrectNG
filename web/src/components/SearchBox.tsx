@@ -1,8 +1,15 @@
 'use client';
-// SearchBox v2 - equal width fix
+// SearchBox v2 - equal width fix + dynamic trades
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TRADES, LOCATIONS } from '@korrectng/shared';
+
+interface TradeOption {
+  value: string;
+  label: string;
+  icon: string;
+  isCustom?: boolean;
+}
 
 interface Props {
   initialTrade?: string;
@@ -20,12 +27,43 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
   const [isSearching, setIsSearching] = useState(false);
   const [locationQuery, setLocationQuery] = useState(initialLocation);
 
+  // Dynamic trades from API
+  const [trades, setTrades] = useState<TradeOption[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(true);
+
   const tradeRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Get current trade label
-  const selectedTrade = TRADES.find(t => t.value === trade);
+  // Fetch dynamic trades from API
+  useEffect(() => {
+    async function fetchTrades() {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/services/trades`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            setTrades(data.data);
+          }
+        }
+      } catch {
+        // Fall back to hardcoded trades on error
+        setTrades(TRADES.filter(t => t.value !== 'other').map(t => ({
+          value: t.value,
+          label: t.label,
+          icon: t.icon,
+          isCustom: false,
+        })));
+      } finally {
+        setTradesLoading(false);
+      }
+    }
+    fetchTrades();
+  }, []);
+
+  // Get current trade label - now supports dynamic trades
+  const selectedTrade = trades.find(t => t.value === trade) ||
+    TRADES.find(t => t.value === trade);
 
   // Filter locations based on input
   const filteredLocations = LOCATIONS.filter(loc =>
@@ -152,23 +190,35 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
                   <span className="text-xl">🔍</span>
                   <span className="text-gray-600">All Services</span>
                 </button>
-                {TRADES.map((t) => (
-                  <button
-                    key={t.value}
-                    onClick={() => handleTradeSelect(t.value)}
-                    className={`w-full px-4 py-3 text-left hover:bg-brand-green/5 flex items-center gap-3 transition-colors ${
-                      trade === t.value ? 'bg-brand-green/10 text-brand-green' : ''
-                    }`}
-                  >
-                    <span className="text-xl">{t.icon}</span>
-                    <span className="font-medium">{t.label}</span>
-                    {trade === t.value && (
-                      <svg className="w-5 h-5 ml-auto text-brand-green" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
+                {tradesLoading ? (
+                  <div className="px-4 py-3 text-gray-500 flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+                    Loading services...
+                  </div>
+                ) : (
+                  trades.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => handleTradeSelect(t.value)}
+                      className={`w-full px-4 py-3 text-left hover:bg-brand-green/5 flex items-center gap-3 transition-colors ${
+                        trade === t.value ? 'bg-brand-green/10 text-brand-green' : ''
+                      }`}
+                    >
+                      <span className="text-xl">{t.icon}</span>
+                      <span className="font-medium">{t.label}</span>
+                      {t.isCustom && (
+                        <span className="text-xs bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full">
+                          Custom
+                        </span>
+                      )}
+                      {trade === t.value && (
+                        <svg className="w-5 h-5 ml-auto text-brand-green" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -275,7 +325,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
         <div className="mt-4 sm:mt-6">
           <p className="text-white/70 text-xs sm:text-sm text-center mb-2 sm:mb-3">Popular Services:</p>
           <div className="flex flex-wrap gap-2 justify-center">
-            {TRADES.slice(0, 5).map((t) => (
+            {(trades.length > 0 ? trades : TRADES.filter(t => t.value !== 'other')).slice(0, 5).map((t) => (
               <button
                 key={t.value}
                 onClick={() => handleTradeSelect(t.value)}

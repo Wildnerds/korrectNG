@@ -9,6 +9,7 @@ export const TRADES = [
   { value: 'carpenter', label: 'Carpenter', icon: '🪚' },
   { value: 'painter', label: 'Painter', icon: '🎨' },
   { value: 'welder', label: 'Welder', icon: '🔥' },
+  { value: 'other', label: 'Other Services', icon: '✨' },
 ] as const;
 
 export type TradeValue = (typeof TRADES)[number]['value'];

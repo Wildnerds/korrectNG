@@ -10,7 +10,28 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export function getTradeLabel(value: string): string {
+/**
+ * Formats a custom trade value for display (capitalizes first letter)
+ */
+export function formatCustomTradeLabel(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+/**
+ * Normalizes a custom trade value: lowercase, trim, capitalize first letter
+ */
+export function normalizeCustomTrade(value: string): string {
+  const normalized = value.toLowerCase().trim();
+  if (!normalized) return normalized;
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+export function getTradeLabel(value: string, customTrade?: string): string {
+  // If trade is 'other' and customTrade is provided, return formatted custom trade
+  if (value === 'other' && customTrade) {
+    return formatCustomTradeLabel(customTrade);
+  }
   const trade = TRADES.find((t) => t.value === value);
   return trade?.label ?? value;
 }

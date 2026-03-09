@@ -39,6 +39,7 @@ import merchantVerificationRoutes from './routes/merchantVerification';
 import materialOrderRoutes from './routes/materialOrders';
 import materialEscrowRoutes from './routes/materialEscrow';
 import merchantReviewRoutes from './routes/merchantReviews';
+import servicesRoutes from './routes/services';
 import { startDisputeEscalationJob } from './jobs/disputeEscalation';
 import { startAutoCertificationJob } from './jobs/autoCertification';
 import { startBookingAutoCancelJob } from './jobs/bookingAutoCancel';
@@ -138,6 +139,7 @@ app.use('/api/v1/merchant-verification', merchantVerificationRoutes);
 app.use('/api/v1/material-orders', materialOrderRoutes);
 app.use('/api/v1/material-escrow', materialEscrowRoutes);
 app.use('/api/v1/merchant-reviews', merchantReviewRoutes);
+app.use('/api/v1/services', servicesRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -74,6 +74,7 @@ export const updateProfileSchema = z.object({
 export const artisanProfileSchema = z.object({
   businessName: z.string().min(2, 'Business name must be at least 2 characters').max(100),
   trade: z.enum(TRADE_VALUES as unknown as [string, ...string[]]),
+  customTrade: z.string().min(2, 'Custom trade must be at least 2 characters').max(100).optional(),
   description: z.string().min(20, 'Description must be at least 20 characters').max(1000),
   location: z.string().min(2, 'Location is required').max(100),
   address: z.string().min(5, 'Address must be at least 5 characters').max(200),
@@ -81,7 +82,13 @@ export const artisanProfileSchema = z.object({
   phoneNumber: z.string().min(10).max(15),
   yearsOfExperience: z.number().min(0).max(50),
   workingHours: z.string().max(100).optional(),
-});
+}).refine(
+  (data) => data.trade !== 'other' || (data.customTrade && data.customTrade.trim().length >= 2),
+  {
+    message: 'Custom trade is required when selecting "Other Services"',
+    path: ['customTrade'],
+  }
+);
 
 export const artisanSearchSchema = z.object({
   trade: z.string().optional(),
@@ -121,10 +128,17 @@ export const flagReviewSchema = z.object({
 export const verificationPersonalInfoSchema = z.object({
   businessName: z.string().min(2).max(100),
   trade: z.enum(TRADE_VALUES as unknown as [string, ...string[]]),
+  customTrade: z.string().min(2).max(100).optional(),
   yearsOfExperience: z.number().min(0).max(50),
   location: z.string().min(2).max(100),
   address: z.string().min(5).max(200),
-});
+}).refine(
+  (data) => data.trade !== 'other' || (data.customTrade && data.customTrade.trim().length >= 2),
+  {
+    message: 'Custom trade is required when selecting "Other Services"',
+    path: ['customTrade'],
+  }
+);
 
 // ─── Warranty Schemas ────────────────────────────────────────────────────────
 

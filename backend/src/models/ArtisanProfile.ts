@@ -31,6 +31,7 @@ export interface IArtisanProfile extends Document {
   businessName: string;
   slug: string;
   trade: string;
+  customTrade?: string;
   description: string;
   location: string;
   address: string;
@@ -90,8 +91,14 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
       enum: [
         'mechanic', 'electrician', 'plumber', 'ac-tech',
         'generator-tech', 'phone-repair', 'tailor',
-        'carpenter', 'painter', 'welder',
+        'carpenter', 'painter', 'welder', 'other',
       ],
+    },
+    customTrade: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      maxlength: 100,
     },
     description: { type: String, required: true, maxlength: 1000 },
     location: { type: String, required: true, trim: true },
@@ -169,6 +176,7 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
 );
 
 artisanProfileSchema.index({ trade: 1, location: 1 });
+artisanProfileSchema.index({ customTrade: 1 });
 artisanProfileSchema.index({ slug: 1 });
 artisanProfileSchema.index({ isPublished: 1, verificationStatus: 1, subscriptionActive: 1 });
 artisanProfileSchema.index({ averageRating: -1 });
@@ -179,12 +187,28 @@ artisanProfileSchema.index(
   { name: 'artisan_text_search' }
 );
 
-// Pre-save hook to calculate isProfileComplete for artisan profiles
+// Pre-save hook to calculate isProfileComplete and normalize customTrade
 // Required fields: businessName, trade, description, location, address, whatsappNumber, phoneNumber
 artisanProfileSchema.pre('save', function (next) {
+  // Normalize customTrade if present
+  if (this.customTrade) {
+    this.customTrade = this.customTrade.toLowerCase().trim();
+  }
+
+  // Clear customTrade if trade is not 'other'
+  if (this.trade !== 'other') {
+    this.customTrade = undefined;
+  }
+
+  // Calculate profile completeness
+  // If trade is 'other', customTrade is required for completeness
+  const hasRequiredTrade = this.trade === 'other'
+    ? !!(this.trade && this.customTrade)
+    : !!this.trade;
+
   this.isProfileComplete = !!(
     this.businessName &&
-    this.trade &&
+    hasRequiredTrade &&
     this.description &&
     this.location &&
     this.address &&
