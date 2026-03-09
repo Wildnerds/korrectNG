@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { artisanProfileSchema, artisanSearchSchema } from '@korrectng/shared';
+import { artisanProfileBaseSchema, artisanSearchSchema } from '@korrectng/shared';
 import { slugify } from '@korrectng/shared';
 import { ArtisanProfile, SearchLog } from '../models';
 import { protect, authorize, requireVerifiedEmail, AuthRequest } from '../middleware/auth';
@@ -150,7 +150,7 @@ router.patch(
   '/profile',
   protect,
   authorize('artisan'),
-  validate(artisanProfileSchema.partial()),
+  validate(artisanProfileBaseSchema.partial()),
   async (req: AuthRequest, res, next) => {
     try {
       let updateData = { ...req.body };

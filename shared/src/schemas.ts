@@ -71,7 +71,8 @@ export const updateProfileSchema = z.object({
 
 // ─── Artisan Schemas ─────────────────────────────────────────────────────────
 
-export const artisanProfileSchema = z.object({
+// Base schema without refinement - used for partial updates
+export const artisanProfileBaseSchema = z.object({
   businessName: z.string().min(2, 'Business name must be at least 2 characters').max(100),
   trade: z.enum(TRADE_VALUES as unknown as [string, ...string[]]),
   customTrade: z.string().min(2, 'Custom trade must be at least 2 characters').max(100).optional(),
@@ -82,7 +83,10 @@ export const artisanProfileSchema = z.object({
   phoneNumber: z.string().min(10).max(15),
   yearsOfExperience: z.number().min(0).max(50),
   workingHours: z.string().max(100).optional(),
-}).refine(
+});
+
+// Full schema with refinement - used for complete validation
+export const artisanProfileSchema = artisanProfileBaseSchema.refine(
   (data) => data.trade !== 'other' || (data.customTrade && data.customTrade.trim().length >= 2),
   {
     message: 'Custom trade is required when selecting "Other Services"',
