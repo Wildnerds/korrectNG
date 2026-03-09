@@ -21,7 +21,7 @@ router.get('/trades', async (_req, res, next) => {
     // Get distinct custom trades from approved/published artisans
     const customTrades = await ArtisanProfile.distinct('customTrade', {
       trade: 'other',
-      customTrade: { $exists: true, $ne: null, $ne: '' },
+      customTrade: { $exists: true, $nin: [null, ''] },
       verificationStatus: 'approved',
       isPublished: true,
     });
@@ -73,7 +73,7 @@ router.get('/custom-trades', async (_req, res, next) => {
     // This allows new artisans to see what custom trades others have used
     const customTrades = await ArtisanProfile.distinct('customTrade', {
       trade: 'other',
-      customTrade: { $exists: true, $ne: null, $ne: '' },
+      customTrade: { $exists: true, $nin: [null, ''] },
     });
 
     // Format and sort alphabetically
