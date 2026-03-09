@@ -38,22 +38,31 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
   // Fetch dynamic trades from API
   useEffect(() => {
     async function fetchTrades() {
+      // Fallback to hardcoded trades
+      const fallbackTrades = TRADES.filter(t => t.value !== 'other').map(t => ({
+        value: t.value,
+        label: t.label,
+        icon: t.icon,
+        isCustom: false,
+      }));
+
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/services/trades`);
         if (res.ok) {
           const data = await res.json();
-          if (data.success && Array.isArray(data.data)) {
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
             setTrades(data.data);
+          } else {
+            // API returned but no valid data - use fallback
+            setTrades(fallbackTrades);
           }
+        } else {
+          // API returned non-200 status - use fallback
+          setTrades(fallbackTrades);
         }
       } catch {
-        // Fall back to hardcoded trades on error
-        setTrades(TRADES.filter(t => t.value !== 'other').map(t => ({
-          value: t.value,
-          label: t.label,
-          icon: t.icon,
-          isCustom: false,
-        })));
+        // Network error - use fallback
+        setTrades(fallbackTrades);
       } finally {
         setTradesLoading(false);
       }
