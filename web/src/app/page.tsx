@@ -63,13 +63,16 @@ export default async function HomePage() {
       {/* How It Works */}
       <section id="how-it-works" className="py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-14">How KorrectNG Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">How KorrectNG Works</h2>
+          <p className="text-brand-gray text-center mb-14 max-w-2xl mx-auto">
+            From search to completion, every step is protected with escrow payments
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { num: 1, title: 'Search', desc: 'Enter what you need and your location to find verified artisans near you' },
-              { num: 2, title: 'Compare', desc: 'Check ratings, reviews, and work history before choosing' },
-              { num: 3, title: 'Connect', desc: 'Contact directly via WhatsApp or phone to discuss your job' },
-              { num: 4, title: 'Protected', desc: 'Pay via escrow for 7-day protection and leave a review after completion' },
+              { num: 1, title: 'Search & Book', desc: 'Find verified artisans near you, compare ratings and reviews, then request a booking' },
+              { num: 2, title: 'Get a Quote', desc: 'Artisan sends you a detailed quote with labor costs and material requirements' },
+              { num: 3, title: 'Order Materials', desc: 'Buy materials from verified merchants on the platform with escrow protection, or source your own' },
+              { num: 4, title: 'Job Complete', desc: 'Artisan completes the work, you confirm satisfaction, and escrow releases payment' },
             ].map((step) => (
               <div key={step.num} className="text-center px-4">
                 <div className="w-16 h-16 bg-brand-green text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-5">
