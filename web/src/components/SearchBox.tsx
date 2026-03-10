@@ -47,7 +47,7 @@ export default function SearchBox({ initialTrade = '', initialLocation = '', var
       }));
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/services/trades`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/services/trades`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.data) && data.data.length > 0) {
