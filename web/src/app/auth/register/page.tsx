@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -18,6 +18,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get('role');
+  const refParam = searchParams.get('ref');
   const initialRole = roleParam === 'artisan' ? 'artisan' : roleParam === 'merchant' ? 'merchant' : 'customer';
   const { register, refreshUser } = useAuth();
 
@@ -25,16 +26,43 @@ function RegisterForm() {
     email: '',
     password: '',
     role: initialRole as 'customer' | 'artisan' | 'merchant',
+    referralCode: refParam || '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+
+  // Validate referral code on mount if present
+  useEffect(() => {
+    if (refParam && form.role === 'merchant') {
+      validateReferralCode(refParam);
+    }
+  }, [refParam]);
+
+  const validateReferralCode = async (code: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/referrals/validate/${code}`);
+      const data = await res.json();
+      if (data.success && data.data?.referrerName) {
+        setReferrerName(data.data.referrerName);
+        // Save to localStorage for merchant verification
+        localStorage.setItem('merchantReferralCode', code.toUpperCase());
+      }
+    } catch {
+      // Invalid code, ignore
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await register(form);
+      await register({ email: form.email, password: form.password, role: form.role });
+      // Save referral code for merchants
+      if (form.role === 'merchant' && form.referralCode) {
+        localStorage.setItem('merchantReferralCode', form.referralCode.toUpperCase());
+      }
       if (form.role === 'artisan') {
         router.push('/dashboard/artisan/verification');
       } else if (form.role === 'merchant') {
@@ -147,6 +175,33 @@ function RegisterForm() {
               required
             />
           </div>
+          {form.role === 'merchant' && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Referral Code <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={form.referralCode}
+                onChange={(e) => {
+                  setForm({ ...form, referralCode: e.target.value.toUpperCase() });
+                  if (e.target.value.length >= 5) {
+                    validateReferralCode(e.target.value);
+                  } else {
+                    setReferrerName(null);
+                  }
+                }}
+                placeholder="e.g., JOH1A2B3"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green uppercase"
+                maxLength={10}
+              />
+              {referrerName && (
+                <p className="text-sm text-brand-green mt-1">
+                  Referred by: {referrerName}
+                </p>
+              )}
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}

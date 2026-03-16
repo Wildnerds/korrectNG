@@ -145,6 +145,8 @@ router.patch(
 
       if (merchant) {
         // Update existing profile
+        // Don't allow changing referral after creation
+        delete updateData.referralCode;
         Object.assign(merchant, updateData);
         await merchant.save();
       } else {
@@ -154,6 +156,23 @@ router.patch(
             !updateData.phoneNumber) {
           throw new AppError('All required fields must be provided for new profile', 400);
         }
+
+        // Handle referral code if provided
+        let referredBy = undefined;
+        let referredByCode = undefined;
+        if (updateData.referralCode) {
+          const referrer = await User.findOne({
+            referralCode: updateData.referralCode.toUpperCase(),
+            role: 'artisan',
+            isActive: true,
+          });
+          if (referrer) {
+            referredBy = referrer._id;
+            referredByCode = updateData.referralCode.toUpperCase();
+          }
+        }
+        delete updateData.referralCode;
+
         merchant = await MerchantProfile.create({
           user: req.user!._id,
           ...updateData,
@@ -168,7 +187,34 @@ router.patch(
           badges: [],
           deliveryAreas: updateData.deliveryAreas || [],
           defaultDeliveryFee: updateData.defaultDeliveryFee || 0,
+          referredBy,
+          referredByCode,
         });
+
+        // Create referral record if referred
+        if (referredBy) {
+          const ArtisanProfile = (await import('../models/ArtisanProfile')).ArtisanProfile;
+          const Referral = (await import('../models/Referral')).default;
+
+          const artisanProfile = await ArtisanProfile.findOne({ user: referredBy });
+          if (artisanProfile) {
+            await Referral.create({
+              referrer: referredBy,
+              referrerProfile: artisanProfile._id,
+              referred: req.user!._id,
+              referredProfile: merchant._id,
+              referralCode: referredByCode,
+              status: 'pending',
+            });
+
+            // Update referrer stats
+            const referrer = await User.findById(referredBy);
+            if (referrer?.referralStats) {
+              referrer.referralStats.totalReferrals += 1;
+              await referrer.save();
+            }
+          }
+        }
       }
 
       res.status(200).json({ success: true, data: merchant });

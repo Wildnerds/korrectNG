@@ -69,11 +69,17 @@ export default function MerchantVerificationPage() {
     try {
       // Create merchant profile
       const slug = slugify(`${profile.businessName} ${profile.location}`);
+      // Include referral code if present
+      const referralCode = typeof window !== 'undefined' ? localStorage.getItem('merchantReferralCode') : null;
       await apiFetch('/merchants/my-profile', {
         method: 'PATCH',
-        body: JSON.stringify({ ...profile, slug }),
+        body: JSON.stringify({ ...profile, slug, ...(referralCode && { referralCode }) }),
         token,
       });
+      // Clear referral code after use
+      if (referralCode) {
+        localStorage.removeItem('merchantReferralCode');
+      }
 
       // Create or get verification application
       let currentApp = application;

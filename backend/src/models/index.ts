@@ -61,3 +61,6 @@ export type { IMerchantVerificationApplication, IMerchantVerificationDocument } 
 
 export { MerchantReview } from './MerchantReview';
 export type { IMerchantReview } from './MerchantReview';
+
+export { default as Referral } from './Referral';
+export type { IReferral, ReferralStatus } from './Referral';

@@ -85,6 +85,10 @@ export interface IMerchantProfile extends Document {
   defaultDeliveryFee: number;
   freeDeliveryThreshold?: number;
 
+  // Referral tracking
+  referredBy?: mongoose.Types.ObjectId; // Artisan user who referred this merchant
+  referredByCode?: string; // The referral code used
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -177,6 +181,17 @@ const merchantProfileSchema = new Schema<IMerchantProfile>(
     deliveryAreas: [{ type: String, trim: true }],
     defaultDeliveryFee: { type: Number, default: 0, min: 0 },
     freeDeliveryThreshold: { type: Number, min: 0 },
+
+    // Referral tracking
+    referredBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    referredByCode: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );

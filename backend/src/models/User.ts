@@ -34,6 +34,14 @@ export interface IUser extends Document {
   isActive: boolean;
   deactivatedAt?: Date;
   deactivationReason?: string;
+  // Referral system (for artisans)
+  referralCode?: string;
+  referralStats?: {
+    totalReferrals: number;
+    activeReferrals: number;
+    totalEarnings: number;
+    pendingEarnings: number;
+  };
   createdAt: Date;
   updatedAt: Date;
   matchPassword(password: string): Promise<boolean>;
@@ -88,6 +96,19 @@ const userSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     deactivatedAt: Date,
     deactivationReason: String,
+    // Referral system (for artisans)
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    referralStats: {
+      totalReferrals: { type: Number, default: 0 },
+      activeReferrals: { type: Number, default: 0 },
+      totalEarnings: { type: Number, default: 0 },
+      pendingEarnings: { type: Number, default: 0 },
+    },
   },
   { timestamps: true }
 );
@@ -141,6 +162,27 @@ userSchema.methods.checkProfileComplete = function (): boolean {
 userSchema.pre('save', function (next) {
   if (this.role === 'customer') {
     this.isProfileComplete = !!(this.firstName && this.lastName && this.phone && this.address);
+  }
+  next();
+});
+
+// Generate referral code for artisans
+userSchema.pre('save', async function (next) {
+  if (this.role === 'artisan' && !this.referralCode) {
+    // Generate a unique referral code: first 3 chars of name + random 5 chars
+    const namePrefix = (this.firstName || 'ART').substring(0, 3).toUpperCase();
+    const randomPart = crypto.randomBytes(3).toString('hex').toUpperCase().substring(0, 5);
+    this.referralCode = `${namePrefix}${randomPart}`;
+
+    // Initialize referral stats
+    if (!this.referralStats) {
+      this.referralStats = {
+        totalReferrals: 0,
+        activeReferrals: 0,
+        totalEarnings: 0,
+        pendingEarnings: 0,
+      };
+    }
   }
   next();
 });

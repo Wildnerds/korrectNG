@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createMaterialOrderSchema, reportDefectSchema } from '@korrectng/shared';
-import { MaterialOrder, Product, MerchantProfile, User } from '../models';
+import { MaterialOrder, Product, MerchantProfile, User, Referral } from '../models';
 import Booking from '../models/Booking';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -658,6 +658,61 @@ router.post('/:id/receive', protect, authorize('artisan'), async (req: AuthReque
       wasOnTime = order.deliveredAt <= order.scheduledDeliveryDate;
     }
     await onOrderCompleted(order.merchantProfile.toString(), wasOnTime);
+
+    // Check for referral bonus on first sale
+    const merchantProfileDoc = await MerchantProfile.findById(order.merchantProfile);
+    if (merchantProfileDoc?.referredBy && merchantProfileDoc.ordersCompleted === 1) {
+      // This is the merchant's first completed sale - pay referral bonus
+      const referral = await Referral.findOne({ referred: order.merchant });
+      if (referral && !referral.signupBonusPaid) {
+        // Mark first sale and activate referral
+        referral.merchantFirstSaleAt = new Date();
+        referral.status = 'active';
+        referral.merchantOrderCount = 1;
+        referral.merchantTotalSales = order.totalAmount;
+        await referral.save();
+
+        // Notify referring artisan about the bonus
+        await createNotification(referral.referrer.toString(), {
+          type: 'referral_first_sale' as any,
+          title: 'Referral Milestone!',
+          message: `${merchantProfileDoc.businessName} (your referral) just completed their first sale! Your bonus of NGN${referral.signupBonusAmount.toLocaleString()} will be credited soon.`,
+          link: '/dashboard/artisan/referrals',
+          data: {
+            referralId: referral._id,
+            merchantName: merchantProfileDoc.businessName,
+            bonusAmount: referral.signupBonusAmount,
+          },
+        });
+      }
+    } else if (merchantProfileDoc?.referredBy) {
+      // Update referral stats for subsequent orders
+      const referral = await Referral.findOne({ referred: order.merchant });
+      if (referral) {
+        referral.merchantOrderCount += 1;
+        referral.merchantTotalSales += order.totalAmount;
+
+        // Calculate and add commission if bonus was paid
+        if (referral.signupBonusPaid && referral.commissionRate > 0) {
+          const commissionAmount = Math.round(order.totalAmount * referral.commissionRate);
+          referral.totalCommissionEarned += commissionAmount;
+          referral.commissionPayments.push({
+            orderId: order._id,
+            orderAmount: order.totalAmount,
+            commissionAmount,
+            paidAt: new Date(),
+          });
+
+          // Update referrer's stats
+          const referrer = await User.findById(referral.referrer);
+          if (referrer?.referralStats) {
+            referrer.referralStats.totalEarnings += commissionAmount;
+            await referrer.save();
+          }
+        }
+        await referral.save();
+      }
+    }
 
     // Notify merchant - payment released
     await createNotification(order.merchant.toString(), {
