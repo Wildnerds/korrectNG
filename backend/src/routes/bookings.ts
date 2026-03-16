@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { protect, restrictTo, requireProfileComplete } from '../middleware/auth';
 import Booking, { BookingStatus } from '../models/Booking';
+import Quote from '../models/Quote';
 import { ArtisanProfile } from '../models/ArtisanProfile';
 import { User } from '../models/User';
 import Conversation from '../models/Conversation';
@@ -16,6 +17,7 @@ import { getMerchantQuotesForMaterials } from '../services/materialMatchingServi
 const router = Router();
 
 // Validation schemas
+// V1: Direct artisan booking
 const createBookingSchema = z.object({
   artisanProfileId: z.string().min(1),
   jobType: z.string().min(1).max(100),
@@ -24,7 +26,19 @@ const createBookingSchema = z.object({
   address: z.string().min(5),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
-  images: z.array(z.string()).max(5).optional(), // Up to 5 images
+  images: z.array(z.string()).max(5).optional(),
+});
+
+// V2: Open booking for quotes
+const createOpenBookingSchema = z.object({
+  jobType: z.string().min(1).max(100),
+  description: z.string().min(10).max(2000),
+  location: z.string().min(1),
+  address: z.string().min(5),
+  scheduledDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
+  images: z.array(z.string()).max(5).optional(),
+  // No artisanProfileId for v2
 });
 
 const sendQuoteSchema = z.object({
@@ -159,6 +173,174 @@ router.post('/', bookingLimiter, protect, requireProfileComplete('customer'), as
     res.status(201).json({
       success: true,
       data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/v1/bookings/open
+ * @desc    Create an open booking request for quotes (v2 flow)
+ * @access  Private (Customer with complete profile)
+ */
+router.post('/open', bookingLimiter, protect, requireProfileComplete('customer'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const validation = createOpenBookingSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error.errors[0].message,
+      });
+    }
+
+    const customerId = (req as any).user._id;
+    const { jobType, description, location, address, scheduledDate, scheduledTime, images } = validation.data;
+
+    // Create open booking (no artisan assigned yet)
+    const booking = await Booking.create({
+      customer: customerId,
+      bookingVersion: 'v2',
+      jobType,
+      description,
+      location,
+      address,
+      images: images || [],
+      scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
+      scheduledTime,
+      status: 'open',
+    });
+
+    log.info('Open booking created (v2)', {
+      bookingId: booking._id,
+      customerId,
+      jobType,
+      location,
+    });
+
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('customer', 'firstName lastName email phone avatar');
+
+    res.status(201).json({
+      success: true,
+      message: 'Booking request created. Artisans will start sending quotes soon.',
+      data: populatedBooking,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   GET /api/v1/bookings/open-jobs
+ * @desc    Get open bookings for artisans to browse and quote on
+ * @access  Private (Artisan)
+ */
+router.get('/open-jobs', protect, restrictTo('artisan'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const artisanUserId = (req as any).user._id;
+    const { trade, location } = req.query;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = parseInt(req.query.skip as string) || 0;
+
+    // Get artisan's profile to match by trade
+    const artisanProfile = await ArtisanProfile.findOne({ user: artisanUserId });
+
+    // Build query for open v2 bookings
+    const query: any = {
+      bookingVersion: 'v2',
+      status: 'open',
+      expiresAt: { $gt: new Date() },  // Not expired
+    };
+
+    // Filter by trade/jobType if artisan has a profile
+    if (artisanProfile?.trade) {
+      // Match bookings where jobType matches artisan's trade
+      query.jobType = { $regex: new RegExp(artisanProfile.trade, 'i') };
+    }
+
+    if (trade) {
+      query.jobType = { $regex: new RegExp(trade as string, 'i') };
+    }
+
+    if (location) {
+      query.location = { $regex: new RegExp(location as string, 'i') };
+    }
+
+    // Get bookings where this artisan hasn't already quoted
+    const existingQuoteBookingIds = await Quote.find({
+      artisan: artisanUserId,
+      status: { $in: ['pending', 'accepted'] },
+    }).distinct('booking');
+
+    query._id = { $nin: existingQuoteBookingIds };
+
+    const [bookings, total] = await Promise.all([
+      Booking.find(query)
+        .populate('customer', 'firstName lastName avatar location')
+        .select('-paymentReference -paystackReference')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Booking.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        bookings,
+        total,
+        hasMore: skip + bookings.length < total,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   GET /api/v1/bookings/:id/quotes
+ * @desc    Get all quotes for a booking
+ * @access  Private (Customer who owns booking)
+ */
+router.get('/:id/quotes', protect, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user._id;
+    const bookingId = req.params.id;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Verify customer owns this booking
+    if (booking.customer.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to view quotes for this booking',
+      });
+    }
+
+    const quotes = await Quote.find({
+      booking: bookingId,
+      status: { $in: ['pending', 'accepted'] },
+    })
+      .populate('artisan', 'firstName lastName avatar')
+      .populate('artisanProfile', 'businessName slug trade rating reviewCount averageResponseTime completedJobs')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        quotes,
+        total: quotes.length,
+        bookingStatus: booking.status,
+      },
     });
   } catch (error) {
     next(error);

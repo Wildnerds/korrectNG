@@ -84,6 +84,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Warranty Claims
             </Link>
             <Link
+              href="/admin/escrow-reviews"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              Escrow Reviews
+            </Link>
+            <Link
               href="/admin/users"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
             >

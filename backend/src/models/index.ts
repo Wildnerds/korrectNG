@@ -25,6 +25,9 @@ export type { IJobContract, IMilestone, IMaterial, ISignature } from './JobContr
 export { EscrowPayment } from './EscrowPayment';
 export type { IEscrowPayment, IRelease } from './EscrowPayment';
 
+export { default as Quote } from './Quote';
+export type { IQuote, QuoteStatus, IQuotePreviousVersion } from './Quote';
+
 export { Dispute } from './Dispute';
 export type { IDispute, IEvidence, ITimeline } from './Dispute';
 

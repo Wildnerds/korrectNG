@@ -1,7 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type BookingStatus =
-  | 'pending'          // Customer requested, waiting for artisan
+  | 'pending'          // Customer requested, waiting for artisan (v1)
+  | 'open'             // Customer created booking, receiving quotes (v2)
   | 'quoted'           // Artisan sent price quote, waiting for customer
   | 'accepted'         // Customer accepted quote
   | 'rejected'         // Artisan rejected the request
@@ -15,13 +16,19 @@ export type BookingStatus =
   | 'cancelled'        // Cancelled by either party
   | 'refunded';        // Payment refunded
 
+export type BookingVersion = 'v1' | 'v2';
+
 export type PaymentStatus = 'pending' | 'escrow' | 'released' | 'refunded' | 'partial_refund';
 
 export interface IBooking extends Document {
   customer: mongoose.Types.ObjectId;
-  artisan: mongoose.Types.ObjectId;
-  artisanProfile: mongoose.Types.ObjectId;
+  artisan?: mongoose.Types.ObjectId;           // Optional for v2 until quote accepted
+  artisanProfile?: mongoose.Types.ObjectId;    // Optional for v2 until quote accepted
   conversation?: mongoose.Types.ObjectId;
+
+  // V2 Multi-quote support
+  bookingVersion: BookingVersion;
+  acceptedQuote?: mongoose.Types.ObjectId;     // Reference to accepted Quote (v2)
 
   // Job details
   jobType: string;
@@ -113,13 +120,24 @@ const bookingSchema = new Schema<IBooking>(
     artisan: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
       index: true,
+      // Not required for v2 bookings until quote accepted
     },
     artisanProfile: {
       type: Schema.Types.ObjectId,
       ref: 'ArtisanProfile',
-      required: true,
+      // Not required for v2 bookings until quote accepted
+    },
+
+    // V2 Multi-quote support
+    bookingVersion: {
+      type: String,
+      enum: ['v1', 'v2'],
+      default: 'v1',
+    },
+    acceptedQuote: {
+      type: Schema.Types.ObjectId,
+      ref: 'Quote',
     },
     conversation: {
       type: Schema.Types.ObjectId,
@@ -211,6 +229,7 @@ const bookingSchema = new Schema<IBooking>(
       type: String,
       enum: [
         'pending',
+        'open',            // V2: Receiving quotes
         'quoted',
         'accepted',
         'rejected',
@@ -324,6 +343,8 @@ bookingSchema.index({ customer: 1, status: 1 });
 bookingSchema.index({ artisan: 1, status: 1 });
 bookingSchema.index({ createdAt: -1 });
 bookingSchema.index({ paymentReference: 1 });
+bookingSchema.index({ bookingVersion: 1, status: 1 });  // For finding open v2 bookings
+bookingSchema.index({ status: 1, jobType: 1, location: 1 });  // For artisan browsing open jobs
 
 // Generate unique payment reference
 bookingSchema.pre('save', function (next) {
@@ -354,12 +375,15 @@ bookingSchema.pre('save', function (next) {
     // Set auto-expiry based on status
     const now = new Date();
     if (this.status === 'pending') {
-      // Artisan has 48 hours to respond
+      // Artisan has 48 hours to respond (v1)
       this.expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    } else if (this.status === 'open') {
+      // V2 booking stays open for 7 days to collect quotes
+      this.expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     } else if (this.status === 'quoted') {
       // Customer has 48 hours to accept/decline quote
       this.expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-    } else if (this.status === 'accepted') {
+    } else if (this.status === 'accepted' || this.status === 'payment_pending') {
       // Customer has 24 hours to pay
       this.expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     } else {

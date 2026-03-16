@@ -2,7 +2,16 @@ import mongoose, { Document, Schema } from 'mongoose';
 import Conversation from './Conversation';
 import { log } from '../utils/logger';
 
-export type MessageType = 'text' | 'image' | 'booking_request' | 'booking_update' | 'system';
+export type MessageType =
+  | 'text'
+  | 'image'
+  | 'booking_request'
+  | 'booking_update'
+  | 'system'
+  | 'quote_sent'       // Artisan sent a quote
+  | 'quote_revised'    // Artisan revised their quote
+  | 'quote_accepted'   // Customer accepted a quote
+  | 'quote_rejected';  // Customer rejected a quote
 
 export interface IMessage extends Document {
   conversation: mongoose.Types.ObjectId;
@@ -37,7 +46,10 @@ const messageSchema = new Schema<IMessage>(
     },
     type: {
       type: String,
-      enum: ['text', 'image', 'booking_request', 'booking_update', 'system'],
+      enum: [
+        'text', 'image', 'booking_request', 'booking_update', 'system',
+        'quote_sent', 'quote_revised', 'quote_accepted', 'quote_rejected',
+      ],
       default: 'text',
     },
     metadata: {

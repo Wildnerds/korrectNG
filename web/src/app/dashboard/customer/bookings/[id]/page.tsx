@@ -34,6 +34,8 @@ interface Booking {
   location: string;
   address: string;
   status: string;
+  bookingVersion?: 'v1' | 'v2';
+  acceptedQuote?: string;
   quotedPrice?: number;
   quoteMessage?: string;
   finalPrice?: number;
@@ -50,7 +52,7 @@ interface Booking {
   expiresAt?: string;
   materialsList?: MaterialItem[];
   linkedMaterialOrders?: MaterialOrder[];
-  artisan: {
+  artisan?: {
     _id: string;
     firstName: string;
     lastName: string;
@@ -73,6 +75,7 @@ interface Booking {
 
 const statusLabels: Record<string, { label: string; color: string; description: string }> = {
   pending: { label: 'Awaiting Quote', color: 'bg-yellow-100 text-yellow-700', description: 'Waiting for the artisan to send a quote' },
+  open: { label: 'Receiving Quotes', color: 'bg-blue-100 text-blue-700', description: 'Artisans are sending quotes. Compare and choose the best one.' },
   quoted: { label: 'Quote Received', color: 'bg-blue-100 text-blue-700', description: 'Review and accept or decline the quote' },
   accepted: { label: 'Quote Accepted', color: 'bg-green-100 text-green-700', description: 'Proceed to payment to confirm booking' },
   payment_pending: { label: 'Awaiting Payment', color: 'bg-orange-100 text-orange-700', description: 'Complete payment to confirm booking' },
@@ -335,7 +338,7 @@ export default function BookingDetailPage() {
               </span>
               <p className="text-gray-500 text-sm mt-2">{statusInfo.description}</p>
             </div>
-            {booking.expiresAt && ['pending', 'quoted', 'accepted'].includes(booking.status) && (
+            {booking.expiresAt && ['pending', 'quoted', 'accepted', 'open'].includes(booking.status) && (
               <div className="text-right">
                 <p className="text-xs text-gray-500">Expires</p>
                 <p className="text-sm font-medium text-orange-600">
@@ -344,6 +347,16 @@ export default function BookingDetailPage() {
               </div>
             )}
           </div>
+
+          {/* V2 Booking - Link to quotes */}
+          {booking.bookingVersion === 'v2' && booking.status === 'open' && (
+            <Link
+              href={`/dashboard/customer/bookings/${booking._id}/quotes`}
+              className="block w-full py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium text-center mt-4"
+            >
+              View & Compare Quotes
+            </Link>
+          )}
 
           {booking.cancellationReason && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
@@ -354,45 +367,64 @@ export default function BookingDetailPage() {
           )}
         </div>
 
-        {/* Artisan Info */}
-        <div className="bg-white rounded-xl p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Artisan</h2>
-          <div className="flex items-center gap-4">
-            {booking.artisan.avatar ? (
-              <img
-                src={booking.artisan.avatar}
-                alt={booking.artisan.firstName}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-brand-light-gray flex items-center justify-center text-2xl text-gray-400">
-                {booking.artisan.firstName?.[0]?.toUpperCase()}
+        {/* Artisan Info - Only show if artisan is assigned */}
+        {booking.artisan && booking.artisanProfile ? (
+          <div className="bg-white rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Artisan</h2>
+            <div className="flex items-center gap-4">
+              {booking.artisan.avatar ? (
+                <img
+                  src={booking.artisan.avatar}
+                  alt={booking.artisan.firstName}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-brand-light-gray flex items-center justify-center text-2xl text-gray-400">
+                  {booking.artisan.firstName?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1">
+                <Link
+                  href={`/artisan/${booking.artisanProfile.slug}`}
+                  className="text-lg font-semibold hover:text-brand-green"
+                >
+                  {booking.artisanProfile.businessName}
+                </Link>
+                <p className="text-gray-500 text-sm">
+                  {booking.artisan.firstName} {booking.artisan.lastName}
+                </p>
+                <p className="text-gray-400 text-xs">{booking.artisanProfile.trade}</p>
               </div>
-            )}
-            <div className="flex-1">
-              <Link
-                href={`/artisan/${booking.artisanProfile.slug}`}
-                className="text-lg font-semibold hover:text-brand-green"
-              >
-                {booking.artisanProfile.businessName}
-              </Link>
-              <p className="text-gray-500 text-sm">
-                {booking.artisan.firstName} {booking.artisan.lastName}
-              </p>
-              <p className="text-gray-400 text-xs">{booking.artisanProfile.trade}</p>
+              {booking.artisanProfile.whatsappNumber && (
+                <a
+                  href={`https://wa.me/${booking.artisanProfile.whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600"
+                >
+                  WhatsApp
+                </a>
+              )}
             </div>
-            {booking.artisanProfile.whatsappNumber && (
-              <a
-                href={`https://wa.me/${booking.artisanProfile.whatsappNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600"
-              >
-                WhatsApp
-              </a>
-            )}
           </div>
-        </div>
+        ) : booking.bookingVersion === 'v2' && booking.status === 'open' ? (
+          <div className="bg-white rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Artisan</h2>
+            <div className="text-center py-4">
+              <div className="text-4xl mb-3">🔍</div>
+              <p className="text-gray-600 mb-2">No artisan selected yet</p>
+              <p className="text-gray-400 text-sm">
+                Compare quotes and select an artisan
+              </p>
+              <Link
+                href={`/dashboard/customer/bookings/${booking._id}/quotes`}
+                className="inline-block mt-4 px-6 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium"
+              >
+                View Quotes
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         {/* Job Details */}
         <div className="bg-white rounded-xl p-6 mb-6">

@@ -8,11 +8,15 @@ export type EscrowStatus =
   | 'milestone_2_pending'
   | 'milestone_2_released'
   | 'milestone_3_pending'
+  | 'release_requested'    // V2: Artisan requested single release
+  | 'admin_review'         // V2: Escalated to admin for review
   | 'completed'
   | 'disputed'
   | 'resolved'
   | 'cancelled'
   | 'partial_refund';
+
+export type EscrowVersion = 'v1' | 'v2';
 
 export interface IRelease {
   milestone: number;
@@ -31,10 +35,14 @@ export interface IStatusHistory {
 }
 
 export interface IEscrowPayment extends Document {
-  contract: mongoose.Types.ObjectId;
+  contract?: mongoose.Types.ObjectId;  // Optional for v2 (no contract required)
   booking: mongoose.Types.ObjectId;
   customer: mongoose.Types.ObjectId;
   artisan: mongoose.Types.ObjectId;
+  quote?: mongoose.Types.ObjectId;     // V2: Reference to accepted quote
+
+  // Version
+  escrowVersion: EscrowVersion;
 
   // Amounts (all in Naira)
   totalAmount: number;
@@ -56,6 +64,16 @@ export interface IEscrowPayment extends Document {
 
   // Dispute reference
   dispute?: mongoose.Types.ObjectId;
+
+  // V2: Release request tracking
+  releaseRequestedAt?: Date;
+  releaseRequestedBy?: mongoose.Types.ObjectId;
+  releaseNotes?: string;
+  adminReviewReason?: string;
+  adminReviewRequestedAt?: Date;
+  adminResolvedAt?: Date;
+  adminResolvedBy?: mongoose.Types.ObjectId;
+  adminResolutionNotes?: string;
 
   // Artisan bank details for payouts
   artisanBankCode?: string;
@@ -97,6 +115,7 @@ const statusHistorySchema = new Schema<IStatusHistory>(
       enum: [
         'created', 'funded', 'milestone_1_pending', 'milestone_1_released',
         'milestone_2_pending', 'milestone_2_released', 'milestone_3_pending',
+        'release_requested', 'admin_review',  // V2 statuses
         'completed', 'disputed', 'resolved', 'cancelled', 'partial_refund',
       ],
       required: true,
@@ -113,13 +132,23 @@ const escrowPaymentSchema = new Schema<IEscrowPayment>(
     contract: {
       type: Schema.Types.ObjectId,
       ref: 'JobContract',
-      required: true,
-      unique: true,
+      // Not required for v2 escrows
     },
     booking: {
       type: Schema.Types.ObjectId,
       ref: 'Booking',
       required: true,
+      index: true,
+    },
+    quote: {
+      type: Schema.Types.ObjectId,
+      ref: 'Quote',
+      // For v2 escrows
+    },
+    escrowVersion: {
+      type: String,
+      enum: ['v1', 'v2'],
+      default: 'v1',
     },
     customer: {
       type: Schema.Types.ObjectId,
@@ -180,6 +209,7 @@ const escrowPaymentSchema = new Schema<IEscrowPayment>(
       enum: [
         'created', 'funded', 'milestone_1_pending', 'milestone_1_released',
         'milestone_2_pending', 'milestone_2_released', 'milestone_3_pending',
+        'release_requested', 'admin_review',  // V2 statuses
         'completed', 'disputed', 'resolved', 'cancelled', 'partial_refund',
       ],
       default: 'created',
@@ -191,6 +221,37 @@ const escrowPaymentSchema = new Schema<IEscrowPayment>(
     dispute: {
       type: Schema.Types.ObjectId,
       ref: 'Dispute',
+    },
+
+    // V2: Release request tracking
+    releaseRequestedAt: {
+      type: Date,
+    },
+    releaseRequestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    releaseNotes: {
+      type: String,
+      maxlength: 500,
+    },
+    adminReviewReason: {
+      type: String,
+      maxlength: 500,
+    },
+    adminReviewRequestedAt: {
+      type: Date,
+    },
+    adminResolvedAt: {
+      type: Date,
+    },
+    adminResolvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    adminResolutionNotes: {
+      type: String,
+      maxlength: 1000,
     },
 
     // Artisan bank details
@@ -232,15 +293,21 @@ escrowPaymentSchema.pre('save', function (next) {
 
 // Valid state transitions
 const VALID_TRANSITIONS: Record<EscrowStatus, EscrowStatus[]> = {
+  // V1 milestone-based flow
   created: ['funded', 'cancelled'],
-  funded: ['milestone_1_pending', 'disputed', 'cancelled'],
+  funded: ['milestone_1_pending', 'release_requested', 'disputed', 'cancelled'],  // V2: direct to release_requested
   milestone_1_pending: ['milestone_1_released', 'disputed'],
   milestone_1_released: ['milestone_2_pending', 'disputed'],
   milestone_2_pending: ['milestone_2_released', 'disputed'],
   milestone_2_released: ['milestone_3_pending', 'disputed'],
   milestone_3_pending: ['completed', 'disputed'],
+
+  // V2 single-release flow
+  release_requested: ['completed', 'admin_review', 'disputed'],
+  admin_review: ['completed', 'partial_refund', 'cancelled'],
+
   completed: [], // Terminal state
-  disputed: ['resolved', 'milestone_1_released', 'milestone_2_released', 'milestone_3_pending', 'partial_refund'],
+  disputed: ['resolved', 'milestone_1_released', 'milestone_2_released', 'milestone_3_pending', 'partial_refund', 'admin_review'],
   resolved: [], // Terminal state
   cancelled: [], // Terminal state
   partial_refund: [], // Terminal state
