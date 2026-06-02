@@ -79,7 +79,7 @@ function RegisterForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden">
         <h1 className="text-2xl font-bold text-brand-green mb-6 text-center">
           {form.role === 'artisan' ? 'Get Verified as an Artisan' : form.role === 'merchant' ? 'Sell on KorrectNG Marketplace' : 'Create Customer Account'}
         </h1>
@@ -241,7 +241,7 @@ export default function RegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden text-center">
           <div className="animate-pulse">Loading...</div>
         </div>
       </div>

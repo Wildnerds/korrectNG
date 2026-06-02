@@ -1,7 +1,7 @@
 'use client';
 
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 
 interface GoogleSignInButtonProps {
@@ -18,6 +18,31 @@ export function GoogleSignInButton({
   text = 'continue_with',
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [buttonWidth, setButtonWidth] = useState(400);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        setButtonWidth(Math.min(containerWidth, 400));
+      }
+    };
+
+    const debouncedUpdateWidth = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateWidth, 150);
+    };
+
+    updateWidth();
+    window.addEventListener('resize', debouncedUpdateWidth);
+    return () => {
+      window.removeEventListener('resize', debouncedUpdateWidth);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
@@ -59,14 +84,15 @@ export function GoogleSignInButton({
   }
 
   return (
-    <div className="w-full flex justify-center">
+    <div ref={containerRef} className="w-full flex justify-center overflow-hidden">
       <GoogleLogin
+        key={buttonWidth}
         onSuccess={handleGoogleSuccess}
         onError={handleGoogleError}
         text={text}
         shape="rectangular"
         size="large"
-        width={400}
+        width={buttonWidth}
         useOneTap={false}
       />
     </div>
