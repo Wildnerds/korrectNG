@@ -26,14 +26,14 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">For Artisans</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/auth/register?role=artisan" className="text-gray-400 hover:text-white transition-colors">Get Verified</Link></li>
+              <li><Link href="/signup?role=artisan" className="text-gray-400 hover:text-white transition-colors">Get Verified</Link></li>
               <li><Link href="/dashboard/artisan" className="text-gray-400 hover:text-white transition-colors">Artisan Dashboard</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4">For Merchants</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/auth/register?role=merchant" className="text-gray-400 hover:text-white transition-colors">Become a Merchant</Link></li>
+              <li><Link href="/signup?role=merchant" className="text-gray-400 hover:text-white transition-colors">Become a Merchant</Link></li>
               <li><Link href="/dashboard/merchant" className="text-gray-400 hover:text-white transition-colors">Merchant Dashboard</Link></li>
               <li><Link href="/merchants" className="text-gray-400 hover:text-white transition-colors">Browse Merchants</Link></li>
             </ul>

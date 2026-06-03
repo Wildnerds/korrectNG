@@ -228,7 +228,7 @@ function RegisterForm() {
 
         <p className="text-center mt-6 text-brand-gray">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-brand-green font-medium hover:underline">
+          <Link href="/login" className="text-brand-green font-medium hover:underline">
             Sign In
           </Link>
         </p>
@@ -237,7 +237,7 @@ function RegisterForm() {
   );
 }
 
-export default function RegisterPage() {
+export default function SignupPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">

@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden">
         <h1 className="text-2xl font-bold text-brand-green mb-2 text-center">Reset Password</h1>
         <p className="text-brand-gray text-center mb-6">
           Enter your email and we&apos;ll send you a reset link
@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
               If that email exists in our system, you&apos;ll receive a password reset link shortly.
             </p>
             <Link
-              href="/auth/login"
+              href="/login"
               className="inline-block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
             >
               Back to Login
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
 
         <p className="text-center mt-6 text-brand-gray">
           Remember your password?{' '}
-          <Link href="/auth/login" className="text-brand-green font-medium hover:underline">
+          <Link href="/login" className="text-brand-green font-medium hover:underline">
             Sign In
           </Link>
         </p>

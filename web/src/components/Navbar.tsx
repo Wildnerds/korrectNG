@@ -94,13 +94,13 @@ export default function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/auth/login"
+                  href="/login"
                   className="px-4 py-2 border-2 border-brand-green text-brand-green rounded-md hover:bg-brand-green hover:text-white transition-colors font-semibold"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/register?role=artisan"
+                  href="/signup?role=artisan"
                   className="px-6 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
                 >
                   Get Verified
@@ -168,10 +168,10 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="mx-4 mt-2 px-4 py-3 border-2 border-brand-green text-brand-green rounded-md text-center font-semibold min-h-[44px] flex items-center justify-center">
+                  <Link href="/login" className="mx-4 mt-2 px-4 py-3 border-2 border-brand-green text-brand-green rounded-md text-center font-semibold min-h-[44px] flex items-center justify-center">
                     Sign In
                   </Link>
-                  <Link href="/auth/register?role=artisan" className="mx-4 px-4 py-3 bg-brand-green text-white rounded-md text-center font-semibold min-h-[44px] flex items-center justify-center">
+                  <Link href="/signup?role=artisan" className="mx-4 px-4 py-3 bg-brand-green text-white rounded-md text-center font-semibold min-h-[44px] flex items-center justify-center">
                     Get Verified
                   </Link>
                 </>

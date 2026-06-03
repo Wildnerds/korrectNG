@@ -148,7 +148,7 @@ export default function AboutPage() {
                 Find an Artisan
               </Link>
               <Link
-                href="/auth/register?role=artisan"
+                href="/signup?role=artisan"
                 className="bg-brand-orange text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors"
               >
                 Join as Artisan

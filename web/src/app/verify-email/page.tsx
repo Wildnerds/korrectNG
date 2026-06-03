@@ -38,7 +38,7 @@ function VerifyEmailContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden text-center">
         {status === 'loading' && (
           <>
             <div className="text-5xl mb-4 animate-pulse">⏳</div>
@@ -53,7 +53,7 @@ function VerifyEmailContent() {
             <h1 className="text-2xl font-bold text-brand-green mb-2">Email Verified!</h1>
             <p className="text-brand-gray mb-6">{message}</p>
             <Link
-              href="/auth/login"
+              href="/login"
               className="inline-block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
             >
               Sign In
@@ -68,7 +68,7 @@ function VerifyEmailContent() {
             <p className="text-brand-gray mb-6">{message}</p>
             <div className="space-y-3">
               <Link
-                href="/auth/login"
+                href="/login"
                 className="block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
               >
                 Sign In
@@ -91,7 +91,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden text-center">
           <div className="text-5xl mb-4 animate-pulse">⏳</div>
           <h1 className="text-2xl font-bold text-brand-green mb-2">Loading...</h1>
         </div>

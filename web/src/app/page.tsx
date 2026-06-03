@@ -134,7 +134,7 @@ export default async function HomePage() {
                   Shop Now
                 </Link>
                 <Link
-                  href="/auth/register?role=merchant"
+                  href="/signup?role=merchant"
                   className="px-8 py-3 border-2 border-white text-white rounded-md hover:bg-white hover:text-brand-orange transition-colors font-semibold text-center"
                 >
                   Sell on KorrectNG
@@ -154,7 +154,7 @@ export default async function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/auth/register?role=artisan"
+              href="/signup?role=artisan"
               className="px-8 py-3 bg-white text-brand-green rounded-md hover:bg-gray-100 transition-colors font-semibold"
             >
               Get Verified Today
@@ -178,7 +178,7 @@ export default async function HomePage() {
             Low 5% commission, escrow protection, and trusted platform.
           </p>
           <Link
-            href="/auth/register?role=merchant"
+            href="/signup?role=merchant"
             className="inline-block px-8 py-3 bg-brand-orange text-white rounded-md hover:bg-orange-600 transition-colors font-semibold"
           >
             Become a Merchant

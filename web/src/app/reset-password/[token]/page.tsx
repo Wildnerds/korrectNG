@@ -53,14 +53,14 @@ export default function ResetPasswordPage() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden text-center">
           <div className="text-5xl mb-4">✅</div>
           <h1 className="text-2xl font-bold text-brand-green mb-2">Password Reset!</h1>
           <p className="text-brand-gray mb-6">
             Your password has been successfully reset. You can now sign in with your new password.
           </p>
           <Link
-            href="/auth/login"
+            href="/login"
             className="inline-block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
           >
             Sign In
@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-light-gray py-12 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-md overflow-hidden">
         <h1 className="text-2xl font-bold text-brand-green mb-2 text-center">Set New Password</h1>
         <p className="text-brand-gray text-center mb-6">
           Enter your new password below
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
 
         <p className="text-center mt-6 text-brand-gray">
           Remember your password?{' '}
-          <Link href="/auth/login" className="text-brand-green font-medium hover:underline">
+          <Link href="/login" className="text-brand-green font-medium hover:underline">
             Sign In
           </Link>
         </p>

@@ -53,7 +53,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req, res,
     user.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.save({ validateBeforeSave: false });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/auth/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
 
     // Send welcome email with verification link
     try {
@@ -222,7 +222,7 @@ router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSch
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.CLIENT_URL}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     // Send email
     try {
@@ -301,7 +301,7 @@ router.post('/resend-verification', emailVerificationLimiter, protect, async (re
     user.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.save({ validateBeforeSave: false });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/auth/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
 
     // Send email
     try {

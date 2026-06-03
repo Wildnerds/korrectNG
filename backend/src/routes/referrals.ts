@@ -43,7 +43,7 @@ router.get('/my-code', protect, authorize('artisan'), async (req, res) => {
     }
 
     const baseUrl = process.env.FRONTEND_URL || 'https://korrect.ng';
-    const referralLink = `${baseUrl}/auth/register?role=merchant&ref=${user.referralCode}`;
+    const referralLink = `${baseUrl}/signup?role=merchant&ref=${user.referralCode}`;
 
     res.json({
       success: true,
