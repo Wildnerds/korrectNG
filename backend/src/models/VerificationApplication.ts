@@ -20,7 +20,7 @@ export interface IVerificationApplication extends Document {
   paymentStatus: 'pending' | 'paid';
   paymentReference?: string;
   status: 'pending' | 'in-review' | 'approved' | 'rejected';
-  currentStep: 'personal-info' | 'documents' | 'payment' | 'review';
+  currentStep: 'personal-info' | 'documents' | 'review';
   adminNotes?: string;
   reviewedBy?: mongoose.Types.ObjectId;
   reviewedAt?: Date;

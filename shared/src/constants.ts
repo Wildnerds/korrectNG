@@ -58,7 +58,6 @@ export type Role = (typeof ROLES)[number];
 export const VERIFICATION_STEPS = [
   'personal-info',
   'documents',
-  'payment',
   'review',
 ] as const;
 export type VerificationStep = (typeof VERIFICATION_STEPS)[number];
