@@ -21,6 +21,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'customer' | 'artisan' | 'merchant'>('customer');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,16 +51,79 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* Role selector for new Google users */}
+        {showRoleSelector && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 mb-3 font-medium">
+              First time signing in with Google? Select your account type:
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedRole('customer')}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedRole === 'customer'
+                    ? 'bg-brand-green text-white'
+                    : 'bg-white text-brand-gray hover:bg-gray-100 border'
+                }`}
+              >
+                Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole('artisan')}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedRole === 'artisan'
+                    ? 'bg-brand-green text-white'
+                    : 'bg-white text-brand-gray hover:bg-gray-100 border'
+                }`}
+              >
+                Artisan
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole('merchant')}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedRole === 'merchant'
+                    ? 'bg-brand-green text-white'
+                    : 'bg-white text-brand-gray hover:bg-gray-100 border'
+                }`}
+              >
+                Merchant
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Google Sign-in */}
         <GoogleSignInButton
           onSuccess={(user, token) => {
             Cookies.set('token', token, { expires: 30, path: '/' });
             refreshUser();
-            router.push('/');
+            // Redirect based on role
+            if (user.role === 'artisan') {
+              router.push('/dashboard/artisan');
+            } else if (user.role === 'merchant') {
+              router.push('/dashboard/merchant');
+            } else {
+              router.push('/');
+            }
           }}
           onError={(errorMsg) => setError(errorMsg)}
+          role={selectedRole}
           text="signin_with"
         />
+
+        {/* Toggle for first-time users */}
+        {!showRoleSelector && (
+          <button
+            type="button"
+            onClick={() => setShowRoleSelector(true)}
+            className="w-full mt-2 text-sm text-brand-green hover:underline"
+          >
+            First time with Google? Click here to choose account type
+          </button>
+        )}
 
         {/* Divider */}
         <div className="relative my-6">
