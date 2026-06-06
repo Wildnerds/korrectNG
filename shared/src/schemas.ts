@@ -71,6 +71,13 @@ export const updateProfileSchema = z.object({
 
 // ─── Artisan Schemas ─────────────────────────────────────────────────────────
 
+// Service schema for artisan services
+export const artisanServiceSchema = z.object({
+  value: z.string().min(1, 'Service value is required').max(50),
+  label: z.string().min(1, 'Service label is required').max(100),
+  isCustom: z.boolean().default(false),
+});
+
 // Base schema without refinement - used for partial updates
 export const artisanProfileBaseSchema = z.object({
   businessName: z.string().min(2, 'Business name must be at least 2 characters').max(100),
@@ -83,6 +90,7 @@ export const artisanProfileBaseSchema = z.object({
   phoneNumber: z.string().min(10).max(15),
   yearsOfExperience: z.number().min(0).max(50),
   workingHours: z.string().max(100).optional(),
+  services: z.array(artisanServiceSchema).max(15, 'Maximum 15 services allowed').optional(),
 });
 
 // Full schema with refinement - used for complete validation
@@ -267,6 +275,7 @@ export const acceptTermsSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ArtisanProfileInput = z.infer<typeof artisanProfileSchema>;
+export type ArtisanServiceInput = z.infer<typeof artisanServiceSchema>;
 export type ArtisanSearchInput = z.infer<typeof artisanSearchSchema>;
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 export type EditReviewInput = z.infer<typeof editReviewSchema>;

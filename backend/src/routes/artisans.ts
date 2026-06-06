@@ -99,16 +99,74 @@ router.get('/my-profile', protect, authorize('artisan'), async (req: AuthRequest
 });
 
 // GET /api/v1/artisans/featured
-router.get('/featured', async (_req, res, next) => {
+// Accepts optional ?trade=X query to filter by trade
+router.get('/featured', async (req, res, next) => {
   try {
-    const artisans = await ArtisanProfile.find({
+    const { trade, limit } = req.query;
+    const filter: any = {
       isPublished: true,
       verificationStatus: 'approved',
       // subscriptionActive: true, // TODO: Re-enable when ready to monetize
       averageRating: { $gte: 4.0 },
-    })
+    };
+
+    // Filter by trade if provided
+    if (trade && typeof trade === 'string') {
+      const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+
+      if (defaultTrades.includes(trade)) {
+        filter.trade = trade;
+      } else {
+        filter.trade = 'other';
+        filter.customTrade = trade.toLowerCase();
+      }
+    }
+
+    const artisans = await ArtisanProfile.find(filter)
       .sort({ averageRating: -1, totalReviews: -1 })
-      .limit(6)
+      .limit(Number(limit) || 6)
+      .populate('user', 'firstName lastName avatar');
+
+    res.status(200).json({ success: true, data: artisans });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/artisans/recommendations
+// Returns top-rated artisans, optionally filtered by trade
+// Can exclude a specific artisan (useful for "similar artisans" on profile page)
+router.get('/recommendations', async (req, res, next) => {
+  try {
+    const { trade, exclude, limit } = req.query;
+    const filter: any = {
+      isPublished: true,
+      verificationStatus: 'approved',
+      // subscriptionActive: true, // TODO: Re-enable when ready to monetize
+    };
+
+    // Filter by trade if provided
+    if (trade && typeof trade === 'string') {
+      const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+
+      if (defaultTrades.includes(trade)) {
+        filter.trade = trade;
+      } else {
+        filter.trade = 'other';
+        filter.customTrade = trade.toLowerCase();
+      }
+    }
+
+    // Exclude specific artisan ID
+    if (exclude && typeof exclude === 'string') {
+      filter._id = { $ne: exclude };
+    }
+
+    const artisans = await ArtisanProfile.find(filter)
+      .sort({ averageRating: -1, totalReviews: -1, trustScore: -1 })
+      .limit(Number(limit) || 4)
       .populate('user', 'firstName lastName avatar');
 
     res.status(200).json({ success: true, data: artisans });

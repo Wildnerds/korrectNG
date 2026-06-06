@@ -5,6 +5,7 @@ import { getTradeLabel, ARTISAN_SORT_OPTIONS } from '@korrectng/shared';
 import type { ArtisanProfile, PaginatedResponse } from '@korrectng/shared';
 import ArtisanCard from '@/components/ArtisanCard';
 import SearchBox from '@/components/SearchBox';
+import TopRatedSection from '@/components/TopRatedSection';
 import Link from 'next/link';
 
 interface Props {
@@ -105,6 +106,18 @@ export default async function SearchPage({ searchParams }: Props) {
             ))}
           </div>
         </div>
+
+        {/* Top Rated Section - Show when filtering by trade */}
+        {trade && currentPage === 1 && (
+          <div className="mb-8">
+            <TopRatedSection
+              trade={trade}
+              title={`Top Rated ${getTradeLabel(trade)}s`}
+              limit={4}
+              showViewAll={false}
+            />
+          </div>
+        )}
 
         {/* Results grid */}
         {artisans.length > 0 ? (

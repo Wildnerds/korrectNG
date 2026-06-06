@@ -62,6 +62,14 @@ export interface AuthResponse {
 
 // ─── Artisan Profile ─────────────────────────────────────────────────────────
 
+// ─── Artisan Services ─────────────────────────────────────────────────────────
+
+export interface ArtisanService {
+  value: string;
+  label: string;
+  isCustom: boolean;
+}
+
 export interface ArtisanProfile extends Timestamps {
   _id: string;
   user: string | User;
@@ -82,6 +90,7 @@ export interface ArtisanProfile extends Timestamps {
   totalReviews: number;
   galleryImages: GalleryImage[];
   workingHours: string;
+  services?: ArtisanService[];
 
   // Trust/Reputation metrics
   completionRate?: number;

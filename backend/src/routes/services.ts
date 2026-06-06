@@ -1,6 +1,8 @@
 import { Router } from 'express';
-import { TRADES } from '@korrectng/shared';
+import { TRADES, SERVICES_BY_TRADE } from '@korrectng/shared';
 import { ArtisanProfile } from '../models';
+import { generateDescription, generateShortDescription } from '../utils/descriptionGenerator';
+import { protect, authorize, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -111,6 +113,69 @@ router.get('/all-trades', async (_req, res, next) => {
     res.status(200).json({
       success: true,
       data: allTrades,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/v1/services/by-trade/:trade
+ * Returns predefined services for a specific trade
+ */
+router.get('/by-trade/:trade', async (req, res, next) => {
+  try {
+    const { trade } = req.params;
+    const services = SERVICES_BY_TRADE[trade] || [];
+
+    res.status(200).json({
+      success: true,
+      data: services,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/services/generate-description
+ * Generates a suggested description based on trade, services, and experience
+ * Requires authentication (artisan only)
+ */
+router.post('/generate-description', protect, authorize('artisan'), async (req: AuthRequest, res, next) => {
+  try {
+    const { trade, customTrade, services, yearsOfExperience, location, businessName } = req.body;
+
+    if (!trade || !location) {
+      return res.status(400).json({
+        success: false,
+        error: 'Trade and location are required',
+      });
+    }
+
+    const description = generateDescription({
+      trade,
+      customTrade,
+      services: services || [],
+      yearsOfExperience: yearsOfExperience || 0,
+      location,
+      businessName,
+    });
+
+    const shortDescription = generateShortDescription({
+      trade,
+      customTrade,
+      services: services || [],
+      yearsOfExperience: yearsOfExperience || 0,
+      location,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        description,
+        shortDescription,
+      },
     });
   } catch (error) {
     next(error);

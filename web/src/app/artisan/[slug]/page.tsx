@@ -16,6 +16,7 @@ import ShareButton from './ShareButton';
 import ContactButtons, { ContactButtonsHeader } from './ContactButtons';
 import GallerySection from './GallerySection';
 import BookingButton from './BookingButton';
+import SimilarArtisans from './SimilarArtisans';
 
 interface Props {
   params: { slug: string };
@@ -143,6 +144,27 @@ export default async function ArtisanProfilePage({ params }: Props) {
                 <p className="text-brand-gray leading-relaxed">{artisan.description}</p>
               </div>
 
+              {/* Services Offered */}
+              {artisan.services && artisan.services.length > 0 && (
+                <div className="bg-white rounded-xl p-6">
+                  <h2 className="text-xl font-bold mb-4">Services Offered</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {artisan.services.map((service) => (
+                      <span
+                        key={service.value}
+                        className={`inline-block px-3 py-1.5 rounded-full text-sm font-medium ${
+                          service.isCustom
+                            ? 'bg-brand-orange/10 text-brand-orange'
+                            : 'bg-brand-green/10 text-brand-green'
+                        }`}
+                      >
+                        {service.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Gallery */}
               {artisan.galleryImages.length > 0 && (
                 <GallerySection images={artisan.galleryImages} />
@@ -210,6 +232,9 @@ export default async function ArtisanProfilePage({ params }: Props) {
                 </div>
                 <WarrantyClaimButton artisanId={artisan._id} artisanName={artisan.businessName} />
               </div>
+
+              {/* Similar Artisans */}
+              <SimilarArtisans trade={artisan.trade} excludeId={artisan._id} />
             </div>
           </div>
         </div>

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { TRADES, LOCATIONS, formatCustomTradeLabel } from '@korrectng/shared';
-import type { ArtisanProfile } from '@korrectng/shared';
+import type { ArtisanProfile, ArtisanService } from '@korrectng/shared';
+import ServiceSelector from '@/components/ServiceSelector';
 import Cookies from 'js-cookie';
 import { NotificationPrompt } from '@/components/NotificationPrompt';
 import { BankAccountForm } from '@/components/BankAccountForm';
@@ -38,6 +39,9 @@ export default function ArtisanProfileEdit() {
     yearsOfExperience: '',
     workingHours: '',
   });
+  const [services, setServices] = useState<ArtisanService[]>([]);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [suggestedDescription, setSuggestedDescription] = useState<string | null>(null);
 
   // Custom trade suggestions
   const [customTradeSuggestions, setCustomTradeSuggestions] = useState<{ value: string; label: string }[]>([]);
@@ -77,6 +81,10 @@ export default function ArtisanProfileEdit() {
             yearsOfExperience: artisanProfile.yearsOfExperience?.toString() || '',
             workingHours: artisanProfile.workingHours || '',
           });
+          // Set services
+          if (artisanProfile.services && Array.isArray(artisanProfile.services)) {
+            setServices(artisanProfile.services);
+          }
           // Set the display value for custom trade input
           if ((artisanProfile as any).customTrade) {
             setCustomTradeQuery(formatCustomTradeLabel((artisanProfile as any).customTrade));
@@ -210,6 +218,7 @@ export default function ArtisanProfileEdit() {
       const profileData: Record<string, any> = {
         ...profile,
         yearsOfExperience: parseInt(profile.yearsOfExperience) || 0,
+        services,
       };
 
       // Only include customTrade if trade is 'other'
@@ -253,6 +262,47 @@ export default function ArtisanProfileEdit() {
     setCustomTradeQuery(suggestion.label);
     setProfile({ ...profile, customTrade: suggestion.value });
     setShowCustomTradeSuggestions(false);
+  };
+
+  // Generate description suggestion
+  const handleGenerateDescription = async () => {
+    if (!profile.trade || !profile.location) {
+      setMessage({ type: 'error', text: 'Please select a trade and location first' });
+      return;
+    }
+
+    setGeneratingDescription(true);
+    setSuggestedDescription(null);
+
+    try {
+      const res = await apiFetch<{ description: string; shortDescription: string }>('/services/generate-description', {
+        method: 'POST',
+        body: JSON.stringify({
+          trade: profile.trade,
+          customTrade: profile.customTrade,
+          services,
+          yearsOfExperience: parseInt(profile.yearsOfExperience) || 0,
+          location: profile.location,
+          businessName: profile.businessName,
+        }),
+      });
+
+      if (res.data?.description) {
+        setSuggestedDescription(res.data.description);
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to generate description' });
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const useSuggestedDescription = () => {
+    if (suggestedDescription) {
+      setProfile({ ...profile, description: suggestedDescription });
+      setSuggestedDescription(null);
+      setMessage({ type: 'success', text: 'Description applied! Feel free to edit it.' });
+    }
   };
 
   // Filter suggestions based on input
@@ -449,20 +499,6 @@ export default function ArtisanProfileEdit() {
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  value={profile.description}
-                  onChange={(e) => setProfile({ ...profile, description: e.target.value })}
-                  rows={4}
-                  placeholder="Tell customers about your experience, skills, and services..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                  required
-                  minLength={20}
-                />
-                <p className="text-xs text-gray-500 mt-1">Minimum 20 characters</p>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium mb-1">Years of Experience</label>
                 <input
                   type="number"
@@ -477,6 +513,90 @@ export default function ArtisanProfileEdit() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Services */}
+          {profile.trade && (
+            <div className="bg-white rounded-xl p-6">
+              <h2 className="text-xl font-bold mb-2">Services Offered</h2>
+              <p className="text-sm text-brand-gray mb-4">
+                Select the services you offer to help customers find you. You can add custom services too.
+              </p>
+              <ServiceSelector
+                trade={profile.trade}
+                selectedServices={services}
+                onChange={setServices}
+                maxServices={15}
+              />
+            </div>
+          )}
+
+          {/* Description with Generate Button */}
+          <div className="bg-white rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Description</h2>
+              {profile.trade && profile.location && (
+                <button
+                  type="button"
+                  onClick={handleGenerateDescription}
+                  disabled={generatingDescription}
+                  className="flex items-center gap-2 px-4 py-2 bg-brand-orange/10 text-brand-orange rounded-md hover:bg-brand-orange/20 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {generatingDescription ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Generate Suggestion
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Suggested Description Preview */}
+            {suggestedDescription && (
+              <div className="mb-4 p-4 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-brand-green mb-2">Suggested Description:</p>
+                    <p className="text-sm text-brand-gray">{suggestedDescription}</p>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={useSuggestedDescription}
+                      className="px-3 py-1.5 bg-brand-green text-white rounded-md text-sm font-medium hover:bg-brand-green-dark transition-colors"
+                    >
+                      Use This
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSuggestedDescription(null)}
+                      className="px-3 py-1.5 bg-gray-200 text-brand-gray rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <textarea
+              value={profile.description}
+              onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+              rows={4}
+              placeholder="Tell customers about your experience, skills, and services..."
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+              required
+              minLength={20}
+            />
+            <p className="text-xs text-gray-500 mt-1">Minimum 20 characters. Tip: Click "Generate Suggestion" for a professional description based on your services.</p>
           </div>
 
           {/* Location */}

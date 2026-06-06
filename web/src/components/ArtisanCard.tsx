@@ -48,6 +48,24 @@ export default function ArtisanCard({ artisan }: Props) {
           <p className="text-brand-gray text-sm mb-2">
             {getTradeLabel(artisan.trade)} - {artisan.location}
           </p>
+          {/* Service Tags - show top 3 */}
+          {artisan.services && artisan.services.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {artisan.services.slice(0, 3).map((service) => (
+                <span
+                  key={service.value}
+                  className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-brand-gray rounded-full"
+                >
+                  {service.label}
+                </span>
+              ))}
+              {artisan.services.length > 3 && (
+                <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-brand-gray rounded-full">
+                  +{artisan.services.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-1 mb-3">
             <span className="text-brand-star">{'★'.repeat(Math.round(artisan.averageRating))}</span>
             <span className="text-sm text-brand-gray">

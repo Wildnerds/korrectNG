@@ -8,6 +8,12 @@ export interface IGalleryImage {
   order?: number;
 }
 
+export interface IArtisanService {
+  value: string;
+  label: string;
+  isCustom: boolean;
+}
+
 export type TrustLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
 
 export type BadgeType =
@@ -47,6 +53,7 @@ export interface IArtisanProfile extends Document {
   galleryImages: IGalleryImage[];
   workingHours: string;
   subscriptionActive: boolean;
+  services: IArtisanService[];
 
   // Trust/Reputation metrics
   completionRate: number;      // % jobs confirmed vs accepted (0-100)
@@ -131,6 +138,11 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
     ],
     workingHours: { type: String, default: 'Mon-Sat: 8am - 6pm' },
     subscriptionActive: { type: Boolean, default: false },
+    services: [{
+      value: { type: String, required: true, maxlength: 50 },
+      label: { type: String, required: true, maxlength: 100 },
+      isCustom: { type: Boolean, default: false },
+    }],
 
     // Trust/Reputation metrics
     completionRate: { type: Number, default: 0, min: 0, max: 100 },
