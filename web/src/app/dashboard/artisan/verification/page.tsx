@@ -6,8 +6,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/Toast';
 import { apiFetch } from '@/lib/api';
 import { TRADES, LOCATIONS, formatNaira, slugify } from '@korrectng/shared';
-import type { VerificationApplication, ArtisanProfile } from '@korrectng/shared';
+import type { VerificationApplication, ArtisanProfile, ArtisanService } from '@korrectng/shared';
 import Cookies from 'js-cookie';
+import ServiceSelector from '@/components/ServiceSelector';
 
 const STEPS = ['personal-info', 'documents', 'review'] as const;
 type Step = (typeof STEPS)[number];
@@ -32,6 +33,7 @@ export default function VerificationPage() {
     phoneNumber: '',
     yearsOfExperience: 0,
   });
+  const [services, setServices] = useState<ArtisanService[]>([]);
 
   useEffect(() => {
     async function init() {
@@ -77,7 +79,7 @@ export default function VerificationPage() {
       const slug = slugify(`${profile.businessName} ${profile.location}`);
       await apiFetch('/artisans/profile', {
         method: 'PATCH',
-        body: JSON.stringify({ ...profile, slug }),
+        body: JSON.stringify({ ...profile, slug, services }),
         token,
       });
 
@@ -266,7 +268,10 @@ export default function VerificationPage() {
                 <label className="block text-sm font-medium mb-1">Trade</label>
                 <select
                   value={profile.trade}
-                  onChange={(e) => setProfile({ ...profile, trade: e.target.value })}
+                  onChange={(e) => {
+                    setProfile({ ...profile, trade: e.target.value });
+                    setServices([]); // Reset services when trade changes
+                  }}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                   required
                 >
@@ -278,6 +283,21 @@ export default function VerificationPage() {
                   ))}
                 </select>
               </div>
+              {/* Services Selection */}
+              {profile.trade && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Services Offered</label>
+                  <p className="text-xs text-brand-gray mb-3">
+                    Select the services you offer to help customers find you.
+                  </p>
+                  <ServiceSelector
+                    trade={profile.trade}
+                    selectedServices={services}
+                    onChange={setServices}
+                    maxServices={10}
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <textarea
