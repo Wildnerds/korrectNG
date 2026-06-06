@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { merchantReviewSchema, merchantReviewResponseSchema } from '@korrectng/shared';
-import { MerchantReview, MaterialOrder, MerchantProfile } from '../models';
+import { MerchantReview, MaterialOrder, MerchantProfile, User } from '../models';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { AppError } from '../middleware/errorHandler';
 import { createNotification } from '../services/notifications';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -98,7 +99,7 @@ router.post(
         deliveryRating,
       });
 
-      // Notify merchant
+      // Notify merchant (in-app)
       await createNotification(order.merchant.toString(), {
         type: 'new_merchant_review' as any,
         title: 'New Review Received!',
@@ -106,6 +107,24 @@ router.post(
         link: `/dashboard/merchant/reviews`,
         data: { reviewId: review._id, rating },
       });
+
+      // Send email notification to merchant
+      try {
+        const merchantUser = await User.findById(order.merchant);
+        const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
+        if (merchantUser?.email && merchantProfile) {
+          const template = emailTemplates.merchantNewReview(
+            merchantUser.firstName,
+            `${req.user!.firstName} ${req.user!.lastName}`,
+            rating,
+            order.orderNumber,
+            text
+          );
+          await sendEmail({ to: merchantUser.email, ...template });
+        }
+      } catch (emailError) {
+        console.error('Failed to send merchant review notification email:', emailError);
+      }
 
       res.status(201).json({ success: true, data: review });
     } catch (error) {

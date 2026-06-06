@@ -3,6 +3,7 @@ import { User, ArtisanProfile, Review, VerificationApplication, Subscription, Se
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { adminLimiter } from '../middleware/rateLimiter';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -121,7 +122,7 @@ router.patch('/verifications/:id', async (req: AuthRequest, res, next) => {
     await application.save();
 
     // Update artisan profile
-    const artisan = await ArtisanProfile.findById(application.artisan);
+    const artisan = await ArtisanProfile.findById(application.artisan).populate('user', 'firstName lastName email');
     if (artisan) {
       artisan.verificationStatus = status;
       if (status === 'approved') {
@@ -129,6 +130,22 @@ router.patch('/verifications/:id', async (req: AuthRequest, res, next) => {
         artisan.isPublished = true;
       }
       await artisan.save();
+
+      // Send email notification
+      const user = artisan.user as any;
+      if (user?.email) {
+        try {
+          if (status === 'approved') {
+            const template = emailTemplates.verificationApproved(user.firstName, artisan.businessName);
+            await sendEmail({ to: user.email, ...template });
+          } else {
+            const template = emailTemplates.verificationRejected(user.firstName, adminNotes || 'Your application did not meet our verification requirements.');
+            await sendEmail({ to: user.email, ...template });
+          }
+        } catch (emailError) {
+          console.error('Failed to send verification email:', emailError);
+        }
+      }
     }
 
     res.status(200).json({ success: true, data: application });
@@ -378,11 +395,22 @@ router.post('/merchant-verifications/:id/approve', async (req: AuthRequest, res,
     await application.save();
 
     // Update merchant profile
-    const merchant = await MerchantProfile.findById(application.merchant);
+    const merchant = await MerchantProfile.findById(application.merchant).populate('user', 'firstName lastName email');
     if (merchant) {
       merchant.verificationStatus = 'approved';
       merchant.isPublished = true;
       await merchant.save();
+
+      // Send email notification
+      const user = merchant.user as any;
+      if (user?.email) {
+        try {
+          const template = emailTemplates.merchantVerificationApproved(user.firstName, merchant.businessName);
+          await sendEmail({ to: user.email, ...template });
+        } catch (emailError) {
+          console.error('Failed to send merchant verification email:', emailError);
+        }
+      }
     }
 
     res.status(200).json({ success: true, data: application });
@@ -410,10 +438,21 @@ router.post('/merchant-verifications/:id/reject', async (req: AuthRequest, res, 
     await application.save();
 
     // Update merchant profile
-    const merchant = await MerchantProfile.findById(application.merchant);
+    const merchant = await MerchantProfile.findById(application.merchant).populate('user', 'firstName lastName email');
     if (merchant) {
       merchant.verificationStatus = 'rejected';
       await merchant.save();
+
+      // Send email notification
+      const user = merchant.user as any;
+      if (user?.email) {
+        try {
+          const template = emailTemplates.verificationRejected(user.firstName, reason);
+          await sendEmail({ to: user.email, ...template });
+        } catch (emailError) {
+          console.error('Failed to send merchant rejection email:', emailError);
+        }
+      }
     }
 
     res.status(200).json({ success: true, data: application });

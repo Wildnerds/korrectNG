@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { warrantyClaimSchema, warrantyResponseSchema } from '@korrectng/shared';
-import { WarrantyClaim, ArtisanProfile } from '../models';
+import { WarrantyClaim, ArtisanProfile, User } from '../models';
 import Booking from '../models/Booking';
 import { protect, authorize, requireVerifiedEmail, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { AppError } from '../middleware/errorHandler';
 import { warrantyLimiter } from '../middleware/rateLimiter';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -72,6 +73,21 @@ router.post('/claim', warrantyLimiter, protect, authorize('customer'), requireVe
       jobDescription,
       issueDescription,
     });
+
+    // Send email notification to artisan
+    try {
+      const artisanUser = await User.findById(artisan.user);
+      if (artisanUser?.email) {
+        const template = emailTemplates.warrantyClaimNotification(
+          artisanUser.firstName,
+          `${req.user!.firstName} ${req.user!.lastName}`,
+          jobDescription
+        );
+        await sendEmail({ to: artisanUser.email, ...template });
+      }
+    } catch (emailError) {
+      console.error('Failed to send warranty claim notification email:', emailError);
+    }
 
     res.status(201).json({
       success: true,

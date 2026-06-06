@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { createReviewSchema, editReviewSchema, artisanResponseSchema, flagReviewSchema } from '@korrectng/shared';
-import { Review, ArtisanProfile } from '../models';
+import { Review, ArtisanProfile, User } from '../models';
 import { protect, authorize, requireVerifiedEmail, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { AppError } from '../middleware/errorHandler';
 import { reviewLimiter } from '../middleware/rateLimiter';
+import { sendEmail, emailTemplates } from '../utils/email';
 
 const router = Router();
 
@@ -64,6 +65,23 @@ router.post('/', reviewLimiter, protect, authorize('customer'), requireVerifiedE
     });
 
     await review.populate('customer', 'firstName lastName avatar');
+
+    // Send email notification to artisan
+    try {
+      const artisanUser = await User.findById(artisan.user);
+      if (artisanUser?.email) {
+        const template = emailTemplates.newReviewNotification(
+          artisanUser.firstName,
+          `${req.user!.firstName} ${req.user!.lastName}`,
+          rating,
+          text
+        );
+        await sendEmail({ to: artisanUser.email, ...template });
+      }
+    } catch (emailError) {
+      console.error('Failed to send review notification email:', emailError);
+    }
+
     res.status(201).json({ success: true, data: review });
   } catch (error) {
     next(error);
