@@ -27,13 +27,14 @@ export default function InstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-      // Show prompt after user has been on site for 30 seconds
+      // Show prompt after user has been on site for 5 seconds
       setTimeout(() => {
-        const dismissed = localStorage.getItem('pwa-prompt-dismissed');
-        if (!dismissed) {
+        const dismissedAt = localStorage.getItem('pwa-prompt-dismissed');
+        // Show again if dismissed more than 7 days ago
+        if (!dismissedAt || Date.now() - parseInt(dismissedAt) > 7 * 24 * 60 * 60 * 1000) {
           setShowPrompt(true);
         }
-      }, 30000);
+      }, 5000);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -41,11 +42,12 @@ export default function InstallPrompt() {
     // Show iOS prompt after delay
     if (ios && !standalone) {
       setTimeout(() => {
-        const dismissed = localStorage.getItem('pwa-prompt-dismissed');
-        if (!dismissed) {
+        const dismissedAt = localStorage.getItem('pwa-prompt-dismissed');
+        // Show again if dismissed more than 7 days ago
+        if (!dismissedAt || Date.now() - parseInt(dismissedAt) > 7 * 24 * 60 * 60 * 1000) {
           setShowPrompt(true);
         }
-      }, 30000);
+      }, 5000);
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -65,7 +67,8 @@ export default function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-prompt-dismissed', 'true');
+    // Store timestamp so we can show again after 7 days
+    localStorage.setItem('pwa-prompt-dismissed', Date.now().toString());
   };
 
   // Don't show if already installed

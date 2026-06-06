@@ -2,6 +2,13 @@
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Handle messages from the main thread (e.g., SKIP_WAITING for updates)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Push notification event handler
 self.addEventListener('push', (event) => {
   console.log('[Push Worker] Push received:', event);
