@@ -11,6 +11,12 @@ export function PWAUpdatePrompt() {
       return;
     }
 
+    // Only show update prompt if there's an existing service worker controller
+    // This prevents showing update on first visit or after clearing data
+    if (!navigator.serviceWorker.controller) {
+      return;
+    }
+
     const handleUpdate = () => {
       navigator.serviceWorker.ready.then((registration) => {
         // Check for updates
@@ -31,7 +37,7 @@ export function PWAUpdatePrompt() {
         });
 
         // Check if there's already a waiting worker
-        if (registration.waiting) {
+        if (registration.waiting && navigator.serviceWorker.controller) {
           setWaitingWorker(registration.waiting);
           setShowUpdate(true);
         }
