@@ -181,6 +181,42 @@ router.get('/users', async (req, res, next) => {
   }
 });
 
+// PATCH /api/v1/admin/users/:id/role - Change user role
+router.patch('/users/:id/role', async (req: AuthRequest, res, next) => {
+  try {
+    const { role } = req.body;
+    const validRoles = ['customer', 'artisan', 'merchant', 'admin'];
+
+    if (!role || !validRoles.includes(role)) {
+      throw new AppError(`Invalid role. Must be one of: ${validRoles.join(', ')}`, 400);
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Prevent demoting the last admin
+    if (user.role === 'admin' && role !== 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        throw new AppError('Cannot change role of the last admin', 400);
+      }
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      message: `User role changed to ${role}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/v1/admin/artisans
 router.get('/artisans', async (req, res, next) => {
   try {
