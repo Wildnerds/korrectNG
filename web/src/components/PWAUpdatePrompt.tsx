@@ -11,49 +11,68 @@ export function PWAUpdatePrompt() {
       return;
     }
 
-    // Only show update prompt if there's an existing service worker controller
-    // This prevents showing update on first visit or after clearing data
-    if (!navigator.serviceWorker.controller) {
-      return;
-    }
+    let isFirstInstall = false;
 
-    const handleUpdate = () => {
-      navigator.serviceWorker.ready.then((registration) => {
-        // Check for updates
-        registration.update();
+    const showUpdatePrompt = (worker: ServiceWorker) => {
+      // Don't show update prompt on first install
+      if (isFirstInstall) return;
+      setWaitingWorker(worker);
+      setShowUpdate(true);
+    };
 
-        // Listen for new service worker
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available
-                setWaitingWorker(newWorker);
-                setShowUpdate(true);
-              }
-            });
+    const setupUpdateListener = (registration: ServiceWorkerRegistration) => {
+      // Check if there's already a waiting worker
+      if (registration.waiting) {
+        showUpdatePrompt(registration.waiting);
+      }
+
+      // Listen for new service worker installations
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          // New SW installed and there's an existing controller = update available
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdatePrompt(newWorker);
           }
         });
-
-        // Check if there's already a waiting worker
-        if (registration.waiting && navigator.serviceWorker.controller) {
-          setWaitingWorker(registration.waiting);
-          setShowUpdate(true);
-        }
       });
     };
 
-    handleUpdate();
+    // Check if this is first visit (no controller yet)
+    if (!navigator.serviceWorker.controller) {
+      isFirstInstall = true;
+    }
 
-    // Also check when the page becomes visible
-    document.addEventListener('visibilitychange', () => {
+    // Wait for service worker to be ready, then set up update detection
+    navigator.serviceWorker.ready.then((registration) => {
+      // Force check for updates
+      registration.update();
+      setupUpdateListener(registration);
+    });
+
+    // Also check when page becomes visible
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         navigator.serviceWorker.ready.then((registration) => {
           registration.update();
         });
       }
-    });
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Listen for controller changes (new SW took over)
+    const handleControllerChange = () => {
+      // Reload to get the new version
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
   }, []);
 
   const handleUpdate = () => {
