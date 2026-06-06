@@ -515,6 +515,41 @@ export default function ArtisanProfileEdit() {
             </div>
           </div>
 
+          {/* Location - Moved before Services so Generate Description button works */}
+          <div className="bg-white rounded-xl p-6">
+            <h2 className="text-xl font-bold mb-4">Location</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Area</label>
+                <select
+                  value={profile.location}
+                  onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                  required
+                >
+                  <option value="">Select your area</option>
+                  {LOCATIONS.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Full Address</label>
+                <input
+                  type="text"
+                  value={profile.address}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  placeholder="e.g., 123 Main Street, Lekki Phase 1"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Services */}
           {profile.trade && (
             <div className="bg-white rounded-xl p-6">
@@ -597,41 +632,6 @@ export default function ArtisanProfileEdit() {
               minLength={20}
             />
             <p className="text-xs text-gray-500 mt-1">Minimum 20 characters. Tip: Click "Generate Suggestion" for a professional description based on your services.</p>
-          </div>
-
-          {/* Location */}
-          <div className="bg-white rounded-xl p-6">
-            <h2 className="text-xl font-bold mb-4">Location</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Area</label>
-                <select
-                  value={profile.location}
-                  onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                  required
-                >
-                  <option value="">Select your area</option>
-                  {LOCATIONS.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Full Address</label>
-                <input
-                  type="text"
-                  value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                  placeholder="e.g., 123 Main Street, Lekki Phase 1"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                  required
-                />
-              </div>
-            </div>
           </div>
 
           {/* Contact Information */}

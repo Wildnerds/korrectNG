@@ -307,6 +307,7 @@ export const merchantProfileSchema = z.object({
   whatsappNumber: z.string().min(10).max(15),
   phoneNumber: z.string().min(10).max(15),
   cacNumber: z.string().max(50).optional(),
+  businessLogo: z.string().url().optional(),
   deliveryAreas: z.array(z.string().max(100)).optional(),
   defaultDeliveryFee: z.number().min(0).optional(),
   freeDeliveryThreshold: z.number().min(0).optional(),
