@@ -1,6 +1,7 @@
 {
   "name": "KorrectNG - Find Verified Artisans",
   "short_name": "KorrectNG",
+  "version": "1.0.1",
   "description": "Nigeria's leading platform for verified artisans. Find trusted mechanics, electricians, plumbers, and more.",
   "start_url": "/",
   "display": "standalone",
