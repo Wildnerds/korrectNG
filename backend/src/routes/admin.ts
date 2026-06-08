@@ -222,14 +222,24 @@ router.get('/artisans', async (req, res, next) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+
+    const filter: any = {};
+    if (status === 'verified') {
+      filter.verificationStatus = 'approved';
+    } else if (status === 'pending') {
+      filter.verificationStatus = { $in: ['pending', 'in-review'] };
+    } else if (status === 'rejected') {
+      filter.verificationStatus = 'rejected';
+    }
 
     const [artisans, total] = await Promise.all([
-      ArtisanProfile.find()
+      ArtisanProfile.find(filter)
         .populate('user', 'firstName lastName email phone')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
-      ArtisanProfile.countDocuments(),
+      ArtisanProfile.countDocuments(filter),
     ]);
 
     res.status(200).json({
@@ -238,6 +248,64 @@ router.get('/artisans', async (req, res, next) => {
         data: artisans,
         pagination: { page, limit, total, pages: Math.ceil(total / limit) },
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/admin/artisans/:id/verify - Directly verify an artisan (bypass verification process)
+router.post('/artisans/:id/verify', async (req: AuthRequest, res, next) => {
+  try {
+    const artisan = await ArtisanProfile.findById(req.params.id).populate('user', 'firstName lastName email');
+    if (!artisan) {
+      throw new AppError('Artisan not found', 404);
+    }
+
+    if (artisan.verificationStatus === 'approved') {
+      throw new AppError('Artisan is already verified', 400);
+    }
+
+    // Update artisan profile
+    artisan.verificationStatus = 'approved';
+    artisan.isPublished = true;
+    await artisan.save();
+
+    // Create or update verification application
+    let application = await VerificationApplication.findOne({ artisan: artisan._id });
+    if (!application) {
+      application = new VerificationApplication({
+        artisan: artisan._id,
+        currentStep: 'review',
+        status: 'approved',
+        documents: [],
+        reviewedBy: req.user!._id,
+        reviewedAt: new Date(),
+        adminNotes: 'Directly verified by admin',
+      });
+    } else {
+      application.status = 'approved';
+      application.reviewedBy = req.user!._id;
+      application.reviewedAt = new Date();
+      application.adminNotes = 'Directly verified by admin';
+    }
+    await application.save();
+
+    // Send email notification
+    const user = artisan.user as any;
+    if (user?.email) {
+      try {
+        const template = emailTemplates.verificationApproved(user.firstName, artisan.businessName);
+        await sendEmail({ to: user.email, ...template });
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: artisan,
+      message: 'Artisan verified successfully',
     });
   } catch (error) {
     next(error);

@@ -40,10 +40,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">Artisans</p>
             </div>
             <Link
+              href="/admin/artisans"
+              className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
+            >
+              All Artisans
+            </Link>
+            <Link
               href="/admin/verifications"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
             >
-              Artisan Verifications
+              Verification Queue
             </Link>
 
             <div className="pt-3 pb-1">
