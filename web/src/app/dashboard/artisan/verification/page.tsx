@@ -330,12 +330,14 @@ export default function VerificationPage() {
                   <label className="block text-sm font-medium mb-1">Years of Experience</label>
                   <input
                     type="number"
-                    value={profile.yearsOfExperience}
+                    value={profile.yearsOfExperience || ''}
                     onChange={(e) =>
-                      setProfile({ ...profile, yearsOfExperience: parseInt(e.target.value) || 0 })
+                      setProfile({ ...profile, yearsOfExperience: e.target.value === '' ? 0 : parseInt(e.target.value) })
                     }
+                    onFocus={(e) => e.target.value === '0' && e.target.select()}
                     min={0}
                     max={50}
+                    placeholder="0"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                     required
                   />

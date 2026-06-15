@@ -508,6 +508,7 @@ export default function ArtisanProfileEdit() {
                   }
                   min={0}
                   max={50}
+                  placeholder="0"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                   required
                 />
