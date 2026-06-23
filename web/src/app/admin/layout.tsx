@@ -37,13 +37,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
 
             <div className="pt-3 pb-1">
-              <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">Artisans</p>
+              <p className="px-4 text-xs font-semibold text-brand-gray uppercase tracking-wider">Skilled Professionals</p>
             </div>
             <Link
               href="/admin/artisans"
               className="block px-4 py-2 rounded-md hover:bg-brand-light-gray transition-colors font-medium"
             >
-              All Artisans
+              All Professionals
             </Link>
             <Link
               href="/admin/verifications"

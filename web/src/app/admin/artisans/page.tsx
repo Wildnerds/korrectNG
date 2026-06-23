@@ -45,7 +45,7 @@ export default function AdminArtisansPage() {
       const res = await apiFetch<{ data: Artisan[] }>(url, { token });
       setArtisans(res.data?.data || []);
     } catch {
-      showToast('Failed to load artisans', 'error');
+      showToast('Failed to load skilled professionals', 'error');
     } finally {
       setLoading(false);
     }
@@ -59,10 +59,10 @@ export default function AdminArtisansPage() {
         method: 'POST',
         token,
       });
-      showToast('Artisan verified successfully', 'success');
+      showToast('Skilled professional verified successfully', 'success');
       fetchArtisans();
     } catch (err: any) {
-      showToast(err.message || 'Failed to verify artisan', 'error');
+      showToast(err.message || 'Failed to verify skilled professional', 'error');
     } finally {
       setVerifying(null);
     }
@@ -83,7 +83,7 @@ export default function AdminArtisansPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Artisans</h1>
+      <h1 className="text-3xl font-bold mb-8">Skilled Professionals</h1>
 
       <div className="flex gap-2 mb-6">
         {['all', 'pending', 'verified', 'rejected'].map((s) => (
@@ -174,7 +174,7 @@ export default function AdminArtisansPage() {
           </table>
         </div>
       ) : (
-        <div className="text-center py-10 text-brand-gray">No artisans found</div>
+        <div className="text-center py-10 text-brand-gray">No skilled professionals found</div>
       )}
     </div>
   );

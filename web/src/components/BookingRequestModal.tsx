@@ -131,7 +131,7 @@ export function BookingRequestModal({
       });
 
       if (response.data) {
-        showToast('Booking request sent! The artisan will send you a quote.', 'success');
+        showToast('Booking request sent! The professional will send you a quote.', 'success');
         onClose();
         router.push('/dashboard/customer/bookings');
       }
@@ -185,7 +185,7 @@ export function BookingRequestModal({
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-brand-green min-h-[120px]"
-                placeholder="Describe what you need done in detail. This helps the artisan give you an accurate quote."
+                placeholder="Describe what you need done in detail. This helps the professional give you an accurate quote."
                 required
                 minLength={10}
               />
@@ -197,7 +197,7 @@ export function BookingRequestModal({
                 Photos (optional)
               </label>
               <p className="text-xs text-gray-500 mb-2">
-                Add up to 5 photos to help the artisan understand the job
+                Add up to 5 photos to help the professional understand the job
               </p>
 
               <input

@@ -164,13 +164,13 @@ export default function CustomerContractsPage() {
           <div className="text-center py-16 bg-white rounded-xl">
             <p className="text-xl text-brand-gray mb-4">No contracts yet</p>
             <p className="text-brand-gray mb-6">
-              When you book a service and the artisan creates a contract, it will appear here.
+              When you book a service and the professional creates a contract, it will appear here.
             </p>
             <Link
               href="/search"
               className="inline-block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
             >
-              Find Artisans
+              Find Professionals
             </Link>
           </div>
         )}

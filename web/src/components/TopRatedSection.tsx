@@ -64,7 +64,7 @@ export default function TopRatedSection({
     return null;
   }
 
-  const sectionTitle = title || (trade ? `Top Rated ${getTradeLabel(trade)}s` : 'Top Rated Artisans');
+  const sectionTitle = title || (trade ? `Top Rated ${getTradeLabel(trade)}s` : 'Top Rated Skilled Professionals');
 
   return (
     <div className="bg-white rounded-xl p-6">
@@ -156,7 +156,7 @@ export async function TopRatedSectionServer({
     return null;
   }
 
-  const sectionTitle = title || (trade ? `Top Rated ${getTradeLabel(trade)}s` : 'Top Rated Artisans');
+  const sectionTitle = title || (trade ? `Top Rated ${getTradeLabel(trade)}s` : 'Top Rated Skilled Professionals');
 
   return (
     <div className="bg-white rounded-xl p-6">

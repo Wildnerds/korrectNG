@@ -158,7 +158,7 @@ export default function ContactPage() {
                       <option value="">Select a topic</option>
                       <option value="general">General Inquiry</option>
                       <option value="support">Customer Support</option>
-                      <option value="artisan">Artisan Verification</option>
+                      <option value="artisan">Professional Verification</option>
                       <option value="warranty">Warranty Claim</option>
                       <option value="partnership">Partnership Opportunity</option>
                       <option value="feedback">Feedback/Suggestion</option>

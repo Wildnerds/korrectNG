@@ -12,7 +12,7 @@ export default function ShareButton({ artisanName, slug }: Props) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/artisan/${slug}` : '';
-  const shareText = `Check out ${artisanName} on KorrectNG - a verified artisan you can trust!`;
+  const shareText = `Check out ${artisanName} on KorrectNG - a verified skilled professional you can trust!`;
 
   const handleShare = async () => {
     if (navigator.share) {

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | KorrectNG',
-  description: 'Terms of Service for KorrectNG - Nigeria\'s Trusted Artisan Marketplace',
+  description: 'Terms of Service for KorrectNG - Nigeria\'s Trusted Skilled Professionals Marketplace',
 };
 
 export default function TermsOfServicePage() {
@@ -23,9 +23,9 @@ export default function TermsOfServicePage() {
 
             <h2>2. Description of Service</h2>
             <p>
-              KorrectNG is an online marketplace that connects customers with verified artisans and service
+              KorrectNG is an online marketplace that connects customers with verified skilled professionals and service
               providers in Nigeria. We facilitate the discovery of and connection between customers seeking
-              services and artisans providing services including but not limited to:
+              services and professionals providing services including but not limited to:
             </p>
             <ul>
               <li>Auto mechanics</li>
@@ -55,18 +55,18 @@ export default function TermsOfServicePage() {
 
             <h3>3.2 Account Types</h3>
             <p>
-              <strong>Customer Accounts:</strong> Allow users to search for artisans, leave reviews, bookmark
+              <strong>Customer Accounts:</strong> Allow users to search for professionals, leave reviews, bookmark
               favorites, and submit warranty claims.
             </p>
             <p>
-              <strong>Artisan Accounts:</strong> Allow service providers to create profiles, receive customer
+              <strong>Professional Accounts:</strong> Allow service providers to create profiles, receive customer
               inquiries, respond to reviews, and participate in the verification program.
             </p>
 
-            <h2>4. Artisan Verification Program</h2>
+            <h2>4. Professional Verification Program</h2>
             <h3>4.1 Verification Process</h3>
             <p>
-              Artisans may apply for verification by submitting required documents including:
+              Professionals may apply for verification by submitting required documents including:
             </p>
             <ul>
               <li>Valid government-issued identification (NIN, Driver's License, or Passport)</li>
@@ -77,19 +77,19 @@ export default function TermsOfServicePage() {
             <h3>4.2 Verification Cost</h3>
             <p>
               Verification is FREE. KorrectNG charges a 10% platform commission on completed jobs only.
-              Artisans only pay when they earn.
+              Professionals only pay when they earn.
             </p>
 
             <h3>4.3 Verification Status</h3>
             <p>
-              Verification does not guarantee the quality of work or conduct of artisans. It confirms that
-              the artisan has provided valid identification and credentials as of the verification date.
+              Verification does not guarantee the quality of work or conduct of professionals. It confirms that
+              the professional has provided valid identification and credentials as of the verification date.
             </p>
 
             <h2>5. Platform Commission</h2>
             <p>
               KorrectNG charges a 10% commission on all completed jobs paid through the platform. This fee is
-              automatically deducted when payment is released to the artisan. There are no monthly fees or
+              automatically deducted when payment is released to the professional. There are no monthly fees or
               subscription charges.
             </p>
 
@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
             <p>
               Services paid through the KorrectNG platform escrow system qualify for issue resolution protection.
               Once you certify job completion, a 7-day issue resolution window begins. During this period,
-              you can report issues and the artisan has the opportunity to re-check and fix their work.
+              you can report issues and the professional has the opportunity to re-check and fix their work.
             </p>
 
             <h3>6.2 Eligibility Requirements</h3>
@@ -123,7 +123,7 @@ export default function TermsOfServicePage() {
             <h3>6.4 Claims Process</h3>
             <p>
               To file a claim, customers must submit through the Platform within the 7-day issue resolution window
-              after job certification, providing a description of the issue. Artisans have 7 days to respond
+              after job certification, providing a description of the issue. Professionals have 7 days to respond
               and re-check the work.
             </p>
 
@@ -146,19 +146,19 @@ export default function TermsOfServicePage() {
             <p>
               All payments are processed through Paystack. By making a payment, you agree to Paystack's terms
               of service. KorrectNG does not store payment card details. The 10% platform commission is automatically
-              deducted when funds are released to artisans.
+              deducted when funds are released to professionals.
             </p>
 
             <h2>9. Limitation of Liability</h2>
             <p>
-              KorrectNG is a marketplace platform that facilitates connections between customers and artisans.
+              KorrectNG is a marketplace platform that facilitates connections between customers and professionals.
               We are NOT:
             </p>
             <ul>
-              <li>A party to any agreement between customers and artisans</li>
-              <li>Responsible for the quality of services provided by artisans</li>
+              <li>A party to any agreement between customers and professionals</li>
+              <li>Responsible for the quality of services provided by professionals</li>
               <li>Liable for any damages arising from services or disputes</li>
-              <li>An employer of any artisan on the Platform</li>
+              <li>An employer of any professional on the Platform</li>
             </ul>
             <p>
               Our maximum liability for any claim shall not exceed the amount paid by you to KorrectNG in the

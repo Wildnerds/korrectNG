@@ -10,24 +10,24 @@ export default function Footer() {
               Korrect<span className="text-brand-orange">NG</span>
             </h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Nigeria&apos;s leading platform for verified artisans and trusted merchants. We connect customers with
+              Nigeria&apos;s leading platform for verified skilled professionals and trusted merchants. We connect customers with
               skilled service providers and quality materials.
             </p>
           </div>
           <div>
             <h4 className="font-semibold mb-4">For Customers</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/search" className="text-gray-400 hover:text-white transition-colors">Find Artisans</Link></li>
+              <li><Link href="/search" className="text-gray-400 hover:text-white transition-colors">Find Professionals</Link></li>
               <li><Link href="/shop" className="text-gray-400 hover:text-white transition-colors">Shop Materials</Link></li>
               <li><Link href="/#how-it-works" className="text-gray-400 hover:text-white transition-colors">How It Works</Link></li>
               <li><Link href="/dashboard/customer" className="text-gray-400 hover:text-white transition-colors">My Dashboard</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">For Artisans</h4>
+            <h4 className="font-semibold mb-4">For Skilled Professionals</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/signup?role=artisan" className="text-gray-400 hover:text-white transition-colors">Get Verified</Link></li>
-              <li><Link href="/dashboard/artisan" className="text-gray-400 hover:text-white transition-colors">Artisan Dashboard</Link></li>
+              <li><Link href="/dashboard/artisan" className="text-gray-400 hover:text-white transition-colors">Professional Dashboard</Link></li>
             </ul>
           </div>
           <div>

@@ -67,9 +67,9 @@ interface MaterialOrder {
 
 const STATUS_LABELS: Record<string, { label: string; color: string; description: string }> = {
   pending_artisan_approval: {
-    label: 'Awaiting Artisan Approval',
+    label: 'Awaiting Professional Approval',
     color: 'bg-yellow-100 text-yellow-700',
-    description: 'The artisan is reviewing the items to verify they are correct',
+    description: 'The professional is reviewing the items to verify they are correct',
   },
   pending: {
     label: 'Awaiting Merchant',
@@ -99,17 +99,17 @@ const STATUS_LABELS: Record<string, { label: string; color: string; description:
   shipped: {
     label: 'In Transit',
     color: 'bg-indigo-100 text-indigo-700',
-    description: 'Order is on the way to the artisan',
+    description: 'Order is on the way to the professional',
   },
   delivered: {
     label: 'Delivered',
     color: 'bg-green-100 text-green-700',
-    description: 'Delivered to artisan. Waiting for receipt confirmation.',
+    description: 'Delivered to professional. Waiting for receipt confirmation.',
   },
   received: {
     label: 'Received',
     color: 'bg-green-100 text-green-700',
-    description: 'Artisan confirmed receipt. Merchant has been paid.',
+    description: 'Professional confirmed receipt. Merchant has been paid.',
   },
   completed: {
     label: 'Completed',
@@ -122,9 +122,9 @@ const STATUS_LABELS: Record<string, { label: string; color: string; description:
     description: 'This order was cancelled',
   },
   rejected: {
-    label: 'Rejected by Artisan',
+    label: 'Rejected by Professional',
     color: 'bg-red-100 text-red-700',
-    description: 'The artisan rejected these items. Please select different products.',
+    description: 'The professional rejected these items. Please select different products.',
   },
   disputed: {
     label: 'Disputed',
@@ -268,7 +268,7 @@ export default function CustomerMaterialOrderDetailPage() {
           {/* Rejection note */}
           {order.status === 'rejected' && order.artisanApprovalNote && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800">Artisan's feedback:</p>
+              <p className="text-sm font-medium text-red-800">Professional's feedback:</p>
               <p className="text-red-700">{order.artisanApprovalNote}</p>
             </div>
           )}
@@ -331,7 +331,7 @@ export default function CustomerMaterialOrderDetailPage() {
             <div>
               <p className="text-sm text-brand-gray">Delivery To</p>
               <p className="font-medium">
-                {order.artisan.firstName} {order.artisan.lastName} (Artisan)
+                {order.artisan.firstName} {order.artisan.lastName} (Professional)
               </p>
             </div>
             <div>

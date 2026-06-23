@@ -90,7 +90,7 @@ const overallStatusConfig = {
     bg: 'bg-yellow-50',
     border: 'border-yellow-200',
     label: 'Some Prices Higher Than Average',
-    description: 'Consider asking the artisan to justify pricing or provide receipts.',
+    description: 'Consider asking the professional to justify pricing or provide receipts.',
   },
   overpriced: {
     color: 'text-red-700',

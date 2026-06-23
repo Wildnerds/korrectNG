@@ -309,7 +309,7 @@ export default function ContractBuilder({ bookingId, booking, onSuccess }: Contr
           value={materialsResponsibility}
           onChange={(e) => setMaterialsResponsibility(e.target.value as any)}
         >
-          <option value="artisan">Artisan provides all materials</option>
+          <option value="artisan">Professional provides all materials</option>
           <option value="customer">Customer provides all materials</option>
           <option value="shared">Shared responsibility (specify below)</option>
         </FormSelect>
@@ -349,7 +349,7 @@ export default function ContractBuilder({ bookingId, booking, onSuccess }: Contr
                   className="px-3 py-2 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                 >
                   <option value="customer">Customer</option>
-                  <option value="artisan">Artisan</option>
+                  <option value="artisan">Professional</option>
                 </select>
                 <button
                   type="button"

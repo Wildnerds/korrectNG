@@ -131,7 +131,7 @@ export default function CustomerEscrowPage() {
               <div>
                 <p className="font-semibold text-green-800">Payment Successful!</p>
                 <p className="text-sm text-green-700">
-                  Your escrow has been funded. The artisan can now begin work.
+                  Your escrow has been funded. The professional can now begin work.
                 </p>
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function CustomerEscrowPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
             <h2 className="text-lg font-semibold mb-4">Fund Escrow to Start</h2>
             <p className="text-brand-gray mb-4">
-              Both parties have signed the contract. Fund the escrow to allow the artisan to begin work.
+              Both parties have signed the contract. Fund the escrow to allow the professional to begin work.
               Your payment will be held securely and released in milestones as work progresses.
             </p>
 

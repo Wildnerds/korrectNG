@@ -42,9 +42,9 @@ interface MaterialOrder {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; description?: string }> = {
   pending_artisan_approval: {
-    label: 'Awaiting Artisan',
+    label: 'Awaiting Professional',
     color: 'bg-yellow-100 text-yellow-700',
-    description: 'Artisan is verifying the items',
+    description: 'Professional is verifying the items',
   },
   pending: {
     label: 'Awaiting Merchant',
@@ -74,17 +74,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; description?
   shipped: {
     label: 'In Transit',
     color: 'bg-indigo-100 text-indigo-700',
-    description: 'Order is on the way to artisan',
+    description: 'Order is on the way to professional',
   },
   delivered: {
     label: 'Delivered',
     color: 'bg-green-100 text-green-700',
-    description: 'Delivered to artisan - awaiting confirmation',
+    description: 'Delivered to professional - awaiting confirmation',
   },
   received: {
     label: 'Received',
     color: 'bg-green-100 text-green-700',
-    description: 'Artisan confirmed receipt',
+    description: 'Professional confirmed receipt',
   },
   completed: {
     label: 'Completed',
@@ -99,7 +99,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; description?
   rejected: {
     label: 'Rejected',
     color: 'bg-red-100 text-red-700',
-    description: 'Artisan rejected the items',
+    description: 'Professional rejected the items',
   },
   disputed: {
     label: 'Disputed',

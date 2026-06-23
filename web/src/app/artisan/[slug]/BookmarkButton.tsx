@@ -20,7 +20,7 @@ export default function BookmarkButton({ artisanId }: { artisanId: string }) {
 
   const handleToggle = async () => {
     if (!user) {
-      showToast('Please sign in to save artisans', 'warning');
+      showToast('Please sign in to save professionals', 'warning');
       return;
     }
     setLoading(true);
@@ -31,12 +31,12 @@ export default function BookmarkButton({ artisanId }: { artisanId: string }) {
         token,
       });
       setBookmarked(!bookmarked);
-      showToast(bookmarked ? 'Artisan removed from saved' : 'Artisan saved!', 'success');
+      showToast(bookmarked ? 'Professional removed from saved' : 'Professional saved!', 'success');
       // Refresh user data to update bookmarkedArtisans count
       refreshUser();
     } catch (err) {
       if (err instanceof ApiError && err.code === 'EMAIL_NOT_VERIFIED') {
-        showToast('Please verify your email to save artisans', 'warning');
+        showToast('Please verify your email to save professionals', 'warning');
       } else {
         showToast('Something went wrong. Please try again.', 'error');
       }
@@ -54,7 +54,7 @@ export default function BookmarkButton({ artisanId }: { artisanId: string }) {
           ? 'bg-brand-orange text-white'
           : 'bg-white/20 text-white hover:bg-white/30'
       } ${loading ? 'opacity-50 cursor-wait' : ''}`}
-      title={bookmarked ? 'Remove from saved' : 'Save artisan'}
+      title={bookmarked ? 'Remove from saved' : 'Save professional'}
     >
       {loading ? (
         <span className="flex items-center gap-2">

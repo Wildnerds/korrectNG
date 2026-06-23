@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const res = await serverFetch<ArtisanProfile>(`/artisans/${params.slug}`);
     const artisan = res.data;
-    if (!artisan) return { title: 'Artisan Not Found' };
+    if (!artisan) return { title: 'Professional Not Found' };
 
     return {
       title: `${artisan.businessName} - ${getTradeLabel(artisan.trade)} in ${artisan.location}`,
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: 'Artisan Not Found' };
+    return { title: 'Professional Not Found' };
   }
 }
 
@@ -208,7 +208,7 @@ export default async function ArtisanProfilePage({ params }: Props) {
               </div>
 
               <div className="bg-white rounded-xl p-6">
-                <h3 className="font-bold mb-4">Book This Artisan</h3>
+                <h3 className="font-bold mb-4">Book This Professional</h3>
                 <div className="space-y-3">
                   <BookingButton
                     artisanProfileId={artisan._id}

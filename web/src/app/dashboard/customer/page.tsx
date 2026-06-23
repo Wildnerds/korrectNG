@@ -73,7 +73,7 @@ export default function CustomerDashboard() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a.5.5 0 000 1h5a.5.5 0 000-1h-5zm0 2a.5.5 0 000 1h5a.5.5 0 000-1h-5z"/></svg>
-                    Save Artisans
+                    Save Professionals
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -116,8 +116,8 @@ export default function CustomerDashboard() {
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold">Find Artisans</h3>
-              <p className="text-sm text-gray-500">Search for skilled artisans</p>
+              <h3 className="font-semibold">Find Professionals</h3>
+              <p className="text-sm text-gray-500">Search for skilled professionals</p>
             </div>
           </Link>
 
@@ -147,7 +147,7 @@ export default function CustomerDashboard() {
                 : 'bg-white text-brand-gray hover:bg-gray-100'
             }`}
           >
-            Saved Artisans ({bookmarks.length})
+            Saved Professionals ({bookmarks.length})
           </button>
           <button
             onClick={() => setActiveTab('claims')}
@@ -184,12 +184,12 @@ export default function CustomerDashboard() {
             </div>
           ) : (
             <div className="text-center py-16 bg-white rounded-xl">
-              <p className="text-xl text-brand-gray mb-4">No saved artisans yet</p>
+              <p className="text-xl text-brand-gray mb-4">No saved professionals yet</p>
               <Link
                 href="/search"
                 className="inline-block px-6 py-3 bg-brand-green text-white rounded-md hover:bg-brand-green-dark transition-colors font-semibold"
               >
-                Find Artisans
+                Find Professionals
               </Link>
             </div>
           )
@@ -200,7 +200,7 @@ export default function CustomerDashboard() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-bold">
-                      {(claim.artisan as any)?.businessName || 'Artisan'}
+                      {(claim.artisan as any)?.businessName || 'Professional'}
                     </h3>
                     <p className="text-sm text-brand-gray">{claim.jobDescription}</p>
                   </div>
@@ -219,7 +219,7 @@ export default function CustomerDashboard() {
                 <p className="text-brand-gray text-sm">{claim.issueDescription}</p>
                 {claim.artisanResponse && (
                   <div className="mt-3 pl-4 border-l-2 border-brand-green">
-                    <p className="text-sm font-medium text-brand-green">Artisan Response:</p>
+                    <p className="text-sm font-medium text-brand-green">Professional's Response:</p>
                     <p className="text-sm text-brand-gray">{claim.artisanResponse}</p>
                   </div>
                 )}

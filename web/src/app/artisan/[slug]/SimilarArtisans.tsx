@@ -58,7 +58,7 @@ export default function SimilarArtisans({ trade, excludeId }: SimilarArtisansPro
   return (
     <div className="bg-white rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold">Similar Artisans</h3>
+        <h3 className="font-bold">Similar Professionals</h3>
         <Link
           href={`/search?trade=${trade}&sort=rating`}
           className="text-brand-green hover:underline text-xs font-medium"

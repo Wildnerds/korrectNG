@@ -75,17 +75,23 @@ export default function UsersPage() {
       )}
 
       <div className="flex gap-2 mb-6">
-        {['', 'customer', 'artisan', 'merchant', 'admin'].map((role) => (
+        {[
+          { value: '', label: 'All' },
+          { value: 'customer', label: 'Customer' },
+          { value: 'artisan', label: 'Professional' },
+          { value: 'merchant', label: 'Merchant' },
+          { value: 'admin', label: 'Admin' },
+        ].map((role) => (
           <button
-            key={role}
-            onClick={() => setRoleFilter(role)}
+            key={role.value}
+            onClick={() => setRoleFilter(role.value)}
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              roleFilter === role
+              roleFilter === role.value
                 ? 'bg-brand-green text-white'
                 : 'bg-white text-brand-gray hover:bg-gray-100'
             }`}
           >
-            {role || 'All'}
+            {role.label}
           </button>
         ))}
       </div>
@@ -125,7 +131,7 @@ export default function UsersPage() {
                               : 'bg-blue-100 text-blue-700'
                       }`}
                     >
-                      {user.role}
+                      {user.role === 'artisan' ? 'professional' : user.role}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -143,7 +149,7 @@ export default function UsersPage() {
                       className="px-3 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-brand-green disabled:opacity-50"
                     >
                       <option value="customer">Customer</option>
-                      <option value="artisan">Artisan</option>
+                      <option value="artisan">Skilled Professional</option>
                       <option value="merchant">Merchant</option>
                       <option value="admin">Admin</option>
                     </select>

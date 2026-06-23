@@ -127,7 +127,7 @@ export default function CustomerBookingsPage() {
   };
 
   const certifyJob = async (bookingId: string) => {
-    if (!confirm('Are you satisfied with the job? This will release payment to the artisan.')) return;
+    if (!confirm('Are you satisfied with the job? This will release payment to the professional.')) return;
 
     setActionLoading(bookingId);
     const token = Cookies.get('token');
@@ -187,7 +187,7 @@ export default function CustomerBookingsPage() {
             href="/search"
             className="px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium"
           >
-            Find Artisans
+            Find Professionals
           </Link>
         </div>
 
@@ -215,7 +215,7 @@ export default function CustomerBookingsPage() {
               href="/search"
               className="inline-block px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green-dark font-medium"
             >
-              Find an Artisan
+              Find a Professional
             </Link>
           </div>
         ) : (
@@ -329,7 +329,7 @@ export default function CustomerBookingsPage() {
                 {booking.status === 'completed' && (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                     <p className="text-purple-800 font-medium mb-3">
-                      The artisan has marked this job as complete. Please review and certify.
+                      The professional has marked this job as complete. Please review and certify.
                     </p>
                     <button
                       onClick={() => certifyJob(booking._id)}

@@ -51,7 +51,7 @@ export default function ConversationList({
         <p className="text-gray-500 mb-2">{emptyMessage}</p>
         <p className="text-sm text-gray-400">
           {userRole === 'customer'
-            ? 'Find an artisan to start a conversation'
+            ? 'Find a professional to start a conversation'
             : 'Customers will message you when they need your services'}
         </p>
         {userRole === 'customer' && (
@@ -59,7 +59,7 @@ export default function ConversationList({
             href="/search"
             className="inline-block mt-4 px-6 py-3 bg-brand-green text-white rounded-lg font-medium hover:bg-brand-green-dark transition-colors"
           >
-            Find Artisans
+            Find Professionals
           </Link>
         )}
       </div>

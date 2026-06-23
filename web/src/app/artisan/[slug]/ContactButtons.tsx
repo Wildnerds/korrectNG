@@ -16,13 +16,13 @@ export default function ContactButtons({ whatsappLink, phoneLink, phoneNumber }:
   const handleContact = (e: React.MouseEvent, type: 'whatsapp' | 'call', link: string) => {
     if (!user) {
       e.preventDefault();
-      showToast('Please sign in to contact artisans', 'warning');
+      showToast('Please sign in to contact professionals', 'warning');
       return;
     }
 
     if (!user.isEmailVerified) {
       e.preventDefault();
-      showToast('Please verify your email to contact artisans', 'warning');
+      showToast('Please verify your email to contact professionals', 'warning');
       return;
     }
 
@@ -70,12 +70,12 @@ export default function ContactButtons({ whatsappLink, phoneLink, phoneNumber }:
           </button>
           {!user && (
             <p className="text-xs text-center text-gray-500 mt-2">
-              Sign in to contact this artisan
+              Sign in to contact this professional
             </p>
           )}
           {user && !user.isEmailVerified && (
             <p className="text-xs text-center text-amber-600 mt-2">
-              Verify your email to contact artisans
+              Verify your email to contact professionals
             </p>
           )}
         </>
@@ -119,13 +119,13 @@ export function ContactButtonsHeader({ whatsappLink, phoneLink }: Omit<Props, 'p
   const handleContact = (e: React.MouseEvent, type: 'whatsapp' | 'call') => {
     if (!user) {
       e.preventDefault();
-      showToast('Please sign in to contact artisans', 'warning');
+      showToast('Please sign in to contact professionals', 'warning');
       return;
     }
 
     if (!user.isEmailVerified) {
       e.preventDefault();
-      showToast('Please verify your email to contact artisans', 'warning');
+      showToast('Please verify your email to contact professionals', 'warning');
       return;
     }
   };

@@ -230,7 +230,7 @@ export default function ReviewList({ artisanId, initialReviews }: Props) {
               </div>
               {review.artisanResponse && (
                 <div className="mt-3 pl-4 border-l-2 border-brand-green bg-green-50 p-3 rounded-r-md">
-                  <p className="text-sm font-medium text-brand-green mb-1">Artisan Response:</p>
+                  <p className="text-sm font-medium text-brand-green mb-1">Professional's Response:</p>
                   <p className="text-sm text-brand-gray">{review.artisanResponse}</p>
                 </div>
               )}

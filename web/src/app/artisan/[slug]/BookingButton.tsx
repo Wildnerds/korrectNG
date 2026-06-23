@@ -35,7 +35,7 @@ export default function BookingButton({ artisanProfileId, artisanUserId, artisan
     }
 
     if (user.role === 'artisan') {
-      showToast('Artisans cannot book other artisans', 'warning');
+      showToast('Skilled professionals cannot book other professionals', 'warning');
       return;
     }
 

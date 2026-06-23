@@ -15,18 +15,18 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'KorrectNG - Find Verified Artisans in Nigeria',
+    default: 'KorrectNG - Find Verified Skilled Professionals in Nigeria',
     template: '%s | KorrectNG',
   },
   description:
-    "Nigeria's leading platform for verified artisans. Find trusted mechanics, electricians, plumbers, and more with verified reviews and warranty protection.",
+    "Nigeria's leading platform for verified skilled professionals. Find trusted mechanics, electricians, plumbers, and more with verified reviews and warranty protection.",
   keywords: [
-    'artisans Nigeria',
+    'skilled professionals Nigeria',
     'verified mechanic Lagos',
     'plumber Nigeria',
     'electrician Lagos',
     'KorrectNG',
-    'trusted artisans',
+    'trusted professionals',
   ],
   manifest: '/manifest.json',
   appleWebApp: {

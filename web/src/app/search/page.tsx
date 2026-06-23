@@ -17,10 +17,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const location = searchParams.location || '';
   const title = trade
     ? `${trade}${location ? ` in ${location}` : ''} - KorrectNG`
-    : 'Find Verified Artisans - KorrectNG';
+    : 'Find Verified Skilled Professionals - KorrectNG';
   return {
     title,
-    description: `Find verified ${trade || 'artisans'}${location ? ` in ${location}` : ''} on KorrectNG. Trusted professionals with reviews and warranty protection.`,
+    description: `Find verified ${trade || 'skilled professionals'}${location ? ` in ${location}` : ''} on KorrectNG. Trusted professionals with reviews and warranty protection.`,
   };
 }
 
@@ -84,7 +84,7 @@ export default async function SearchPage({ searchParams }: Props) {
         {/* Results header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold">
-            {trade ? getTradeLabel(trade) : 'All Artisans'}
+            {trade ? getTradeLabel(trade) : 'All Skilled Professionals'}
             {location ? ` in ${location}` : ''}
             <span className="text-brand-gray text-base font-normal ml-2">
               ({pagination.total} results)
@@ -128,7 +128,7 @@ export default async function SearchPage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="text-center py-20">
-            <p className="text-xl text-brand-gray mb-4">No artisans found</p>
+            <p className="text-xl text-brand-gray mb-4">No skilled professionals found</p>
             <p className="text-brand-gray mb-6">Try adjusting your search filters</p>
             <Link
               href="/search"

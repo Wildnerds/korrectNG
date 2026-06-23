@@ -85,7 +85,7 @@ export default function InstallPrompt() {
           <p className="text-sm text-brand-gray mt-1">
             {isIOS
               ? 'Tap the share button and "Add to Home Screen" for the best experience.'
-              : 'Install our app for quick access to verified artisans.'}
+              : 'Install our app for quick access to verified professionals.'}
           </p>
         </div>
         <button

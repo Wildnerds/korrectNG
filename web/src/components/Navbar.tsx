@@ -51,7 +51,7 @@ export default function Navbar() {
               How It Works
             </Link>
             <Link href="/search" className="text-brand-black hover:text-brand-green font-medium">
-              Find Artisans
+              Find Professionals
             </Link>
             <Link href="/shop" className="text-brand-black hover:text-brand-green font-medium">
               Shop Materials
@@ -130,7 +130,7 @@ export default function Navbar() {
           <div className="md:hidden pb-4 border-t">
             <div className="flex flex-col gap-2 pt-4">
               <Link href="/search" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
-                Find Artisans
+                Find Professionals
               </Link>
               <Link href="/shop" className="px-4 py-3 text-brand-black hover:text-brand-green hover:bg-gray-50 font-medium min-h-[44px] flex items-center">
                 Shop Materials
