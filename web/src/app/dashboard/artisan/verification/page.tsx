@@ -26,6 +26,7 @@ export default function VerificationPage() {
   const [profile, setProfile] = useState({
     businessName: '',
     trade: '',
+    customTrade: '',
     description: '',
     location: '',
     address: '',
@@ -265,17 +266,17 @@ export default function VerificationPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Trade</label>
+                <label className="block text-sm font-medium mb-1">Trade/Profession</label>
                 <select
                   value={profile.trade}
                   onChange={(e) => {
-                    setProfile({ ...profile, trade: e.target.value });
+                    setProfile({ ...profile, trade: e.target.value, customTrade: '' });
                     setServices([]); // Reset services when trade changes
                   }}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                   required
                 >
-                  <option value="">Select trade</option>
+                  <option value="">Select your profession</option>
                   {TRADES.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
@@ -283,8 +284,22 @@ export default function VerificationPage() {
                   ))}
                 </select>
               </div>
+              {/* Custom Trade Input */}
+              {profile.trade === 'other' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Specify Your Profession</label>
+                  <input
+                    type="text"
+                    value={profile.customTrade}
+                    onChange={(e) => setProfile({ ...profile, customTrade: e.target.value })}
+                    placeholder="e.g., Interior Designer, Laundry Service, etc."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                    required
+                  />
+                </div>
+              )}
               {/* Services Selection */}
-              {profile.trade && (
+              {profile.trade && profile.trade !== 'other' && (
                 <div>
                   <label className="block text-sm font-medium mb-2">Services Offered</label>
                   <p className="text-xs text-brand-gray mb-3">

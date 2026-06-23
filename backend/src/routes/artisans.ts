@@ -24,7 +24,9 @@ router.get('/', searchLimiter, validateQuery(artisanSearchSchema), async (req, r
     if (trade) {
       // Check if it's a default trade value
       const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
-        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder',
+        'hair-stylist', 'barber', 'tiler', 'pop-installer', 'solar-installer',
+        'makeup-artist', 'event-decorator', 'photographer', 'caterer'];
 
       if (defaultTrades.includes(trade)) {
         filter.trade = trade;
@@ -113,7 +115,9 @@ router.get('/featured', async (req, res, next) => {
     // Filter by trade if provided
     if (trade && typeof trade === 'string') {
       const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
-        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder',
+        'hair-stylist', 'barber', 'tiler', 'pop-installer', 'solar-installer',
+        'makeup-artist', 'event-decorator', 'photographer', 'caterer'];
 
       if (defaultTrades.includes(trade)) {
         filter.trade = trade;
@@ -149,7 +153,9 @@ router.get('/recommendations', async (req, res, next) => {
     // Filter by trade if provided
     if (trade && typeof trade === 'string') {
       const defaultTrades = ['mechanic', 'electrician', 'plumber', 'ac-tech',
-        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder'];
+        'generator-tech', 'phone-repair', 'tailor', 'carpenter', 'painter', 'welder',
+        'hair-stylist', 'barber', 'tiler', 'pop-installer', 'solar-installer',
+        'makeup-artist', 'event-decorator', 'photographer', 'caterer'];
 
       if (defaultTrades.includes(trade)) {
         filter.trade = trade;

@@ -98,7 +98,10 @@ const artisanProfileSchema = new Schema<IArtisanProfile>(
       enum: [
         'mechanic', 'electrician', 'plumber', 'ac-tech',
         'generator-tech', 'phone-repair', 'tailor',
-        'carpenter', 'painter', 'welder', 'other',
+        'carpenter', 'painter', 'welder',
+        'hair-stylist', 'barber', 'tiler', 'pop-installer',
+        'solar-installer', 'makeup-artist', 'event-decorator',
+        'photographer', 'caterer', 'other',
       ],
     },
     customTrade: {
