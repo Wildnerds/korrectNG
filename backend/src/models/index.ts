@@ -64,3 +64,6 @@ export type { IMerchantReview } from './MerchantReview';
 
 export { default as Referral } from './Referral';
 export type { IReferral, ReferralStatus } from './Referral';
+
+export { MaterialsAdvanceRequest } from './MaterialsAdvanceRequest';
+export type { IMaterialsAdvanceRequest, IMaterialItem, AdvanceRequestStatus } from './MaterialsAdvanceRequest';

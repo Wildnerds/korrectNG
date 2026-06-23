@@ -355,4 +355,81 @@ export function getDefaultMilestones(): MilestoneTemplate[] {
   return DEFAULT_MILESTONES;
 }
 
+// Milestone presets for different job types
+export const MILESTONE_PRESETS = {
+  // Standard: 30-40-30 (default for most jobs)
+  standard: {
+    name: 'Standard (30-40-30)',
+    description: 'Balanced split suitable for most jobs',
+    milestones: [
+      { order: 1, name: 'Project Initiation', percentage: 30, description: 'Startup payment for materials and preparation' },
+      { order: 2, name: 'Midpoint Progress', percentage: 40, description: 'Work approximately 50% complete' },
+      { order: 3, name: 'Project Completion', percentage: 30, description: 'Final payment on completion' },
+    ],
+  },
+
+  // Material-Heavy: 50-30-20 (for tilers, POP, construction)
+  materialHeavy: {
+    name: 'Material Heavy (50-30-20)',
+    description: 'Higher upfront payment for material-intensive jobs (tiling, POP, construction)',
+    milestones: [
+      { order: 1, name: 'Materials & Setup', percentage: 50, description: 'Upfront payment for materials purchase and site preparation' },
+      { order: 2, name: 'Installation Progress', percentage: 30, description: 'Work in progress, materials installed' },
+      { order: 3, name: 'Final Inspection', percentage: 20, description: 'Final payment after quality check' },
+    ],
+  },
+
+  // Labor-Heavy: 20-40-40 (for services like barber, makeup, photography)
+  laborHeavy: {
+    name: 'Labor Heavy (20-40-40)',
+    description: 'Lower upfront payment for service-based jobs (hair, makeup, photography)',
+    milestones: [
+      { order: 1, name: 'Booking Confirmation', percentage: 20, description: 'Deposit to secure the booking' },
+      { order: 2, name: 'Service In Progress', percentage: 40, description: 'Payment during service delivery' },
+      { order: 3, name: 'Service Completed', percentage: 40, description: 'Final payment on satisfaction' },
+    ],
+  },
+
+  // Quick Service: 50-50 (for simple, quick jobs like phone repair)
+  quickService: {
+    name: 'Quick Service (50-50)',
+    description: 'Two-milestone split for simple, quick jobs',
+    milestones: [
+      { order: 1, name: 'Diagnosis & Parts', percentage: 50, description: 'Payment for diagnosis and parts procurement' },
+      { order: 2, name: 'Repair Completed', percentage: 50, description: 'Final payment on completion' },
+    ],
+  },
+
+  // Event-Based: 40-30-30 (for events like catering, photography, decoration)
+  eventBased: {
+    name: 'Event-Based (40-30-30)',
+    description: 'For event services that require advance preparation',
+    milestones: [
+      { order: 1, name: 'Booking & Preparation', percentage: 40, description: 'Advance payment for event booking and preparation' },
+      { order: 2, name: 'Event Day', percentage: 30, description: 'Payment on event day' },
+      { order: 3, name: 'Post-Event Delivery', percentage: 30, description: 'Final payment after deliverables (photos, cleanup, etc.)' },
+    ],
+  },
+};
+
+// Get recommended preset based on trade
+export function getRecommendedPreset(trade: string): keyof typeof MILESTONE_PRESETS {
+  const materialHeavyTrades = ['tiler', 'pop-installer', 'carpenter', 'welder', 'plumber', 'solar-installer'];
+  const laborHeavyTrades = ['hair-stylist', 'barber', 'makeup-artist'];
+  const quickServiceTrades = ['phone-repair'];
+  const eventBasedTrades = ['photographer', 'caterer', 'event-decorator'];
+
+  if (materialHeavyTrades.includes(trade)) return 'materialHeavy';
+  if (laborHeavyTrades.includes(trade)) return 'laborHeavy';
+  if (quickServiceTrades.includes(trade)) return 'quickService';
+  if (eventBasedTrades.includes(trade)) return 'eventBased';
+
+  return 'standard';
+}
+
+// Get all milestone presets
+export function getMilestonePresets() {
+  return MILESTONE_PRESETS;
+}
+
 export default contractTemplates;

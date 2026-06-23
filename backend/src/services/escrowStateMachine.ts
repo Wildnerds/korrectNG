@@ -118,11 +118,13 @@ export async function createEscrow(
 
 /**
  * Mark escrow as funded (called after successful payment)
+ * Auto-releases the first milestone (startup payment) to allow provider to begin work
  */
 export async function fundEscrow(
   escrowId: string,
   by: mongoose.Types.ObjectId,
-  paystackReference?: string
+  paystackReference?: string,
+  autoReleaseFirstMilestone: boolean = true
 ): Promise<IEscrowPayment> {
   const escrow = await EscrowPayment.findById(escrowId);
 
@@ -142,10 +144,16 @@ export async function fundEscrow(
   escrow.setStatus('funded', by, 'Escrow funded by customer');
   await escrow.save();
 
-  // Update contract status to active
+  // Update contract status to active and get milestone info
   const contract = await JobContract.findById(escrow.contract);
+  let firstMilestoneAmount = 0;
   if (contract) {
     contract.setStatus('active', by, 'Escrow funded, work can begin');
+
+    // Get first milestone amount for notification
+    if (contract.milestones && contract.milestones.length > 0) {
+      firstMilestoneAmount = contract.milestones[0].amount;
+    }
     await contract.save();
   }
 
@@ -156,19 +164,65 @@ export async function fundEscrow(
     paidAt: new Date(),
   });
 
-  // Notify artisan
-  await createNotification(escrow.artisan.toString(), {
-    type: 'escrow_funded' as any,
-    title: 'Escrow Funded!',
-    message: `The customer has funded ₦${escrow.totalAmount.toLocaleString()} in escrow. You can now begin work.`,
-    link: `/dashboard/artisan/contracts/${escrow.contract}`,
-    data: { escrowId: escrow._id, amount: escrow.totalAmount },
-  });
+  // Auto-release first milestone (startup payment) if enabled
+  if (autoReleaseFirstMilestone && firstMilestoneAmount > 0) {
+    try {
+      // Transition to milestone_1_pending then milestone_1_released
+      escrow.setStatus('milestone_1_pending', by, 'Auto-requesting first milestone for startup costs');
+      await escrow.save();
+
+      // Auto-approve and release first milestone
+      escrow.setStatus('milestone_1_released', by, 'Auto-released startup payment');
+      escrow.releases.push({
+        milestone: 1,
+        amount: firstMilestoneAmount,
+        releasedAt: new Date(),
+        releasedBy: by,
+        status: 'completed',
+      });
+      escrow.releasedAmount = firstMilestoneAmount;
+      await escrow.save();
+
+      // Update milestone status in contract
+      if (contract && contract.milestones.length > 0) {
+        contract.milestones[0].status = 'approved';
+        contract.milestones[0].approvedAt = new Date();
+        await contract.save();
+      }
+
+      log.info('First milestone auto-released', {
+        escrowId,
+        amount: firstMilestoneAmount,
+      });
+
+      // Notify artisan about startup payment
+      await createNotification(escrow.artisan.toString(), {
+        type: 'milestone_released' as any,
+        title: 'Startup Payment Released!',
+        message: `₦${firstMilestoneAmount.toLocaleString()} has been released as startup payment. You can now purchase materials and begin work.`,
+        link: `/dashboard/artisan/contracts/${escrow.contract}`,
+        data: { escrowId: escrow._id, milestone: 1, amount: firstMilestoneAmount },
+      });
+    } catch (error) {
+      log.error('Failed to auto-release first milestone', { escrowId, error });
+      // Continue even if auto-release fails - escrow is still funded
+    }
+  } else {
+    // Standard notification without auto-release
+    await createNotification(escrow.artisan.toString(), {
+      type: 'escrow_funded' as any,
+      title: 'Escrow Funded!',
+      message: `The customer has funded ₦${escrow.totalAmount.toLocaleString()} in escrow. You can now begin work.`,
+      link: `/dashboard/artisan/contracts/${escrow.contract}`,
+      data: { escrowId: escrow._id, amount: escrow.totalAmount },
+    });
+  }
 
   log.info('Escrow funded', {
     escrowId,
     amount: escrow.totalAmount,
     paystackReference,
+    autoReleasedFirstMilestone: autoReleaseFirstMilestone && firstMilestoneAmount > 0,
   });
 
   return escrow;

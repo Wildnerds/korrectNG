@@ -6,7 +6,7 @@ import Booking from '../models/Booking';
 import { ArtisanProfile } from '../models/ArtisanProfile';
 import { createNotification, notificationTemplates } from '../services/notifications';
 import { log } from '../utils/logger';
-import { getContractTemplate, getDefaultMilestones } from '../data/contractTemplates';
+import { getContractTemplate, getDefaultMilestones, getMilestonePresets, getRecommendedPreset } from '../data/contractTemplates';
 import {
   createContractSchema,
   updateContractSchema,
@@ -498,6 +498,33 @@ router.post(
           status: bothSigned ? 'signed' : 'pending_signatures',
           customerSigned: !!contract.customerSignature,
           artisanSigned: !!contract.artisanSignature,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * @route   GET /api/v1/contracts/milestone-presets
+ * @desc    Get all milestone presets for contract creation
+ * @access  Private
+ */
+router.get(
+  '/milestone-presets',
+  protect,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const trade = req.query.trade as string;
+      const presets = getMilestonePresets();
+      const recommended = trade ? getRecommendedPreset(trade) : 'standard';
+
+      res.status(200).json({
+        success: true,
+        data: {
+          presets,
+          recommended,
         },
       });
     } catch (error) {
