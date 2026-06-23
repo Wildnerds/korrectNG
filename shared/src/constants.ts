@@ -49,6 +49,7 @@ export const LOCATIONS = [
   'Abuja',
   'Port Harcourt',
   'Ibadan',
+  'Ogun State',
   'Kano',
   'Enugu',
 ] as const;
