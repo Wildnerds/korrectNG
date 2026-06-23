@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { EscrowStatus, PaymentProgress, MilestoneApproval } from '@/components/escrow';
+import MaterialsAdvanceList from '@/components/contracts/MaterialsAdvanceList';
 import Cookies from 'js-cookie';
 import type { EscrowPayment, JobContract } from '@korrectng/shared';
 
@@ -202,6 +203,17 @@ export default function CustomerEscrowPage() {
                 onUpdate={fetchData}
               />
             </div>
+
+            {/* Materials Advance Requests */}
+            {['funded', 'milestone_1_released', 'milestone_2_released'].includes(escrow.status) && (
+              <div className="mt-6 bg-white rounded-xl p-6 shadow-sm">
+                <MaterialsAdvanceList
+                  escrowId={escrow._id as string}
+                  userRole="customer"
+                  onUpdate={fetchData}
+                />
+              </div>
+            )}
 
             {/* Dispute Option */}
             {['funded', 'milestone_1_pending', 'milestone_1_released', 'milestone_2_pending', 'milestone_2_released', 'milestone_3_pending'].includes(escrow.status) && (
