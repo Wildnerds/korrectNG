@@ -1,17 +1,18 @@
-const withPWA = require('@ducanh2912/next-pwa').default({
-  dest: 'public',
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: true,
-  swcMinify: true,
-  disable: process.env.NODE_ENV === 'development',
-  workboxOptions: {
-    disableDevLogs: true,
-  },
-  customWorkerSrc: 'worker',
-  customWorkerDest: 'public',
-  customWorkerPrefix: 'push-worker',
-});
+// Temporarily disabled PWA to debug 410 errors
+// const withPWA = require('@ducanh2912/next-pwa').default({
+//   dest: 'public',
+//   cacheOnFrontEndNav: true,
+//   aggressiveFrontEndNavCaching: true,
+//   reloadOnOnline: true,
+//   swcMinify: true,
+//   disable: process.env.NODE_ENV === 'development',
+//   workboxOptions: {
+//     disableDevLogs: true,
+//   },
+//   customWorkerSrc: 'worker',
+//   customWorkerDest: 'public',
+//   customWorkerPrefix: 'push-worker',
+// });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -26,5 +27,5 @@ const nextConfig = {
   },
 };
 
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig;
 
