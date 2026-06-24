@@ -56,7 +56,16 @@
       "Bash(pnpm run vercel:build:*)",
       "Bash(git status:*)",
       "Bash(git rm:*)",
-      "Bash(pnpm dev:web:*)"
+      "Bash(pnpm dev:web:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm build:shared:*)",
+      "Bash(npx -y typescript:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(node_modules/.bin/tsc.cmd:*)",
+      "Bash(pnpm add:*)",
+      "Bash(git restore:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(git diff:*)"
     ]
   }
 }

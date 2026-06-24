@@ -53,7 +53,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req, res,
     user.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.save({ validateBeforeSave: false });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/email-verification?token=${verificationToken}`;
 
     // Send welcome email with verification link
     try {
@@ -301,7 +301,7 @@ router.post('/resend-verification', emailVerificationLimiter, protect, async (re
     user.emailVerificationExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.save({ validateBeforeSave: false });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${process.env.CLIENT_URL}/email-verification?token=${verificationToken}`;
 
     // Send email
     try {
