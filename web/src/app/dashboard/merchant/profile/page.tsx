@@ -54,6 +54,8 @@ export default function MerchantProfilePage() {
     defaultDeliveryFee: 0,
     freeDeliveryThreshold: 0,
   });
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [suggestedDescription, setSuggestedDescription] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -138,6 +140,49 @@ export default function MerchantProfilePage() {
   const handleDeliveryAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, deliveryAreas: areas }));
+  };
+
+  // Generate description suggestion
+  const handleGenerateDescription = async () => {
+    if (!formData.businessName || !formData.category || !formData.location) {
+      showToast('Please fill in business name, category, and location first', 'error');
+      return;
+    }
+
+    setGeneratingDescription(true);
+    setSuggestedDescription(null);
+    const token = Cookies.get('token');
+
+    try {
+      const res = await apiFetch<{ description: string; shortDescription: string }>('/services/generate-merchant-description', {
+        method: 'POST',
+        body: JSON.stringify({
+          businessName: formData.businessName,
+          category: formData.category,
+          categories: formData.categories,
+          location: formData.location,
+          deliveryAreas: formData.deliveryAreas,
+          freeDeliveryThreshold: formData.freeDeliveryThreshold,
+        }),
+        token,
+      });
+
+      if (res.data?.description) {
+        setSuggestedDescription(res.data.description);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate description', 'error');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const useSuggestedDescription = () => {
+    if (suggestedDescription) {
+      setFormData(prev => ({ ...prev, description: suggestedDescription }));
+      setSuggestedDescription(null);
+      showToast('Description applied! Feel free to edit it.', 'success');
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -320,14 +365,67 @@ export default function MerchantProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium">Description</label>
+                {formData.businessName && formData.category && formData.location && (
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={generatingDescription}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-brand-orange/10 text-brand-orange rounded-md hover:bg-brand-orange/20 transition-colors text-xs font-medium disabled:opacity-50"
+                  >
+                    {generatingDescription ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Generate Suggestion
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Suggested Description Preview */}
+              {suggestedDescription && (
+                <div className="mb-3 p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                  <p className="text-xs font-medium text-brand-green mb-2">Suggested Description:</p>
+                  <p className="text-sm text-brand-gray mb-3">{suggestedDescription}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={useSuggestedDescription}
+                      className="px-3 py-1 bg-brand-green text-white rounded-md text-xs font-medium hover:bg-brand-green-dark transition-colors"
+                    >
+                      Use This
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSuggestedDescription(null)}
+                      className="px-3 py-1 bg-gray-200 text-brand-gray rounded-md text-xs font-medium hover:bg-gray-300 transition-colors"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
+                placeholder="Describe your store and what you offer..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Tip: Fill in your business details above and click "Generate Suggestion" for a professional description.
+              </p>
             </div>
           </div>
 

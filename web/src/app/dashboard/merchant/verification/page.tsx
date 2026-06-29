@@ -42,6 +42,8 @@ export default function MerchantVerificationPage() {
     defaultDeliveryFee: 0,
     freeDeliveryThreshold: 0,
   });
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [suggestedDescription, setSuggestedDescription] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -186,6 +188,49 @@ export default function MerchantVerificationPage() {
     setProfile(prev => ({ ...prev, deliveryAreas: areas }));
   };
 
+  // Generate description suggestion
+  const handleGenerateDescription = async () => {
+    if (!profile.businessName || !profile.category || !profile.location) {
+      showToast('Please fill in business name, category, and location first', 'error');
+      return;
+    }
+
+    setGeneratingDescription(true);
+    setSuggestedDescription(null);
+    const token = Cookies.get('token');
+
+    try {
+      const res = await apiFetch<{ description: string; shortDescription: string }>('/services/generate-merchant-description', {
+        method: 'POST',
+        body: JSON.stringify({
+          businessName: profile.businessName,
+          category: profile.category,
+          categories: profile.categories,
+          location: profile.location,
+          deliveryAreas: profile.deliveryAreas,
+          freeDeliveryThreshold: profile.freeDeliveryThreshold,
+        }),
+        token,
+      });
+
+      if (res.data?.description) {
+        setSuggestedDescription(res.data.description);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate description', 'error');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const useSuggestedDescription = () => {
+    if (suggestedDescription) {
+      setProfile(prev => ({ ...prev, description: suggestedDescription }));
+      setSuggestedDescription(null);
+      showToast('Description applied! Feel free to edit it.', 'success');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -278,7 +323,56 @@ export default function MerchantVerificationPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Description *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Description *</label>
+                  {profile.businessName && profile.category && profile.location && (
+                    <button
+                      type="button"
+                      onClick={handleGenerateDescription}
+                      disabled={generatingDescription}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-brand-orange/10 text-brand-orange rounded-md hover:bg-brand-orange/20 transition-colors text-xs font-medium disabled:opacity-50"
+                    >
+                      {generatingDescription ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Generate Suggestion
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Suggested Description Preview */}
+                {suggestedDescription && (
+                  <div className="mb-3 p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                    <p className="text-xs font-medium text-brand-green mb-2">Suggested Description:</p>
+                    <p className="text-sm text-brand-gray mb-3">{suggestedDescription}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={useSuggestedDescription}
+                        className="px-3 py-1 bg-brand-green text-white rounded-md text-xs font-medium hover:bg-brand-green-dark transition-colors"
+                      >
+                        Use This
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSuggestedDescription(null)}
+                        className="px-3 py-1 bg-gray-200 text-brand-gray rounded-md text-xs font-medium hover:bg-gray-300 transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <textarea
                   value={profile.description}
                   onChange={(e) => setProfile({ ...profile, description: e.target.value })}
@@ -287,6 +381,9 @@ export default function MerchantVerificationPage() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Tip: Fill in your business details above and click "Generate Suggestion" for a professional description.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

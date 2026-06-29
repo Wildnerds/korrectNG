@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { TRADES, SERVICES_BY_TRADE } from '@korrectng/shared';
 import { ArtisanProfile } from '../models';
-import { generateDescription, generateShortDescription } from '../utils/descriptionGenerator';
+import { generateDescription, generateShortDescription, generateMerchantDescription, generateShortMerchantDescription } from '../utils/descriptionGenerator';
 import { protect, authorize, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -168,6 +168,50 @@ router.post('/generate-description', protect, authorize('artisan'), async (req: 
       services: services || [],
       yearsOfExperience: yearsOfExperience || 0,
       location,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        description,
+        shortDescription,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/services/generate-merchant-description
+ * Generates a suggested description for merchant stores
+ * Requires authentication (merchant only)
+ */
+router.post('/generate-merchant-description', protect, authorize('merchant'), async (req: AuthRequest, res, next) => {
+  try {
+    const { businessName, category, categories, location, deliveryAreas, freeDeliveryThreshold } = req.body;
+
+    if (!businessName || !category || !location) {
+      return res.status(400).json({
+        success: false,
+        error: 'Business name, category, and location are required',
+      });
+    }
+
+    const description = generateMerchantDescription({
+      businessName,
+      category,
+      categories: categories || [],
+      location,
+      deliveryAreas: deliveryAreas || [],
+      freeDeliveryThreshold: freeDeliveryThreshold || 0,
+    });
+
+    const shortDescription = generateShortMerchantDescription({
+      businessName,
+      category,
+      location,
+      deliveryAreas: deliveryAreas || [],
     });
 
     res.status(200).json({
