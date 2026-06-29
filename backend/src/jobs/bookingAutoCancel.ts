@@ -76,11 +76,11 @@ export async function runBookingAutoCancelCheck(): Promise<void> {
 
           // Send emails
           if (customerUser) {
-            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName, 'system', booking.jobType, 'Artisan did not respond within 48 hours');
+            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName || 'there', 'system', booking.jobType, 'Artisan did not respond within 48 hours');
             await sendEmail({ to: customerUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
           if (artisanUser) {
-            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName, 'system', booking.jobType, 'No response within 48 hours');
+            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName || 'there', 'system', booking.jobType, 'No response within 48 hours');
             await sendEmail({ to: artisanUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
         } else if (previousStatus === 'quoted') {
@@ -106,11 +106,11 @@ export async function runBookingAutoCancelCheck(): Promise<void> {
 
           // Send emails
           if (customerUser) {
-            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName, 'system', booking.jobType, 'Quote not responded to within 48 hours');
+            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName || 'there', 'system', booking.jobType, 'Quote not responded to within 48 hours');
             await sendEmail({ to: customerUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
           if (artisanUser) {
-            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName, 'system', booking.jobType, 'Customer did not respond to quote within 48 hours');
+            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName || 'there', 'system', booking.jobType, 'Customer did not respond to quote within 48 hours');
             await sendEmail({ to: artisanUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
         } else if (previousStatus === 'accepted') {
@@ -136,11 +136,11 @@ export async function runBookingAutoCancelCheck(): Promise<void> {
 
           // Send emails
           if (customerUser) {
-            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName, 'system', booking.jobType, 'Payment not completed within 24 hours');
+            const emailContent = emailTemplates.bookingCancelled(customerUser.firstName || 'there', 'system', booking.jobType, 'Payment not completed within 24 hours');
             await sendEmail({ to: customerUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
           if (artisanUser) {
-            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName, 'system', booking.jobType, 'Customer did not complete payment within 24 hours');
+            const emailContent = emailTemplates.bookingCancelled(artisanUser.firstName || 'there', 'system', booking.jobType, 'Customer did not complete payment within 24 hours');
             await sendEmail({ to: artisanUser.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {});
           }
         }

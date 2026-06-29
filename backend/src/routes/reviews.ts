@@ -70,9 +70,13 @@ router.post('/', reviewLimiter, protect, authorize('customer'), requireVerifiedE
     try {
       const artisanUser = await User.findById(artisan.user);
       if (artisanUser?.email) {
+        const artisanName = artisanUser.firstName || 'there';
+        const reviewerName = req.user!.firstName && req.user!.lastName
+          ? `${req.user!.firstName} ${req.user!.lastName}`
+          : req.user!.firstName || 'A customer';
         const template = emailTemplates.newReviewNotification(
-          artisanUser.firstName,
-          `${req.user!.firstName} ${req.user!.lastName}`,
+          artisanName,
+          reviewerName,
           rating,
           text
         );

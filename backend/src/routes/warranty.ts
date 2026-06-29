@@ -78,9 +78,13 @@ router.post('/claim', warrantyLimiter, protect, authorize('customer'), requireVe
     try {
       const artisanUser = await User.findById(artisan.user);
       if (artisanUser?.email) {
+        const artisanName = artisanUser.firstName || 'there';
+        const customerName = req.user!.firstName && req.user!.lastName
+          ? `${req.user!.firstName} ${req.user!.lastName}`
+          : req.user!.firstName || 'A customer';
         const template = emailTemplates.warrantyClaimNotification(
-          artisanUser.firstName,
-          `${req.user!.firstName} ${req.user!.lastName}`,
+          artisanName,
+          customerName,
           jobDescription
         );
         await sendEmail({ to: artisanUser.email, ...template });

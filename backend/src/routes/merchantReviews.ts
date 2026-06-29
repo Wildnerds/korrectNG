@@ -113,9 +113,13 @@ router.post(
         const merchantUser = await User.findById(order.merchant);
         const merchantProfile = await MerchantProfile.findById(order.merchantProfile);
         if (merchantUser?.email && merchantProfile) {
+          const merchantName = merchantUser.firstName || 'there';
+          const reviewerName = req.user!.firstName && req.user!.lastName
+            ? `${req.user!.firstName} ${req.user!.lastName}`
+            : req.user!.firstName || 'A customer';
           const template = emailTemplates.merchantNewReview(
-            merchantUser.firstName,
-            `${req.user!.firstName} ${req.user!.lastName}`,
+            merchantName,
+            reviewerName,
             rating,
             order.orderNumber,
             text

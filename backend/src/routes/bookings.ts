@@ -436,7 +436,7 @@ router.post('/:id/quote', protect, restrictTo('artisan'), async (req: Request, r
       const customerUser = await User.findById(booking.customer);
       if (customerUser && artisanProfile) {
         const emailContent = emailTemplates.quoteReceived(
-          customerUser.firstName,
+          customerUser.firstName || 'there',
           artisanName,
           artisanProfile.businessName,
           booking.jobType,

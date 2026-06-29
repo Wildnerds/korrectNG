@@ -135,11 +135,12 @@ router.patch('/verifications/:id', async (req: AuthRequest, res, next) => {
       const user = artisan.user as any;
       if (user?.email) {
         try {
+          const displayName = user.firstName || 'there';
           if (status === 'approved') {
-            const template = emailTemplates.verificationApproved(user.firstName, artisan.businessName);
+            const template = emailTemplates.verificationApproved(displayName, artisan.businessName);
             await sendEmail({ to: user.email, ...template });
           } else {
-            const template = emailTemplates.verificationRejected(user.firstName, adminNotes || 'Your application did not meet our verification requirements.');
+            const template = emailTemplates.verificationRejected(displayName, adminNotes || 'Your application did not meet our verification requirements.');
             await sendEmail({ to: user.email, ...template });
           }
         } catch (emailError) {
@@ -295,7 +296,8 @@ router.post('/artisans/:id/verify', async (req: AuthRequest, res, next) => {
     const user = artisan.user as any;
     if (user?.email) {
       try {
-        const template = emailTemplates.verificationApproved(user.firstName, artisan.businessName);
+        const displayName = user.firstName || 'there';
+        const template = emailTemplates.verificationApproved(displayName, artisan.businessName);
         await sendEmail({ to: user.email, ...template });
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError);
@@ -509,7 +511,8 @@ router.post('/merchant-verifications/:id/approve', async (req: AuthRequest, res,
       const user = merchant.user as any;
       if (user?.email) {
         try {
-          const template = emailTemplates.merchantVerificationApproved(user.firstName, merchant.businessName);
+          const displayName = user.firstName || 'there';
+          const template = emailTemplates.merchantVerificationApproved(displayName, merchant.businessName);
           await sendEmail({ to: user.email, ...template });
         } catch (emailError) {
           console.error('Failed to send merchant verification email:', emailError);
@@ -551,7 +554,8 @@ router.post('/merchant-verifications/:id/reject', async (req: AuthRequest, res, 
       const user = merchant.user as any;
       if (user?.email) {
         try {
-          const template = emailTemplates.verificationRejected(user.firstName, reason);
+          const displayName = user.firstName || 'there';
+          const template = emailTemplates.verificationRejected(displayName, reason);
           await sendEmail({ to: user.email, ...template });
         } catch (emailError) {
           console.error('Failed to send merchant rejection email:', emailError);

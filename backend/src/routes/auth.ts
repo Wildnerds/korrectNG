@@ -226,7 +226,8 @@ router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSch
 
     // Send email
     try {
-      const template = emailTemplates.resetPassword(user.firstName, resetUrl);
+      const displayName = user.firstName || 'there';
+      const template = emailTemplates.resetPassword(displayName, resetUrl);
       await sendEmail({
         to: user.email,
         subject: template.subject,
