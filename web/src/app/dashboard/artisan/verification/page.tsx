@@ -35,6 +35,8 @@ export default function VerificationPage() {
     yearsOfExperience: 0,
   });
   const [services, setServices] = useState<ArtisanService[]>([]);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [suggestedDescription, setSuggestedDescription] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -213,6 +215,49 @@ export default function VerificationPage() {
     }
   };
 
+  // Generate description suggestion
+  const handleGenerateDescription = async () => {
+    if (!profile.trade || !profile.location) {
+      showToast('Please select a trade and location first', 'error');
+      return;
+    }
+
+    setGeneratingDescription(true);
+    setSuggestedDescription(null);
+    const token = Cookies.get('token');
+
+    try {
+      const res = await apiFetch<{ description: string; shortDescription: string }>('/services/generate-description', {
+        method: 'POST',
+        body: JSON.stringify({
+          trade: profile.trade,
+          customTrade: profile.customTrade,
+          services,
+          yearsOfExperience: profile.yearsOfExperience || 0,
+          location: profile.location,
+          businessName: profile.businessName,
+        }),
+        token,
+      });
+
+      if (res.data?.description) {
+        setSuggestedDescription(res.data.description);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate description', 'error');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const useSuggestedDescription = () => {
+    if (suggestedDescription) {
+      setProfile({ ...profile, description: suggestedDescription });
+      setSuggestedDescription(null);
+      showToast('Description applied! Feel free to edit it.', 'success');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -298,32 +343,7 @@ export default function VerificationPage() {
                   />
                 </div>
               )}
-              {/* Services Selection */}
-              {profile.trade && profile.trade !== 'other' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Services Offered</label>
-                  <p className="text-xs text-brand-gray mb-3">
-                    Select the services you offer to help customers find you.
-                  </p>
-                  <ServiceSelector
-                    trade={profile.trade}
-                    selectedServices={services}
-                    onChange={setServices}
-                    maxServices={10}
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                  value={profile.description}
-                  onChange={(e) => setProfile({ ...profile, description: e.target.value })}
-                  rows={4}
-                  placeholder="Describe your services and expertise..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
-                  required
-                />
-              </div>
+              {/* Location & Experience - moved before Services so Generate button works */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Location</label>
@@ -357,6 +377,84 @@ export default function VerificationPage() {
                     required
                   />
                 </div>
+              </div>
+              {/* Services Selection */}
+              {profile.trade && profile.trade !== 'other' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Services Offered</label>
+                  <p className="text-xs text-brand-gray mb-3">
+                    Select the services you offer to help customers find you.
+                  </p>
+                  <ServiceSelector
+                    trade={profile.trade}
+                    selectedServices={services}
+                    onChange={setServices}
+                    maxServices={10}
+                  />
+                </div>
+              )}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Description</label>
+                  {profile.trade && profile.location && (
+                    <button
+                      type="button"
+                      onClick={handleGenerateDescription}
+                      disabled={generatingDescription}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-brand-orange/10 text-brand-orange rounded-md hover:bg-brand-orange/20 transition-colors text-xs font-medium disabled:opacity-50"
+                    >
+                      {generatingDescription ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Generate from Services
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Suggested Description Preview */}
+                {suggestedDescription && (
+                  <div className="mb-3 p-3 bg-brand-green/5 border border-brand-green/20 rounded-lg">
+                    <p className="text-xs font-medium text-brand-green mb-2">Suggested Description (based on your services):</p>
+                    <p className="text-sm text-brand-gray mb-3">{suggestedDescription}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={useSuggestedDescription}
+                        className="px-3 py-1 bg-brand-green text-white rounded-md text-xs font-medium hover:bg-brand-green-dark transition-colors"
+                      >
+                        Use This
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSuggestedDescription(null)}
+                        className="px-3 py-1 bg-gray-200 text-brand-gray rounded-md text-xs font-medium hover:bg-gray-300 transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <textarea
+                  value={profile.description}
+                  onChange={(e) => setProfile({ ...profile, description: e.target.value })}
+                  rows={4}
+                  placeholder="Describe your services and expertise..."
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-md focus:outline-none focus:border-brand-green"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Tip: Select your services and click "Generate from Services" for a professional description.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Full Address</label>

@@ -214,6 +214,29 @@ router.patch(
   '/profile',
   protect,
   authorize('artisan'),
+  // Pre-process request body before validation
+  (req, _res, next) => {
+    // Filter out invalid service entries
+    if (req.body.services && Array.isArray(req.body.services)) {
+      req.body.services = req.body.services.filter((s: any) =>
+        s && typeof s === 'object' && s.value && s.label &&
+        typeof s.value === 'string' && s.value.trim().length > 0 &&
+        typeof s.label === 'string' && s.label.trim().length > 0
+      ).map((s: any) => ({
+        value: s.value.trim(),
+        label: s.label.trim(),
+        isCustom: Boolean(s.isCustom),
+      }));
+    }
+    // Clear customTrade if trade is not 'other', or convert empty to undefined
+    if (req.body.trade && req.body.trade !== 'other') {
+      delete req.body.customTrade;
+    } else if (req.body.customTrade !== undefined) {
+      const trimmed = typeof req.body.customTrade === 'string' ? req.body.customTrade.trim() : '';
+      req.body.customTrade = trimmed.length >= 2 ? trimmed : undefined;
+    }
+    next();
+  },
   validate(artisanProfileBaseSchema.partial()),
   async (req: AuthRequest, res, next) => {
     try {

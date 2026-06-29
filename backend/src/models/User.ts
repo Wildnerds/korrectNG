@@ -19,6 +19,7 @@ export interface IUser extends Document {
   password: string;
   googleId?: string;
   role: 'customer' | 'artisan' | 'merchant' | 'admin';
+  roles: ('customer' | 'artisan' | 'merchant' | 'admin')[]; // All roles this user has
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isProfileComplete: boolean;
@@ -80,6 +81,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['customer', 'artisan', 'merchant', 'admin'],
       default: 'customer',
+    },
+    roles: {
+      type: [String],
+      enum: ['customer', 'artisan', 'merchant', 'admin'],
+      default: ['customer'],
     },
     isEmailVerified: { type: Boolean, default: false },
     isPhoneVerified: { type: Boolean, default: false },
@@ -162,6 +168,16 @@ userSchema.methods.checkProfileComplete = function (): boolean {
 userSchema.pre('save', function (next) {
   if (this.role === 'customer') {
     this.isProfileComplete = !!(this.firstName && this.lastName && this.phone && this.address);
+  }
+  next();
+});
+
+// Pre-save hook to ensure current role is in roles array
+userSchema.pre('save', function (next) {
+  if (!this.roles || this.roles.length === 0) {
+    this.roles = [this.role];
+  } else if (!this.roles.includes(this.role)) {
+    this.roles.push(this.role);
   }
   next();
 });

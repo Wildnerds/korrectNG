@@ -352,4 +352,71 @@ router.put('/update-profile', protect, validate(updateProfileSchema), async (req
   }
 });
 
+// POST /api/v1/auth/add-role
+// Add a new role to the current user (e.g., artisan becoming merchant)
+router.post('/add-role', protect, async (req: AuthRequest, res, next) => {
+  try {
+    const { role: newRole } = req.body;
+    const user = req.user!;
+
+    // Validate the new role
+    const validRoles = ['artisan', 'merchant'] as const;
+    if (!validRoles.includes(newRole)) {
+      throw new AppError('Invalid role. Only artisan or merchant roles can be added.', 400);
+    }
+
+    // Can't add admin role this way
+    if (newRole === 'admin') {
+      throw new AppError('Cannot add admin role', 403);
+    }
+
+    // Check if user already has this role
+    if (user.roles && user.roles.includes(newRole)) {
+      throw new AppError(`You already have the ${newRole} role`, 400);
+    }
+
+    // Add the new role
+    if (!user.roles) {
+      user.roles = [user.role];
+    }
+    user.roles.push(newRole);
+    await user.save({ validateBeforeSave: false });
+
+    log.info('Role added to user', { userId: user._id, newRole });
+    res.status(200).json({
+      success: true,
+      data: {
+        message: `${newRole} role added successfully`,
+        roles: user.roles,
+        activeRole: user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/auth/switch-role
+// Switch to a different role the user has
+router.post('/switch-role', protect, async (req: AuthRequest, res, next) => {
+  try {
+    const { role: targetRole } = req.body;
+    const user = req.user!;
+
+    // Check if user has this role
+    if (!user.roles || !user.roles.includes(targetRole)) {
+      throw new AppError(`You don't have access to the ${targetRole} role`, 403);
+    }
+
+    // Switch to the new role
+    user.role = targetRole;
+    await user.save({ validateBeforeSave: false });
+
+    // Return fresh token with updated user data
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

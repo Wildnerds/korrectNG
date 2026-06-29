@@ -33,6 +33,7 @@ export interface User extends Timestamps {
   phone?: string;
   address?: string;
   role: Role;
+  roles: Role[]; // All roles this user has access to
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isProfileComplete: boolean;

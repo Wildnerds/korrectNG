@@ -82,7 +82,8 @@ export const artisanServiceSchema = z.object({
 export const artisanProfileBaseSchema = z.object({
   businessName: z.string().min(2, 'Business name must be at least 2 characters').max(100),
   trade: z.enum(TRADE_VALUES as unknown as [string, ...string[]]),
-  customTrade: z.string().min(2, 'Custom trade must be at least 2 characters').max(100).optional(),
+  // customTrade: allow empty string (converted to undefined) or valid 2+ char string
+  customTrade: z.string().max(100).optional().transform(val => val && val.trim().length >= 2 ? val.trim() : undefined),
   description: z.string().min(20, 'Description must be at least 20 characters').max(1000),
   location: z.string().min(2, 'Location is required').max(100),
   address: z.string().min(5, 'Address must be at least 5 characters').max(200),
@@ -140,7 +141,8 @@ export const flagReviewSchema = z.object({
 export const verificationPersonalInfoSchema = z.object({
   businessName: z.string().min(2).max(100),
   trade: z.enum(TRADE_VALUES as unknown as [string, ...string[]]),
-  customTrade: z.string().min(2).max(100).optional(),
+  // customTrade: allow empty string (converted to undefined) or valid 2+ char string
+  customTrade: z.string().max(100).optional().transform(val => val && val.trim().length >= 2 ? val.trim() : undefined),
   yearsOfExperience: z.number().min(0).max(50),
   location: z.string().min(2).max(100),
   address: z.string().min(5).max(200),

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { formatRating, getMerchantCategoryLabel } from '@korrectng/shared';
 import Cookies from 'js-cookie';
+import RoleSwitcher from '@/components/RoleSwitcher';
 
 interface MerchantProfile {
   _id: string;
@@ -120,8 +121,14 @@ export default function MerchantDashboard() {
   if (!hasProfile && !verification) {
     return (
       <div className="min-h-screen bg-brand-light-gray py-8">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="bg-white rounded-xl p-10">
+        <div className="max-w-3xl mx-auto px-4">
+          {/* Role switcher for users with multiple roles */}
+          {user?.roles && user.roles.length > 1 && (
+            <div className="mb-4 flex justify-end">
+              <RoleSwitcher />
+            </div>
+          )}
+          <div className="bg-white rounded-xl p-10 text-center">
             <div className="text-6xl mb-6">🏪</div>
             <h1 className="text-3xl font-bold mb-4">Welcome to KorrectNG Marketplace!</h1>
             <p className="text-brand-gray mb-8 max-w-md mx-auto">
@@ -144,6 +151,12 @@ export default function MerchantDashboard() {
     return (
       <div className="min-h-screen bg-brand-light-gray py-8">
         <div className="max-w-3xl mx-auto px-4">
+          {/* Role switcher for users with multiple roles */}
+          {user?.roles && user.roles.length > 1 && (
+            <div className="mb-4 flex justify-end">
+              <RoleSwitcher />
+            </div>
+          )}
           <div className="bg-white rounded-xl p-10 text-center">
             {isInReview && (
               <>
@@ -229,6 +242,13 @@ export default function MerchantDashboard() {
   return (
     <div className="min-h-screen bg-brand-light-gray py-8">
       <div className="max-w-7xl mx-auto px-4">
+        {/* Role switcher for users with multiple roles */}
+        {user?.roles && user.roles.length > 1 && (
+          <div className="mb-4 flex justify-end">
+            <RoleSwitcher />
+          </div>
+        )}
+
         {/* Verified badge */}
         {isVerified && !isPublished && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between">

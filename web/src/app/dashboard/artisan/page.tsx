@@ -2,18 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/Toast';
 import { apiFetch } from '@/lib/api';
 import type { ArtisanProfile, WarrantyClaim, VerificationApplication } from '@korrectng/shared';
 import { formatRating, getTradeLabel } from '@korrectng/shared';
 import Cookies from 'js-cookie';
+import RoleSwitcher from '@/components/RoleSwitcher';
 
 export default function ArtisanDashboard() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const router = useRouter();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<ArtisanProfile | null>(null);
   const [verification, setVerification] = useState<VerificationApplication | null>(null);
   const [claims, setClaims] = useState<WarrantyClaim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addingMerchantRole, setAddingMerchantRole] = useState(false);
+
+  // Check if user already has merchant role
+  const hasMerchantRole = user?.roles?.includes('merchant');
 
   useEffect(() => {
     async function fetchData() {
@@ -50,6 +59,34 @@ export default function ArtisanDashboard() {
     }
     fetchData();
   }, [user]);
+
+  const handleBecomeMerchant = async () => {
+    setAddingMerchantRole(true);
+    const token = Cookies.get('token');
+    try {
+      // First add the merchant role
+      await apiFetch('/auth/add-role', {
+        method: 'POST',
+        body: JSON.stringify({ role: 'merchant' }),
+        token,
+      });
+      // Then switch to merchant role so backend authorize middleware works
+      await apiFetch('/auth/switch-role', {
+        method: 'POST',
+        body: JSON.stringify({ role: 'merchant' }),
+        token,
+      });
+      showToast('Merchant role added! Redirecting to set up your store...', 'success');
+      // Refresh user data to get updated roles and active role
+      await refreshUser();
+      // Redirect to merchant profile setup
+      router.push('/dashboard/merchant/profile');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to add merchant role', 'error');
+    } finally {
+      setAddingMerchantRole(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -156,6 +193,13 @@ export default function ArtisanDashboard() {
   return (
     <div className="min-h-screen bg-brand-light-gray py-8">
       <div className="max-w-7xl mx-auto px-4">
+        {/* Role switcher for users with multiple roles */}
+        {user?.roles && user.roles.length > 1 && (
+          <div className="mb-4 flex justify-end">
+            <RoleSwitcher />
+          </div>
+        )}
+
         {/* Verified badge */}
         {isVerified && !isPublished && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center justify-between">
@@ -245,6 +289,24 @@ export default function ArtisanDashboard() {
               >
                 Manage Gallery ({profile?.galleryImages?.length || 0} photos)
               </Link>
+              {/* Also become a Merchant - only show for verified artisans without merchant role */}
+              {isVerified && !hasMerchantRole && (
+                <button
+                  onClick={handleBecomeMerchant}
+                  disabled={addingMerchantRole}
+                  className="block w-full px-4 py-3 border-2 border-brand-orange text-brand-orange rounded-md hover:bg-brand-orange hover:text-white transition-colors text-center font-medium disabled:opacity-50"
+                >
+                  {addingMerchantRole ? 'Setting up...' : 'Also Become a Merchant'}
+                </button>
+              )}
+              {hasMerchantRole && (
+                <Link
+                  href="/dashboard/merchant"
+                  className="block w-full px-4 py-3 border-2 border-brand-orange text-brand-orange rounded-md hover:bg-brand-orange hover:text-white transition-colors text-center font-medium"
+                >
+                  Go to Merchant Dashboard
+                </Link>
+              )}
             </div>
           </div>
 
